@@ -1,5 +1,4 @@
-﻿using Domain.AlbumAggregate.AlbumEntity;
-using Domain.AlbumAggregate.Events;
+﻿using Domain.AlbumAggregate.Events;
 using Domain.Core.Event;
 
 namespace Application.AlbumServices.EventHandlers;

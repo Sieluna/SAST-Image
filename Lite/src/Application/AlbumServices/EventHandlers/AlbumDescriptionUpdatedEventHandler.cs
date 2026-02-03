@@ -1,12 +1,10 @@
-﻿using Domain.AlbumAggregate.AlbumEntity;
-using Domain.AlbumAggregate.Events;
+﻿using Domain.AlbumAggregate.Events;
 using Domain.Core.Event;
 
 namespace Application.AlbumServices.EventHandlers;
 
-internal sealed class AlbumDescriptionUpdatedEventHandler(
-    IAlbumModelRepository repository
-) : IDomainEventHandler<AlbumDescriptionUpdatedEvent>
+internal sealed class AlbumDescriptionUpdatedEventHandler(IAlbumModelRepository repository)
+    : IDomainEventHandler<AlbumDescriptionUpdatedEvent>
 {
     public async ValueTask Handle(
         AlbumDescriptionUpdatedEvent e,

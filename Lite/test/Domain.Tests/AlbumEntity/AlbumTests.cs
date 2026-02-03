@@ -409,7 +409,7 @@ public class AlbumTests(TestContext context)
     public void Raise_Event_When_Image_Added(long actorId, bool isAdmin)
     {
         var album = Album.New;
-        var count = album.Images.Count;
+        int count = album.Images.Count;
         AddImageCommand command = new(
             AlbumId.New,
             ImageTitle.New,

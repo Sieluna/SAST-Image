@@ -1,6 +1,5 @@
 ﻿using Domain.Core.Event;
 using Domain.UserAggregate.Events;
-using Domain.UserAggregate.UserEntity;
 
 namespace Application.UserServices.EventHandlers;
 
