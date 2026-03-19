@@ -17,8 +17,6 @@ public sealed class Album : EntityBase<AlbumId>
 
     private AlbumStatus _status = AlbumStatus.Available;
 
-    private AlbumTitle _title;
-
     private Cover _cover = Cover.Default;
 
     private AccessLevel _accessLevel;
@@ -35,7 +33,6 @@ public sealed class Album : EntityBase<AlbumId>
         : base(AlbumId.GenerateNew())
     {
         _author = command.Actor.Id;
-        _title = command.Title;
     }
 
     internal static async Task<AlbumId> CreateAsync(
@@ -95,12 +92,8 @@ public sealed class Album : EntityBase<AlbumId>
             throw new NoPermissionException();
         if (_status.IsRemoved)
             throw new AlbumRemovedException();
-        if (_title == command.Title)
-            return;
 
-        _title = command.Title;
-
-        AddDomainEvent(new AlbumTitleUpdatedEvent(Id, _title));
+        AddDomainEvent(new AlbumTitleUpdatedEvent(Id, command.Title));
     }
 
     public async Task UpdateCollaborators(

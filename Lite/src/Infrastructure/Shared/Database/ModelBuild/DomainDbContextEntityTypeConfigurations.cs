@@ -22,10 +22,6 @@ internal class DomainDbContextEntityTypeConfigurations
         builder.Ignore(album => album.DomainEvents);
 
         builder
-            .Property<AlbumTitle>("_title")
-            .HasColumnName("title")
-            .HasConversion(t => t.Value, v => new(v));
-        builder
             .Property<AccessLevel>("_accessLevel")
             .HasColumnName("access_level")
             .HasConversion(a => a.Value, v => new(v));

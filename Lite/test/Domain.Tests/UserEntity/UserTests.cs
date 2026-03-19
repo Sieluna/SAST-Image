@@ -285,7 +285,6 @@ public sealed class UserTests(TestContext context)
     #endregion
 
     #region UpdateBiography
-
     [TestMethod]
     public void Raise_Event_When_UpdateBiography()
     {
@@ -437,13 +436,13 @@ file static class RefreshTokenTestHelper
     {
         public static RefreshToken New(long userId = 123, DateTime? expiresAt = null)
         {
-            byte[] buffer = new byte[RefreshToken.ByteLength];
-            BinaryPrimitives.WriteInt64LittleEndian(buffer.AsSpan(0, 8), userId);
+            Span<byte> buffer = stackalloc byte[RefreshToken.ByteLength];
+            BinaryPrimitives.WriteInt64LittleEndian(buffer[0..8], userId);
             BinaryPrimitives.WriteInt64LittleEndian(
-                buffer.AsSpan(8, 8),
+                buffer[8..16],
                 (expiresAt ?? DateTime.UtcNow.AddMinutes(5)).ToBinary()
             );
-            RandomNumberGenerator.Fill(buffer.AsSpan(16));
+            RandomNumberGenerator.Fill(buffer[16..]);
 
             RefreshToken
                 .TryCreateNew(Base64Url.EncodeToString(buffer), out var refreshToken)
