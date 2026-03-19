@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using Domain.Entity;
-using Domain.Tests.AlbumEntity;
 
 namespace Domain.Tests;
 

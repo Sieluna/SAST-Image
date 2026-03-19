@@ -44,12 +44,12 @@ internal sealed class JwtTokenManager(IOptions<JwtAuthOptions> options) : IJwtTo
         return new(accessToken, new(refreshToken), options.Expires);
     }
 
-    private static string GenerateRefreshToken(UserId id)
+    internal static string GenerateRefreshToken(UserId id)
     {
         var expiryTime = DateTime.UtcNow.AddDays(15);
         long expiryTimeBinary = expiryTime.ToBinary();
 
-        Span<byte> tokenBytes = stackalloc byte[32];
+        Span<byte> tokenBytes = stackalloc byte[RefreshToken.ByteLength];
 
         BinaryPrimitives.WriteInt64LittleEndian(tokenBytes[0..8], id.Value);
         BinaryPrimitives.WriteInt64LittleEndian(tokenBytes[8..16], expiryTimeBinary);

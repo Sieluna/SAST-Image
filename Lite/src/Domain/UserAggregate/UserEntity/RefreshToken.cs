@@ -11,7 +11,7 @@ public readonly record struct RefreshToken
     : IValueObject<RefreshToken, string>,
         IFactoryConstructor<RefreshToken, string>
 {
-    const int ByteLength = 32;
+    public const int ByteLength = 32;
 
     public string Value { get; }
 
@@ -28,19 +28,6 @@ public readonly record struct RefreshToken
         }
     }
 
-    internal bool IsExpired
-    {
-        get
-        {
-            Span<byte> buffer = stackalloc byte[ByteLength];
-
-            Base64Url.TryDecodeFromChars(Value, buffer, out _);
-
-            long timeB = BinaryPrimitives.ReadInt64LittleEndian(buffer[8..16]);
-            return DateTime.FromBinary(timeB) < DateTime.UtcNow;
-        }
-    }
-
     internal RefreshToken(string value)
     {
         Value = value;
@@ -50,7 +37,22 @@ public readonly record struct RefreshToken
     {
         Span<byte> buffer = stackalloc byte[ByteLength];
 
-        if (Base64Url.IsValid(input) == false)
+        if (
+            Base64Url.IsValid(input) == false
+            || Base64Url.TryDecodeFromChars(input, buffer, out int count) == false
+            || count != ByteLength
+        )
+        {
+            newObject = default;
+            return false;
+        }
+
+        if (
+            BinaryPrimitives.TryReadInt64LittleEndian(buffer[0..8], out long userId) == false
+            || userId < 0
+            || BinaryPrimitives.TryReadInt64LittleEndian(buffer[8..16], out long timeB) == false
+            || DateTime.FromBinary(timeB) < DateTime.UtcNow
+        )
         {
             newObject = default;
             return false;

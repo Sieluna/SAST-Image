@@ -16,18 +16,14 @@ internal sealed class UpdateCollaboratorsCommandHandler(
     ICollaboratorsExistenceChecker checker
 ) : ICommandHandler<UpdateCollaboratorsCommand>
 {
-    private readonly ICollaboratorsExistenceChecker _checker = checker;
-
     public async ValueTask<Unit> Handle(
         UpdateCollaboratorsCommand request,
         CancellationToken cancellationToken
     )
     {
-        await _checker.CheckAsync(request.Collaborators, cancellationToken);
-
         var album = await repository.GetAsync(request.Album, cancellationToken);
 
-        album.UpdateCollaborators(request);
+        await album.UpdateCollaborators(request, checker);
 
         return Unit.Value;
     }

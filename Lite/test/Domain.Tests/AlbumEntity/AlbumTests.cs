@@ -34,16 +34,13 @@ public class AlbumTests(TestContext context)
             Actor.New(AuthorId)
         );
         var categoryCheckerMock = new Mock<ICategoryExistenceChecker>();
-        var albumTitleCheckerMock = new Mock<IAlbumTitleUniquenessChecker>();
         var repositoryMock = new Mock<IAlbumRepository>();
         var cancellationToken = context.CancellationToken;
 
         categoryCheckerMock
             .Setup(c => c.CheckAsync(command.CategoryId, cancellationToken))
             .Returns(Task.CompletedTask);
-        albumTitleCheckerMock
-            .Setup(t => t.CheckAsync(command.Title, cancellationToken))
-            .Returns(Task.CompletedTask);
+
         repositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Album>(), cancellationToken))
             .Callback<Album, CancellationToken>((album, _) => db.Add(album))
@@ -52,7 +49,6 @@ public class AlbumTests(TestContext context)
         var id = await Album.CreateAsync(
             command,
             categoryCheckerMock.Object,
-            albumTitleCheckerMock.Object,
             repositoryMock.Object,
             cancellationToken
         );
@@ -64,10 +60,6 @@ public class AlbumTests(TestContext context)
         album.DomainEvents.First().ShouldBeOfType<AlbumCreatedEvent>();
         categoryCheckerMock.Verify(
             c => c.CheckAsync(command.CategoryId, cancellationToken),
-            Times.Once
-        );
-        albumTitleCheckerMock.Verify(
-            t => t.CheckAsync(command.Title, cancellationToken),
             Times.Once
         );
         repositoryMock.Verify(r => r.AddAsync(It.IsAny<Album>(), cancellationToken), Times.Once);
@@ -198,8 +190,14 @@ public class AlbumTests(TestContext context)
     {
         var album = Album.Removed;
         UpdateAlbumCategoryCommand command = new(AlbumId.New, CategoryId.New, Actor.Author);
+        var checker = new Mock<ICategoryExistenceChecker>();
+        checker
+            .Setup(c => c.CheckAsync(command.Category, context.CancellationToken))
+            .Returns(Task.CompletedTask);
 
-        Should.Throw<AlbumRemovedException>(() => album.UpdateCategory(command));
+        Should.Throw<AlbumRemovedException>(async () =>
+            await album.UpdateCategory(command, checker.Object)
+        );
     }
 
     [DataRow(VisitorId)]
@@ -209,14 +207,20 @@ public class AlbumTests(TestContext context)
     {
         var album = Album.New;
         UpdateAlbumCategoryCommand command = new(AlbumId.New, CategoryId.New, Actor.New(actorId));
+        var checker = new Mock<ICategoryExistenceChecker>();
+        checker
+            .Setup(c => c.CheckAsync(command.Category, context.CancellationToken))
+            .Returns(Task.CompletedTask);
 
-        Should.Throw<NoPermissionException>(() => album.UpdateCategory(command));
+        Should.Throw<NoPermissionException>(async () =>
+            await album.UpdateCategory(command, checker.Object)
+        );
     }
 
     [DataRow(AdminId, true)]
     [DataRow(AuthorId, false)]
     [TestMethod]
-    public void Raise_Event_When_Category_Updated(long actorId, bool isAdmin)
+    public async Task Raise_Event_When_Category_Updated(long actorId, bool isAdmin)
     {
         var album = Album.New;
         UpdateAlbumCategoryCommand command = new(
@@ -225,7 +229,12 @@ public class AlbumTests(TestContext context)
             Actor.New(actorId, isAdmin)
         );
 
-        album.UpdateCategory(command);
+        var checker = new Mock<ICategoryExistenceChecker>();
+        checker
+            .Setup(c => c.CheckAsync(command.Category, context.CancellationToken))
+            .Returns(Task.CompletedTask);
+
+        await album.UpdateCategory(command, checker.Object);
 
         album.DomainEvents.Count.ShouldBe(1);
         album.DomainEvents.First().ShouldBeOfType<AlbumCategoryUpdatedEvent>();
@@ -291,7 +300,14 @@ public class AlbumTests(TestContext context)
             Actor.Author
         );
 
-        Should.Throw<AlbumRemovedException>(() => album.UpdateCollaborators(command));
+        var checker = new Mock<ICollaboratorsExistenceChecker>();
+        checker
+            .Setup(c => c.CheckAsync(command.Collaborators, context.CancellationToken))
+            .Returns(Task.CompletedTask);
+
+        Should.Throw<AlbumRemovedException>(async () =>
+            await album.UpdateCollaborators(command, checker.Object)
+        );
     }
 
     [DataRow(VisitorId)]
@@ -302,14 +318,20 @@ public class AlbumTests(TestContext context)
         var album = Album.New;
         var collaborators = Collaborators.DefaultNew;
         UpdateCollaboratorsCommand command = new(AlbumId.New, collaborators, Actor.New(actorId));
+        var checker = new Mock<ICollaboratorsExistenceChecker>();
+        checker
+            .Setup(c => c.CheckAsync(command.Collaborators, context.CancellationToken))
+            .Returns(Task.CompletedTask);
 
-        Should.Throw<NoPermissionException>(() => album.UpdateCollaborators(command));
+        Should.Throw<NoPermissionException>(async () =>
+            await album.UpdateCollaborators(command, checker.Object)
+        );
     }
 
     [DataRow(AdminId, true)]
     [DataRow(AuthorId, false)]
     [TestMethod]
-    public void Raise_Event_When_Collaborators_Updated(long actorId, bool isAdmin)
+    public async Task Raise_Event_When_Collaborators_Updated(long actorId, bool isAdmin)
     {
         var album = Album.New;
         var collaborators = Collaborators.DefaultNew;
@@ -318,8 +340,12 @@ public class AlbumTests(TestContext context)
             collaborators,
             Actor.New(actorId, isAdmin)
         );
+        var checker = new Mock<ICollaboratorsExistenceChecker>();
+        checker
+            .Setup(c => c.CheckAsync(command.Collaborators, context.CancellationToken))
+            .Returns(Task.CompletedTask);
 
-        album.UpdateCollaborators(command);
+        await album.UpdateCollaborators(command, checker.Object);
 
         album.DomainEvents.Count.ShouldBe(1);
         album.DomainEvents.First().ShouldBeOfType<AlbumCollaboratorsUpdatedEvent>();

@@ -16,6 +16,7 @@ internal sealed class UpdateAlbumTagsCommandHandler(IAlbumRepository repository)
     )
     {
         var album = await repository.GetAsync(command.Id, cancellationToken);
+
         album.UpdateTags(command);
 
         return Unit.Value;

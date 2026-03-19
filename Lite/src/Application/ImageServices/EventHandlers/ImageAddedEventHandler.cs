@@ -12,8 +12,8 @@ internal sealed class ImageAddedEventHandler(
     {
         ImageModel image = new(e);
 
-        await repository.AddAsync(image, cancellationToken);
-
         await manager.StoreImageAsync(e.ImageId, e.ImageFile.Stream, cancellationToken);
+
+        await repository.AddAsync(image, cancellationToken);
     }
 }

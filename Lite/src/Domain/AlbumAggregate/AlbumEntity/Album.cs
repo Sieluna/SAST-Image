@@ -41,15 +41,11 @@ public sealed class Album : EntityBase<AlbumId>
     internal static async Task<AlbumId> CreateAsync(
         CreateAlbumCommand command,
         ICategoryExistenceChecker categoryChecker,
-        IAlbumTitleUniquenessChecker titleChecker,
         IAlbumRepository repository,
         CancellationToken cancellationToken
     )
     {
-        await Task.WhenAll(
-            titleChecker.CheckAsync(command.Title, cancellationToken),
-            categoryChecker.CheckAsync(command.CategoryId, cancellationToken)
-        );
+        await categoryChecker.CheckAsync(command.CategoryId, cancellationToken);
 
         Album album = new(command);
 
@@ -107,7 +103,10 @@ public sealed class Album : EntityBase<AlbumId>
         AddDomainEvent(new AlbumTitleUpdatedEvent(Id, _title));
     }
 
-    public void UpdateCollaborators(UpdateCollaboratorsCommand command)
+    public async Task UpdateCollaborators(
+        UpdateCollaboratorsCommand command,
+        ICollaboratorsExistenceChecker checker
+    )
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
@@ -117,17 +116,24 @@ public sealed class Album : EntityBase<AlbumId>
         if (_collaborators.SequenceEqual(command.Collaborators.Value))
             return;
 
+        await checker.CheckAsync(command.Collaborators);
+
         _collaborators = command.Collaborators.Value;
 
         AddDomainEvent(new AlbumCollaboratorsUpdatedEvent(Id, command.Collaborators));
     }
 
-    public void UpdateCategory(UpdateAlbumCategoryCommand command)
+    public async Task UpdateCategory(
+        UpdateAlbumCategoryCommand command,
+        ICategoryExistenceChecker checker
+    )
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
         if (_status.IsRemoved)
             throw new AlbumRemovedException();
+
+        await checker.CheckAsync(command.Category);
 
         AddDomainEvent(new AlbumCategoryUpdatedEvent(Id, command.Category));
     }

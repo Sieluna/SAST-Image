@@ -82,11 +82,7 @@ public sealed class User : EntityBase<UserId>
 
     public JwtToken RefreshToken(RefreshTokenCommand command, IJwtTokenGenerator generator)
     {
-        if (
-            _refreshToken == default
-            || _refreshToken.IsExpired
-            || _refreshToken != command.RefreshToken
-        )
+        if (_refreshToken == default || _refreshToken != command.RefreshToken)
             throw new RefreshTokenInvalidException();
 
         var token = generator.Generate(Id, _username, new(_roles));

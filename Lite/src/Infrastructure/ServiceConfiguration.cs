@@ -53,13 +53,17 @@ public static class ServiceConfiguration
             .AddDbContext<DomainDbContext>(
                 (services, options) =>
                 {
-                    options.UseNpgsql(services.GetRequiredService<DbConnection>());
+                    options
+                        .UseNpgsql(services.GetRequiredService<DbConnection>())
+                        .UseSnakeCaseNamingConvention();
                 }
             )
             .AddDbContext<QueryDbContext>(
                 (services, options) =>
                 {
-                    options.UseNpgsql(services.GetRequiredService<DbConnection>());
+                    options
+                        .UseNpgsql(services.GetRequiredService<DbConnection>())
+                        .UseSnakeCaseNamingConvention();
                 }
             );
 
@@ -87,7 +91,6 @@ public static class ServiceConfiguration
             .AddScoped<IAlbumModelRepository, AlbumModelRepository>()
             .AddScoped<ICategoryExistenceChecker, CategoryExistenceChecker>()
             .AddScoped<ICollaboratorsExistenceChecker, CollaboratorsExistenceChecker>()
-            .AddScoped<IAlbumTitleUniquenessChecker, AlbumTitleUniquenessChecker>()
             .AddScoped<ICoverStorageManager, CoverStorageManager>()
             .AddScoped<IAlbumAvailabilityChecker, AlbumAvailabilityChecker>();
 

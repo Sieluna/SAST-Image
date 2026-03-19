@@ -9,6 +9,11 @@ public readonly record struct Username
     : IValueObject<Username, string>,
         IFactoryConstructor<Username, string>
 {
+    private static readonly System.Buffers.SearchValues<char> AllowedChars =
+        System.Buffers.SearchValues.Create(
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+        );
+
     public const int MaxLength = 16;
     public const int MinLength = 2;
 
@@ -30,6 +35,12 @@ public readonly record struct Username
         input = input.Trim();
 
         if (input.Length > MaxLength || input.Length < MinLength)
+        {
+            newObject = default;
+            return false;
+        }
+
+        if (input.AsSpan().ContainsAnyExcept(AllowedChars))
         {
             newObject = default;
             return false;
