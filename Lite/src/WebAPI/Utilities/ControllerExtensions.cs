@@ -4,23 +4,12 @@ namespace WebAPI.Utilities;
 
 public static class ControllerExtensions
 {
-    public static IActionResult DataOrNotFound(this ControllerBase controller, object? data)
+    extension(ControllerBase controller)
     {
-        return data is null ? controller.NotFound() : controller.Ok(data);
-    }
+        public IActionResult ImageOrNotFound(Stream? image) =>
+            image is null ? controller.NotFound() : controller.File(image, "image/*");
 
-    public static IActionResult ImageOrNotFound(this ControllerBase controller, Stream? image)
-    {
-        return image is null ? controller.NotFound() : controller.File(image, "image/*");
-    }
-
-    public static IActionResult AvatarOrNotFound(this ControllerBase controller, Stream? avatar)
-    {
-        return avatar is null ? controller.NotFound() : controller.File(avatar, "image/*");
-    }
-
-    public static IActionResult HeaderOrNotFound(this ControllerBase controller, Stream? header)
-    {
-        return header is null ? controller.NoContent() : controller.File(header, "image/*");
+        public IActionResult DataOrNotFound(object? data) =>
+            data is null ? controller.NotFound() : controller.Ok(data);
     }
 }

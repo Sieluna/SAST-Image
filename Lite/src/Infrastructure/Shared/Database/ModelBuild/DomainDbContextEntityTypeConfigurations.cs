@@ -3,6 +3,7 @@ using Domain.AlbumAggregate.ImageEntity;
 using Domain.CategoryAggregate.CategoryEntity;
 using Domain.UserAggregate.UserEntity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -26,8 +27,6 @@ internal class DomainDbContextEntityTypeConfigurations
             .HasColumnName("access_level")
             .HasConversion(a => a.Value, v => new(v));
 
-        builder.HasIndex("_title").IsUnique(true);
-
         builder.ComplexProperty<AlbumStatus>(
             "_status",
             status =>
@@ -44,12 +43,14 @@ internal class DomainDbContextEntityTypeConfigurations
             .HasConversion(u => u.Value, v => new(v));
 
         builder
-            .PrimitiveCollection<UserId[]>("_collaborators")
+            .Property<Collaborators>("_collaborators")
             .HasColumnName("collaborators")
-            .ElementType(id =>
-                id.HasConversion(
-                    new ValueConverter<UserId, long>(id => id.Value, value => new(value))
-                )
+            .HasConversion(
+                new ValueConverter<Collaborators, long[]>(
+                    c => Array.ConvertAll(c.Value, id => id.Value),
+                    values => new(Array.ConvertAll(values, value => new UserId(value)))
+                ),
+                new ValueComparer<Collaborators>((c1, c2) => c1.Equals(c2), c => c.GetHashCode())
             );
 
         builder.OwnsOne<Cover>(

@@ -21,7 +21,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     private AccessLevel _accessLevel;
 
-    private UserId[] _collaborators = [];
+    private Collaborators _collaborators = [];
 
     private readonly UserId _author;
 
@@ -111,7 +111,7 @@ public sealed class Album : EntityBase<AlbumId>
 
         await checker.CheckAsync(command.Collaborators);
 
-        _collaborators = command.Collaborators.Value;
+        _collaborators = command.Collaborators;
 
         AddDomainEvent(new AlbumCollaboratorsUpdatedEvent(Id, command.Collaborators));
     }
@@ -179,7 +179,7 @@ public sealed class Album : EntityBase<AlbumId>
                 command.Title,
                 command.Tags,
                 _accessLevel,
-                new(_collaborators),
+                _collaborators,
                 command.ImageFile,
                 DateTime.UtcNow,
                 command.Actor.Id

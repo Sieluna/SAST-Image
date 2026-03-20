@@ -86,7 +86,7 @@ public sealed class UserController(IMediator mediator) : ControllerBase
     {
         var query = new UserAvatarQuery(id);
         var result = await mediator.Send(query, cancellationToken);
-        return this.AvatarOrNotFound(result);
+        return this.ImageOrNotFound(result);
     }
 
     [HttpGet("{id:long}/header")]
@@ -97,7 +97,7 @@ public sealed class UserController(IMediator mediator) : ControllerBase
     {
         var query = new UserHeaderQuery(id);
         var result = await mediator.Send(query, cancellationToken);
-        return this.HeaderOrNotFound(result);
+        return this.ImageOrNotFound(result);
     }
 
     [HttpGet("{id:long}/profile")]
