@@ -13,7 +13,7 @@ internal sealed class ImageAddedEventHandler(
     {
         var album = await repository.GetAsync(e.Album, cancellationToken);
 
-        await manager.StoreImageAsync(e.ImageId, e.ImageFile.Stream, cancellationToken);
+        await manager.StoreImageAsync(e.ImageId, e.ImageFile, cancellationToken);
 
         album.ImageAdded(e);
     }

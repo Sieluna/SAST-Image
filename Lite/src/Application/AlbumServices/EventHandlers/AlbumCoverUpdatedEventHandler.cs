@@ -19,11 +19,7 @@ internal sealed class AlbumCoverUpdatedEventHandler(ICoverStorageManager updater
 
         if (e.CoverImage is not null)
         {
-            await updater.UpdateWithCustomImageAsync(
-                e.Album,
-                e.CoverImage.Stream,
-                cancellationToken
-            );
+            await updater.UpdateWithCustomImageAsync(e.Album, e.CoverImage, cancellationToken);
         }
 
         await updater.DeleteCoverAsync(e.Album, cancellationToken);

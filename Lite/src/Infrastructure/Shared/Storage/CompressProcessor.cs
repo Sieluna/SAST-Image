@@ -1,47 +1,18 @@
-﻿using SkiaSharp;
+﻿using NetVips;
 
 namespace Infrastructure.Shared.Storage;
 
 public interface ICompressProcessor
 {
-    public Task<Stream> CompressAsync(
-        Stream originalFile,
-        int rate,
-        CancellationToken cancellationToken = default
-    );
+    public void CompressTo(Stream original, Stream target);
 }
 
 internal sealed class CompressProcessor : ICompressProcessor
 {
-    public Task<Stream> CompressAsync(
-        Stream originalFile,
-        int rate,
-        CancellationToken cancellationToken = default
-    )
+    public async void CompressTo(Stream original, Stream target)
     {
-        return Task.Run(
-            () =>
-            {
-                using var skStream = new SKFrontBufferedManagedStream(
-                    originalFile,
-                    SKFrontBufferedStream.DefaultBufferSize,
-                    false
-                );
+        using var image = Image.NewFromStream(original);
 
-                int position = skStream.Position;
-                try
-                {
-                    using var image = SKBitmap.Decode(skStream);
-                    using var data = image.PeekPixels();
-                    var stream = data.Encode(SKEncodedImageFormat.Webp, rate)!.AsStream(true);
-                    return stream;
-                }
-                finally
-                {
-                    originalFile.Position = position;
-                }
-            },
-            cancellationToken
-        );
+        image.WebpsaveStream(target, keep: Enums.ForeignKeep.None);
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using SkiaSharp;
+using NetVips;
 
 namespace WebAPI.Utilities.Attributes;
 
@@ -19,13 +19,7 @@ public sealed class FileValidator(int minMB, int maxMB) : ValidationAttribute
         if (file.ContentType.Contains("image") == false)
             return new ValidationResult("Not supported file type.");
         using var stream = file.OpenReadStream();
-        using SKFrontBufferedManagedStream skStream = new(
-            stream,
-            SKCodec.MinBufferedBytesNeeded,
-            true
-        );
-        using var code = SKCodec.Create(skStream);
-        if (code is null)
+        if (Image.FindLoadStream(stream) is null)
             return new ValidationResult("Not supported file type.");
 
         return ValidationResult.Success;

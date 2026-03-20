@@ -1,5 +1,6 @@
 ﻿using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.ImageEntity;
+using Domain.Shared;
 
 namespace Application.AlbumServices;
 
@@ -7,7 +8,7 @@ public interface ICoverStorageManager
 {
     public Task UpdateWithCustomImageAsync(
         AlbumId album,
-        Stream stream,
+        IImageFile file,
         CancellationToken cancellationToken = default
     );
 

@@ -2,6 +2,7 @@
 using Application.ImageServices;
 using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.ImageEntity;
+using Domain.Shared;
 using Infrastructure.Shared.Storage;
 using Microsoft.Extensions.Options;
 
@@ -14,16 +15,16 @@ internal sealed class CoverStorageManager(
 ) : StorageManagerBase(options.Value.BasePath), ICoverStorageManager
 {
     private const string filename = "cover.webp";
-    private const int compressRate = 60;
 
     public Stream? OpenReadStream(AlbumId album)
     {
-        return OpenReadStream(album, filename);
+        return OpenRead(album, filename);
     }
 
     public Task DeleteCoverAsync(AlbumId album, CancellationToken cancellationToken = default)
     {
-        return DeleteAsync(album, cancellationToken);
+        Delete(album);
+        return Task.CompletedTask;
     }
 
     public async Task UpdateWithContainedImageAsync(
@@ -34,26 +35,21 @@ internal sealed class CoverStorageManager(
     {
         await using var stream = images.OpenReadStream(image, ImageKind.Thumbnail);
 
-        // TODO: Unimplemented logic in concurrent condition.
         if (stream == null)
             return;
 
-        await StoreAsync(stream, album, filename, cancellationToken);
+        await using var target = OpenWrite(album, filename);
+        compressor.CompressTo(stream, target);
     }
 
     public async Task UpdateWithCustomImageAsync(
         AlbumId album,
-        Stream stream,
+        IImageFile file,
         CancellationToken cancellationToken = default
     )
     {
-        await using var _ = stream;
-        await using var compressed = await compressor.CompressAsync(
-            stream,
-            compressRate,
-            cancellationToken
-        );
+        await using var target = OpenWrite(album, filename);
 
-        await StoreAsync(compressed, album, filename, cancellationToken);
+        compressor.CompressTo(file.Stream, target);
     }
 }

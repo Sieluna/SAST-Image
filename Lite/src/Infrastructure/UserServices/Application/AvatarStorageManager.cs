@@ -1,4 +1,5 @@
 ﻿using Application.UserServices;
+using Domain.Shared;
 using Domain.UserAggregate.UserEntity;
 using Infrastructure.Shared.Storage;
 using Microsoft.Extensions.Options;
@@ -14,13 +15,17 @@ internal sealed class AvatarStorageManager(
 
     public Stream? OpenReadStream(UserId user)
     {
-        return OpenReadStream(user, filename);
+        return OpenRead(user, filename);
     }
 
-    public async Task UpdateAsync(UserId user, Stream avatar, CancellationToken cancellationToken)
+    public async Task UpdateAsync(
+        UserId user,
+        IImageFile avatar,
+        CancellationToken cancellationToken
+    )
     {
-        var file = await processor.CompressAsync(avatar, 50, cancellationToken);
+        await using var target = OpenWrite(user, filename);
 
-        await StoreAsync(file, user, filename, cancellationToken);
+        processor.CompressTo(avatar.Stream, target);
     }
 }

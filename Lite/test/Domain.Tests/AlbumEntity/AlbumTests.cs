@@ -723,7 +723,6 @@ internal static class TestAlbum
                 ];
                 a.Cover = (Cover.Default);
                 a.SetValue(Actor.Author.Id);
-                a.SetValue(AlbumTitle.New);
                 a.SetValue(Subscribe.Default(a.Id));
                 a.SetValue(Collaborators.Default.Value);
 

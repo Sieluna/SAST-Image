@@ -1,4 +1,5 @@
 ﻿using Domain.AlbumAggregate.ImageEntity;
+using Domain.Shared;
 
 namespace Application.ImageServices;
 
@@ -6,7 +7,7 @@ public interface IImageStorageManager
 {
     public Task StoreImageAsync(
         ImageId imageId,
-        Stream imageFile,
+        IImageFile imageFile,
         CancellationToken cancellationToken = default
     );
 

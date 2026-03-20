@@ -1,4 +1,5 @@
 ﻿using Application.UserServices;
+using Domain.Shared;
 using Domain.UserAggregate.UserEntity;
 using Infrastructure.Shared.Storage;
 using Microsoft.Extensions.Options;
@@ -14,12 +15,16 @@ internal sealed class HeaderStorageManager(
 
     public Stream? OpenReadStream(UserId user)
     {
-        return OpenReadStream(user, filename);
+        return OpenRead(user, filename);
     }
 
-    public async Task UpdateAsync(UserId user, Stream header, CancellationToken cancellationToken)
+    public async Task UpdateAsync(
+        UserId user,
+        IImageFile header,
+        CancellationToken cancellationToken
+    )
     {
-        var file = await processor.CompressAsync(header, 50, cancellationToken);
-        await StoreAsync(file, user, filename, cancellationToken);
+        await using var target = OpenWrite(user, filename);
+        processor.CompressTo(header.Stream, target);
     }
 }

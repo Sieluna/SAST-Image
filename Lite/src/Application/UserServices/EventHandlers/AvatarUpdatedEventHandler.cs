@@ -8,6 +8,6 @@ internal sealed class AvatarUpdatedEventHandler(IAvatarStorageManager manager)
 {
     public async ValueTask Handle(AvatarUpdatedEvent e, CancellationToken cancellationToken)
     {
-        await manager.UpdateAsync(e.User, e.Avatar.Stream, cancellationToken);
+        await manager.UpdateAsync(e.User, e.Avatar, cancellationToken);
     }
 }

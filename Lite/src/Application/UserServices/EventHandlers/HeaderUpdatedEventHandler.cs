@@ -8,6 +8,6 @@ internal sealed class HeaderUpdatedEventHandler(IHeaderStorageManager manager)
 {
     public async ValueTask Handle(HeaderUpdatedEvent e, CancellationToken cancellationToken)
     {
-        await manager.UpdateAsync(e.User, e.Header.Stream, cancellationToken);
+        await manager.UpdateAsync(e.User, e.Header, cancellationToken);
     }
 }

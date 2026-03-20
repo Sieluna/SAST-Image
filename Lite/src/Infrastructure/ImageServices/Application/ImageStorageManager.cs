@@ -1,22 +1,22 @@
 ﻿using Application.ImageServices;
 using Domain.AlbumAggregate.ImageEntity;
+using Domain.Shared;
 using Infrastructure.Shared.Storage;
 using Microsoft.Extensions.Options;
-using SkiaSharp;
 
 namespace Infrastructure.ImageServices.Application;
 
 internal sealed class ImageStorageManager(
-    ICompressProcessor compressor,
+    ICompressProcessor processor,
     IOptions<StorageOptions> options
 ) : StorageManagerBase(options.Value.BasePath), IImageStorageManager
 {
-    private const int CompressRate = 60;
     private readonly string CompressedFilename = "compressed.webp";
 
     public Task DeleteImageAsync(ImageId image, CancellationToken cancellationToken = default)
     {
-        return DeleteAsync(image, cancellationToken);
+        Delete(image);
+        return Task.CompletedTask;
     }
 
     public Stream? OpenReadStream(ImageId image, ImageKind kind)
@@ -28,49 +28,51 @@ internal sealed class ImageStorageManager(
             _ => throw new ArgumentOutOfRangeException(nameof(kind), kind, null),
         };
 
-        return OpenReadStream(image, mask);
+        return OpenRead(image, mask);
     }
 
     public async Task StoreImageAsync(
         ImageId imageId,
-        Stream imageFile,
+        IImageFile imageFile,
         CancellationToken cancellationToken = default
     )
     {
-        string extension = GetExtension(imageFile);
+        string originalFilename = $"original.{imageFile.Extesion}";
 
-        string originalFilename = $"original.{extension}";
-
-        await using var compressedImageFile = await compressor.CompressAsync(
-            imageFile,
-            CompressRate,
-            cancellationToken
-        );
-
-        await Task.WhenAll(
-            StoreAsync(imageFile, imageId, originalFilename, cancellationToken),
-            StoreAsync(compressedImageFile, imageId, CompressedFilename, cancellationToken)
-        );
+        await using var original = OpenWrite(imageId, originalFilename);
+        imageFile.Stream.CopyTo(original);
+        await using var compressed = OpenWrite(imageId, CompressedFilename);
+        processor.CompressTo(imageFile.Stream, compressed);
     }
+}
 
-    private static string GetExtension(Stream file)
+file static class ImageFileExtension
+{
+    extension<T>(T file)
+        where T : IImageFile
     {
-        using var stream = new SKFrontBufferedManagedStream(
-            file,
-            SKCodec.MinBufferedBytesNeeded,
-            false
-        );
+        public string Extesion
+        {
+            get
+            {
+                string loader = NetVips.Image.FindLoadStream(file.Stream);
 
-        long position = file.Position;
-        try
-        {
-            using var codec = SKCodec.Create(stream);
-            string format = codec.EncodedFormat.ToString().ToLowerInvariant();
-            return format;
-        }
-        finally
-        {
-            file.Position = position;
+                var span = loader.AsSpan();
+                Span<char> buffer = stackalloc char[span.Length];
+                span.ToLowerInvariant(buffer);
+
+                const string prefix = "vipsforeignload";
+                const string suffix = "file";
+
+                var trimmed = buffer;
+                if (trimmed.StartsWith(prefix, StringComparison.Ordinal))
+                    trimmed = trimmed[prefix.Length..];
+
+                if (trimmed.EndsWith(suffix, StringComparison.Ordinal))
+                    trimmed = trimmed[..^suffix.Length];
+
+                return new string(trimmed);
+            }
         }
     }
 }
