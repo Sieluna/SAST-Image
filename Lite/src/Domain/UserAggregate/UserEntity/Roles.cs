@@ -1,54 +1,61 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Domain.Entity;
 
 namespace Domain.UserAggregate.UserEntity;
 
-public sealed class Roles
-    : ReadOnlyCollection<Role>,
-        IValueObject<Roles, IReadOnlyCollection<Role>>,
-        IFactoryConstructor<Roles, IEnumerable<Role>>
+[CollectionBuilder(typeof(RolesCollectionBuilder), nameof(RolesCollectionBuilder.Build))]
+public readonly struct Roles
+    : IEnumerable<Role>,
+        IValueObject<Roles, Role[]>,
+        IFactoryConstructor<Roles, Role[]>
 {
-    public IReadOnlyCollection<Role> Value => [.. Items];
+    public Role[] Value { get; }
 
-    internal Roles(IList<Role> list)
-        : base(list) { }
-
-    public Roles()
-        : this([]) { }
-
-    public bool Equals(Roles? other)
-    {
-        if (other is null)
-            return false;
-        if (ReferenceEquals(this, other))
-            return true;
-
-        return Items.SequenceEqual(other.Items);
-    }
+    internal Roles(Role[] value) => Value = value;
 
     public static bool TryCreateNew(
-        IEnumerable<Role> input,
-        [NotNullWhen(true)] out Roles? newObject
+        Role[] input,
+        [MaybeNullWhen(false), NotNullWhen(true)] out Roles newObject
     )
     {
         if (input.Any(role => !Enum.IsDefined(role)))
         {
-            newObject = null;
+            newObject = default;
             return false;
         }
 
-        newObject = new(input.ToList());
+        var mid = input.Distinct().ToArray();
+
+        newObject = new(mid);
         return true;
     }
 
     public override bool Equals(object? obj)
     {
-        return Equals(obj as Roles);
+        return obj is Roles roles && Equals(roles);
+    }
+
+    public bool Equals(Roles other)
+    {
+        return Value.SequenceEqual(other.Value);
     }
 
     public override int GetHashCode()
     {
-        return Items.GetHashCode();
+        return HashCode.Combine(Value);
+    }
+
+    public IEnumerator<Role> GetEnumerator() => (Value as IEnumerable<Role>).GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+}
+
+file sealed class RolesCollectionBuilder
+{
+    public static Roles Build(ReadOnlySpan<Role> span)
+    {
+        return new Roles(span.ToArray());
     }
 }

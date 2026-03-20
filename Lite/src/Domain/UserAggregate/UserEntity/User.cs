@@ -14,7 +14,7 @@ public sealed class User : EntityBase<UserId>
     private Username _username;
     private Password _password = null!;
     private RefreshToken _refreshToken;
-    private readonly Role[] _roles = [];
+    private readonly Roles _roles = [];
 
     private User(Username username, Password password)
         : base(UserId.GenerateNew())
@@ -43,7 +43,7 @@ public sealed class User : EntityBase<UserId>
 
         User user = new(command.Username, password);
 
-        var token = jwtGenerator.Generate(user.Id, user._username, new(user._roles));
+        var token = jwtGenerator.Generate(user.Id, user._username, user._roles);
         user._refreshToken = token.RefreshToken;
         await repository.AddAsync(user, cancellationToken);
 
@@ -61,7 +61,7 @@ public sealed class User : EntityBase<UserId>
     {
         await validator.ValidateAsync(_password, command.Password, cancellationToken);
 
-        var token = generator.Generate(Id, _username, new(_roles));
+        var token = generator.Generate(Id, _username, _roles);
 
         _refreshToken = token.RefreshToken;
 
@@ -85,7 +85,7 @@ public sealed class User : EntityBase<UserId>
         if (_refreshToken == default || _refreshToken != command.RefreshToken)
             throw new RefreshTokenInvalidException();
 
-        var token = generator.Generate(Id, _username, new(_roles));
+        var token = generator.Generate(Id, _username, _roles);
         _refreshToken = token.RefreshToken;
         return token;
     }

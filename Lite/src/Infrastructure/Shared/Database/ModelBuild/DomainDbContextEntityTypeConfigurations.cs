@@ -154,7 +154,14 @@ internal class DomainDbContextEntityTypeConfigurations
 
         builder.HasIndex("_username").IsUnique(true);
 
-        builder.PrimitiveCollection<Role[]>("_roles").HasColumnName("roles");
+        builder
+            .Property<Roles>("_roles")
+            .HasColumnName("roles")
+            .HasConversion(
+                new ValueConverter<Roles, Role[]>(c => c.Value, values => new(values)),
+                new ValueComparer<Roles>((c1, c2) => c1.Equals(c2), c => c.GetHashCode())
+            );
+
         builder.OwnsOne<Password>(
             "_password",
             password =>
