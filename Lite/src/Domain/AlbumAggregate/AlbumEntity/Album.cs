@@ -15,7 +15,7 @@ public sealed class Album : EntityBase<AlbumId>
     private Album()
         : base(default) { }
 
-    private AlbumStatus _status = AlbumStatus.Available;
+    private bool _removed = false;
 
     private Cover _cover = Cover.Default;
 
@@ -66,7 +66,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         AddDomainEvent(new AlbumDescriptionUpdatedEvent(Id, command.Description));
@@ -76,7 +76,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
         if (_accessLevel == command.AccessLevel)
             return;
@@ -90,7 +90,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         AddDomainEvent(new AlbumTitleUpdatedEvent(Id, command.Title));
@@ -103,7 +103,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         if (_collaborators.SequenceEqual(command.Collaborators.Value))
@@ -123,7 +123,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         await checker.CheckAsync(command.Category);
@@ -135,7 +135,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         AddDomainEvent(new AlbumTagsUpdatedEvent(Id, command.Tags));
@@ -145,7 +145,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         if (command.CoverImage is null)
@@ -164,7 +164,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManageImages(command.Actor) && _accessLevel.OthersCanNotWrite)
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         Image image = new(command);
@@ -204,7 +204,7 @@ public sealed class Album : EntityBase<AlbumId>
             && (_accessLevel.OthersCanNotWrite || image.IsNotUploader(command.Actor))
         )
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         image.Remove(command);
@@ -221,7 +221,7 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManageImages(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
 
         var image = _images.FindById(command.Image);
@@ -253,12 +253,12 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsRemoved)
+        if (_removed)
             return;
 
-        _status = AlbumStatus.Removed(DateTime.UtcNow);
+        _removed = true;
 
-        AddDomainEvent(new AlbumRemovedEvent(Id, _status));
+        AddDomainEvent(new AlbumRemovedEvent(Id));
         foreach (var image in _images)
         {
             image.AlbumRemoved(command);
@@ -269,12 +269,12 @@ public sealed class Album : EntityBase<AlbumId>
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
-        if (_status.IsAvailable)
+        if (_removed == false)
             return;
 
-        _status = AlbumStatus.Available;
+        _removed = false;
 
-        AddDomainEvent(new AlbumRestoredEvent(Id, _status));
+        AddDomainEvent(new AlbumRestoredEvent(Id));
         foreach (var image in _images)
         {
             image.AlbumRestored(command);
@@ -283,7 +283,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     public void Subscribe(SubscribeCommand command)
     {
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
         if (_subscribes.ContainsUser(command.Actor.Id))
             return;
@@ -297,7 +297,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     public void Unsubscribe(UnsubscribeCommand command)
     {
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
         if (_subscribes.NotContainsUser(command.Actor.Id))
             return;
@@ -311,7 +311,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     public void LikeImage(LikeImageCommand command)
     {
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
         if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
             throw new NoPermissionException();
@@ -323,7 +323,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     public void UnlikeImage(UnlikeImageCommand command)
     {
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
         if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
             throw new NoPermissionException();
@@ -335,7 +335,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     public void UpdateImageTags(UpdateImageTagsCommand command)
     {
-        if (_status.IsRemoved)
+        if (_removed)
             throw new AlbumRemovedException();
         if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
             throw new NoPermissionException();

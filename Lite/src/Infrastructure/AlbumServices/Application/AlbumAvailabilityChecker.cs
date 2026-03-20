@@ -23,7 +23,7 @@ internal sealed class AlbumAvailabilityChecker(QueryDbContext context) : IAlbumA
             {
                 a.AccessLevel,
                 a.AuthorId,
-                a.Status,
+                a.RemovedAt,
                 a.Collaborators,
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -38,7 +38,7 @@ internal sealed class AlbumAvailabilityChecker(QueryDbContext context) : IAlbumA
             || album.Collaborators.Contains(actor.Id.Value)
         )
             return true;
-        if (album.Status == AlbumStatusValue.Removed)
+        if (album.RemovedAt is null)
             return false;
 
         return album.AccessLevel switch

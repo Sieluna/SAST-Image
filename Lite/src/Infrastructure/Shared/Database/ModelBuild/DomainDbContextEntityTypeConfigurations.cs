@@ -27,14 +27,7 @@ internal class DomainDbContextEntityTypeConfigurations
             .HasColumnName("access_level")
             .HasConversion(a => a.Value, v => new(v));
 
-        builder.ComplexProperty<AlbumStatus>(
-            "_status",
-            status =>
-            {
-                status.Property(s => s.Value).HasColumnName("status");
-                status.Property(s => s.RemovedAt).HasColumnName("removed_at");
-            }
-        );
+        builder.Property<bool>("_removed").HasColumnName("removed");
 
         builder.HasOne<User>().WithMany().HasForeignKey("_author");
         builder

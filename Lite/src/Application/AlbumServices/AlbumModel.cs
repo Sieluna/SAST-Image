@@ -16,7 +16,6 @@ public sealed class AlbumModel
         AuthorId = e.AuthorId.Value;
         CategoryId = e.CategoryId.Value;
         AccessLevel = e.AccessLevel.Value;
-        Status = AlbumStatusValue.Available;
     }
 
     public long Id { get; }
@@ -29,7 +28,6 @@ public sealed class AlbumModel
     public long[] Collaborators { get; private set; } = [];
     public DateTime CreatedAt { get; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
-    public AlbumStatusValue Status { get; private set; }
     public DateTime? RemovedAt { get; private set; }
     public List<SubscribeModel> Subscribes { get; } = null!;
     public List<ImageModel> Images { get; } = null!;
@@ -70,8 +68,7 @@ public sealed class AlbumModel
 
     internal void Remove(AlbumRemovedEvent e)
     {
-        Status = e.Status.Value;
-        RemovedAt = e.Status.RemovedAt;
+        RemovedAt = DateTime.UtcNow;
 
         foreach (var image in Images)
         {
@@ -81,7 +78,6 @@ public sealed class AlbumModel
 
     internal void Restore(AlbumRestoredEvent e)
     {
-        Status = e.Status.Value;
         RemovedAt = null;
 
         foreach (var image in Images)

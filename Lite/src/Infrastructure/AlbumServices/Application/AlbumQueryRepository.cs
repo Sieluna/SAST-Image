@@ -1,6 +1,5 @@
 ﻿using Application.AlbumServices.Queries;
 using Application.Shared;
-using Domain.AlbumAggregate.AlbumEntity;
 using Infrastructure.Shared.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +22,7 @@ internal sealed class AlbumQueryRepository(QueryDbContext context)
         return _context
             .Albums.AsNoTracking()
             .Where(a => a.Id == query.Id.Value)
-            .Where(a => a.Status == AlbumStatusValue.Available)
+            .Where(a => a.RemovedAt == null)
             .WhereIsAccessible(query.Actor)
             .Select(a => new DetailedAlbum
             {
@@ -48,7 +47,7 @@ internal sealed class AlbumQueryRepository(QueryDbContext context)
     {
         return _context
             .Albums.AsNoTracking()
-            .Where(a => a.Status == AlbumStatusValue.Available)
+            .Where(a => a.RemovedAt == null)
             .Where(a => query.CategoryId == null || a.CategoryId == query.CategoryId)
             .Where(a => query.AuthorId == null || a.AuthorId == query.AuthorId)
             .Where(a => query.Title == null || EF.Functions.ILike(a.Title, $"%{query.Title}%"))
@@ -75,7 +74,7 @@ internal sealed class AlbumQueryRepository(QueryDbContext context)
     {
         return _context
             .Albums.AsNoTracking()
-            .Where(a => a.Status == AlbumStatusValue.Removed)
+            .Where(a => a.RemovedAt != null)
             .Where(a => a.AuthorId == query.Actor.Id.Value || query.Actor.IsAdmin)
             .Select(a => new RemovedAlbumDto
             {

@@ -355,7 +355,7 @@ internal static class TestUser
             u.SetValue("username", username);
             u.SetValue("password", password);
             u.SetValue("refreshToken", refreshToken);
-            u.SetValue("roles", roles ?? [Role.User]);
+            u.SetValue("roles", Roles.New([Role.User]));
 
             return u;
         }
@@ -387,6 +387,14 @@ file static class NicknameTestHelper
             Nickname.TryCreateNew(value, out var nickname).ShouldBeTrue();
             return nickname;
         }
+    }
+}
+
+file static class RolesTestHelper
+{
+    extension(Roles)
+    {
+        public static Roles New(params Role[] roles) => new(roles);
     }
 }
 

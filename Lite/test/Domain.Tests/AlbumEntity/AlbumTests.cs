@@ -74,7 +74,7 @@ public class AlbumTests(TestContext context)
     {
         var album = Album.Removed;
 
-        bool isRemoved = album.Status.IsRemoved;
+        bool isRemoved = album.IsRemoved;
 
         isRemoved.ShouldBeTrue();
     }
@@ -84,9 +84,7 @@ public class AlbumTests(TestContext context)
     {
         var album = Album.New;
 
-        bool isRemoved = album.Status.IsRemoved;
-
-        isRemoved.ShouldBeFalse();
+        album.IsRemoved.ShouldBeFalse();
     }
 
     #endregion
@@ -600,12 +598,11 @@ public class AlbumTests(TestContext context)
     {
         var album = Album.Removed;
         RemoveAlbumCommand command = new(AlbumId.New, Actor.Author);
-        var time = album.Status.RemovedAt!.Value;
 
         album.Remove(command);
 
         album.DomainEvents.Count.ShouldBe(0);
-        album.Status.RemovedAt.ShouldBe(time);
+        album.IsRemoved.ShouldBeTrue();
     }
 
     [TestMethod]
@@ -647,7 +644,6 @@ public class AlbumTests(TestContext context)
         album.Restore(command);
 
         album.DomainEvents.Count.ShouldBe(0);
-        album.Status.RemovedAt.ShouldBeNull();
     }
 
     [TestMethod]
@@ -690,11 +686,7 @@ internal static class TestAlbum
 
         public UserId Author => album.GetValue<UserId>();
 
-        public AlbumStatus Status
-        {
-            get => album.GetValue<AlbumStatus>();
-            set => album.SetValue(value);
-        }
+        public bool IsRemoved => album.GetValue<bool>();
 
         public List<Image> Images
         {
@@ -724,7 +716,7 @@ internal static class TestAlbum
                 a.Cover = (Cover.Default);
                 a.SetValue(Actor.Author.Id);
                 a.SetValue(Subscribe.Default(a.Id));
-                a.SetValue(Collaborators.Default.Value);
+                a.SetValue(Collaborators.Default);
 
                 a.SetId(AlbumId.New);
 
@@ -736,9 +728,8 @@ internal static class TestAlbum
         {
             get
             {
-                var status = AlbumStatus.Removed(DateTime.UtcNow);
                 var a = Album.New;
-                a.Status = status;
+                a.SetValue(true);
 
                 return a;
             }
