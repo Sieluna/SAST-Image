@@ -5,9 +5,10 @@ using Domain.Shared.Converter;
 
 namespace Domain.UserAggregate.UserEntity;
 
-public sealed record class Password
+public readonly record struct Password
 {
-    private Password() { }
+    public const int HashLength = 32;
+    public const int SaltLength = 16;
 
     internal Password(byte[] hash, byte[] salt)
     {
@@ -24,7 +25,7 @@ public readonly record struct PasswordInput
     : IValueObject<PasswordInput, string>,
         IFactoryConstructor<PasswordInput, string>
 {
-    public const int MaxLength = 20;
+    public const int MaxLength = 32;
     public const int MinLength = 6;
 
     public string Value { get; }

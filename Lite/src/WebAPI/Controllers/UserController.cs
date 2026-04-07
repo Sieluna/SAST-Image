@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Application.UserServices.Queries;
-using Domain.UserAggregate.Commands;
+using Domain.UserAggregate.Commands.Profile;
 using Domain.UserAggregate.UserEntity;
 using Infrastructure.Shared;
 using Mediator;

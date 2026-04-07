@@ -135,6 +135,7 @@ internal class DomainDbContextEntityTypeConfigurations
 
         builder.Ignore(x => x.DomainEvents);
 
+        builder.HasIndex("_username").IsUnique();
         builder
             .Property<Username>("_username")
             .HasColumnName("username")
@@ -145,8 +146,6 @@ internal class DomainDbContextEntityTypeConfigurations
             .HasColumnName("refresh_token")
             .HasConversion(t => t.Value, v => new(v));
 
-        builder.HasIndex("_username").IsUnique(true);
-
         builder
             .Property<Roles>("_roles")
             .HasColumnName("roles")
@@ -155,12 +154,21 @@ internal class DomainDbContextEntityTypeConfigurations
                 new ValueComparer<Roles>((c1, c2) => c1.Equals(c2), c => c.GetHashCode())
             );
 
-        builder.OwnsOne<Password>(
+        builder.HasIndex("_githubLink").IsUnique();
+        builder
+            .Property<ExternalId?>("_githubLink")
+            .HasColumnName("github_link")
+            .HasConversion<long?>(
+                id => id.HasValue ? id.Value.Value : null,
+                id => id.HasValue ? new(id.Value) : null
+            );
+
+        builder.ComplexProperty<Password>(
             "_password",
             password =>
             {
                 password.Property(p => p.Hash).HasColumnName("password_hash").IsRequired();
-                password.Property(p => p.Salt).HasColumnName("password_salt").IsRequired();
+                password.Property(p => p.Hash).HasColumnName("password_hash").IsRequired();
             }
         );
     }

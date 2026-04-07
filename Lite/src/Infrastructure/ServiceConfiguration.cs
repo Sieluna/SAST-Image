@@ -1,4 +1,5 @@
 ﻿using System.Data.Common;
+using System.Security.Claims;
 using System.Text;
 using Application.AlbumServices;
 using Application.AlbumServices.Queries;
@@ -9,6 +10,7 @@ using Application.ImageServices.Queries;
 using Application.Shared;
 using Application.UserServices;
 using Application.UserServices.Queries;
+using AspNet.Security.OAuth.GitHub;
 using Domain;
 using Domain.AlbumAggregate;
 using Domain.AlbumAggregate.Services;
@@ -29,7 +31,9 @@ using Infrastructure.Shared.Storage;
 using Infrastructure.UserServices.Application;
 using Infrastructure.UserServices.Domain;
 using Mediator;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -65,7 +69,12 @@ public static class ServiceConfiguration
                         .UseNpgsql(services.GetRequiredService<DbConnection>())
                         .UseSnakeCaseNamingConvention();
                 }
-            );
+            )
+            .AddDistributedPostgresCache(options =>
+            {
+                options.CreateIfNotExists = true;
+                options.ConnectionString = configuration.GetConnectionString("Database");
+            });
 
         services
             .AddMediator(options =>
@@ -79,7 +88,6 @@ public static class ServiceConfiguration
             .AddScoped<IUnitOfWork, UnitOfWork>();
 
         services.Configure<StorageOptions>(configuration.GetRequiredSection("Storage"));
-        services.AddDistributedMemoryCache();
 
         return services;
     }
@@ -138,9 +146,9 @@ public static class ServiceConfiguration
     {
         services
             .AddScoped<IUserRepository, UserDomainRepository>()
-            .AddScoped<IUserRepository, UserDomainRepository>()
             .AddScoped<IUsernameUniquenessChecker, UsernameUniquenessChecker>()
-            .AddScoped<IRegistryCodeChecker, RegistryCodeChecker>();
+            .AddScoped<IRegistryCodeChecker, RegistryCodeChecker>()
+            .AddScoped<IIdentityUniquenessChecker, IdentityUniquenessChecker>();
 
         services
             .AddScoped<IUserModelRepository, UserModelRepository>()
@@ -151,7 +159,6 @@ public static class ServiceConfiguration
             >();
 
         services
-            .AddMemoryCache()
             .Configure<JwtAuthOptions>(configuration.GetRequiredSection("Auth"))
             .AddSingleton<IPasswordGenerator, PasswordGenerator>()
             .AddSingleton<IPasswordValidator, PasswordValidator>()
@@ -194,6 +201,57 @@ public static class ServiceConfiguration
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
+            .AddCookie(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                options =>
+                {
+                    options.Cookie.Name = ".Sastimg.External";
+                    options.ExpireTimeSpan = TimeSpan.FromSeconds(30);
+                    options.Cookie.MaxAge = TimeSpan.FromSeconds(30);
+                    options.SlidingExpiration = false;
+                }
+            )
+            .AddGitHub(options =>
+            {
+                options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.ClientId =
+                    configuration["Authentication:GitHub:ClientId"]
+                    ?? throw new NullReferenceException();
+                options.ClientSecret =
+                    configuration["Authentication:GitHub:ClientSecret"]
+                    ?? throw new NullReferenceException();
+                options.CallbackPath = "/api/account/oauth/github/callback";
+                options.Scope.Add("user:email");
+
+                options.Events.OnCreatingTicket += (OAuthCreatingTicketContext ctx) =>
+                {
+                    if (
+                        ctx.Identity is not { } identity
+                        || identity.FindFirst(ClaimTypes.NameIdentifier) is not { Value: { } id } c1
+                        || identity.FindFirst(ClaimTypes.Name) is not { Value: { } name } c2
+                        || identity.FindFirst(ClaimTypes.Email) is not { Value: { } email } c3
+                    )
+                        return Task.CompletedTask;
+
+                    identity.RemoveClaim(c1);
+                    identity.RemoveClaim(c2);
+                    identity.RemoveClaim(c3);
+                    identity.RemoveClaim(
+                        identity.FindFirst(GitHubAuthenticationConstants.Claims.Name)
+                    );
+                    identity.RemoveClaim(
+                        identity.FindFirst(GitHubAuthenticationConstants.Claims.Url)
+                    );
+
+                    identity.AddClaims([
+                        new Claim("id", id),
+                        new Claim("username", name),
+                        new Claim("email", email),
+                    ]);
+
+                    return Task.CompletedTask;
+                };
+            })
             .AddJwtBearer(options =>
             {
                 string secKey = jwtOptions.SecKey;
@@ -219,9 +277,17 @@ public static class ServiceConfiguration
                     policy.RequireAuthenticatedUser().RequireClaim("id").RequireClaim("username")
             )
             .AddPolicy(
+                AuthPolicies.OAuth,
+                policy =>
+                    policy
+                        .AddAuthenticationSchemes(GitHubAuthenticationDefaults.AuthenticationScheme)
+                        .RequireAuthenticatedUser()
+            )
+            .AddPolicy(
                 AuthPolicies.User,
                 policy =>
                     policy
+                        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
                         .RequireAuthenticatedUser()
                         .RequireClaim("id")
                         .RequireClaim("username")
@@ -231,6 +297,7 @@ public static class ServiceConfiguration
                 AuthPolicies.Admin,
                 policy =>
                     policy
+                        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
                         .RequireAuthenticatedUser()
                         .RequireClaim("id")
                         .RequireClaim("username")
@@ -243,6 +310,7 @@ public static class ServiceConfiguration
 
 public readonly struct AuthPolicies
 {
+    public const string OAuth = nameof(OAuth);
     public const string Auth = nameof(Auth);
     public const string User = nameof(Domain.UserAggregate.UserEntity.Role.User);
     public const string Admin = nameof(Domain.UserAggregate.UserEntity.Role.Admin);

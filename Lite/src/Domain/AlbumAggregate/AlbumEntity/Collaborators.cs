@@ -42,7 +42,7 @@ public readonly struct Collaborators
 
     public bool Equals(Collaborators other)
     {
-        return Value.SequenceEqual(other.Value);
+        return Value.SequenceEqual(other.Value); // TODO: optimize sorting and comparing.
     }
 
     public override bool Equals(object? obj)

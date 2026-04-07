@@ -93,5 +93,6 @@ public sealed class CategoryController(IMediator mediator) : ControllerBase
     //    var result = await mediator.Send(query, cancellationToken);
     //    return Ok(result);
     //}
+
     #endregion
 }

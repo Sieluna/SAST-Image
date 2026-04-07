@@ -5,6 +5,12 @@ using Domain.Entity;
 
 namespace Domain.UserAggregate.UserEntity;
 
+public enum Role
+{
+    User,
+    Admin,
+}
+
 [CollectionBuilder(typeof(RolesCollectionBuilder), nameof(RolesCollectionBuilder.Build))]
 public readonly struct Roles
     : IEnumerable<Role>,
@@ -39,7 +45,7 @@ public readonly struct Roles
 
     public bool Equals(Roles other)
     {
-        return Value.SequenceEqual(other.Value);
+        return Value.SequenceEqual(other.Value); // TODO: optimize sorting and comparing.
     }
 
     public override int GetHashCode()
@@ -50,6 +56,16 @@ public readonly struct Roles
     public IEnumerator<Role> GetEnumerator() => (Value as IEnumerable<Role>).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public static bool operator ==(Roles left, Roles right)
+    {
+        return left.Equals(right);
+    }
+
+    public static bool operator !=(Roles left, Roles right)
+    {
+        return !(left == right);
+    }
 }
 
 file sealed class RolesCollectionBuilder

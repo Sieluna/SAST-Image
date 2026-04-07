@@ -5,6 +5,7 @@ using System.Security.Cryptography;
 using Domain.Shared;
 using Domain.UserAggregate;
 using Domain.UserAggregate.Commands;
+using Domain.UserAggregate.Commands.Profile;
 using Domain.UserAggregate.Events;
 using Domain.UserAggregate.Exceptions;
 using Domain.UserAggregate.Services;
@@ -26,6 +27,7 @@ public sealed class UserTests(TestContext context)
         RegisterCommand command = new(
             Username.New(),
             Nickname.New(),
+            Email.New,
             PasswordInput.New(),
             RegistryCode.New
         );
@@ -41,7 +43,7 @@ public sealed class UserTests(TestContext context)
             .Setup(c => c.CheckAsync(command.Username, context.CancellationToken))
             .Returns(Task.CompletedTask);
         codeChecker
-            .Setup(c => c.CheckAsync(command.Username, command.Code, context.CancellationToken))
+            .Setup(c => c.CheckAsync(command.Email, command.Code, context.CancellationToken))
             .Returns(Task.CompletedTask);
         pwdGenerator
             .Setup(g => g.GenerateAsync(command.Password, context.CancellationToken))
@@ -73,7 +75,7 @@ public sealed class UserTests(TestContext context)
             Times.Once
         );
         codeChecker.Verify(
-            c => c.CheckAsync(command.Username, command.Code, context.CancellationToken),
+            c => c.CheckAsync(command.Email, command.Code, context.CancellationToken),
             Times.Once
         );
         pwdGenerator.Verify(
@@ -466,5 +468,13 @@ file static class JwtTokenTestHelper
     extension(JwtToken)
     {
         public static JwtToken New => new("access", RefreshToken.New(), 3600);
+    }
+}
+
+file static class EmailTestHelper
+{
+    extension(Email)
+    {
+        public static Email New => new("123456@example.com");
     }
 }

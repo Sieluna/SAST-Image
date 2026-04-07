@@ -1,26 +1,40 @@
 ﻿using Domain.Entity;
 using Domain.UserAggregate.Commands;
+using Domain.UserAggregate.Commands.OAuth.GitHub;
+using Domain.UserAggregate.Commands.Profile;
 using Domain.UserAggregate.Events;
 using Domain.UserAggregate.Exceptions;
 using Domain.UserAggregate.Services;
 
 namespace Domain.UserAggregate.UserEntity;
 
+/// <summary>
+/// Represents an authenticated user within the system.
+/// </summary>
+/// <remarks>
+/// The User class encapsulates user identity, authentication credentials, and profile-related actions.
+/// It supports both standard and external authentication flows, as well as operations for updating user profile
+/// information. Instances of this class are typically managed through repository and service abstractions.
+/// This class is sealed and cannot be inherited.
+/// </remarks>
 public sealed class User : EntityBase<UserId>
 {
+    [Obsolete("For ORM use only.", true)]
     private User()
         : base(default) { }
 
     private Username _username;
-    private Password _password = null!;
+    private Password _password;
     private RefreshToken _refreshToken;
+    private Email _email;
     private readonly Roles _roles = [];
 
-    private User(Username username, Password password)
+    private User(Username username, Password password, Email email)
         : base(UserId.GenerateNew())
     {
         _username = username;
         _password = password;
+        _email = email;
         _roles = [Role.User];
     }
 
@@ -36,12 +50,12 @@ public sealed class User : EntityBase<UserId>
     {
         await Task.WhenAll(
             usernameChecker.CheckAsync(command.Username, cancellationToken),
-            codeChecker.CheckAsync(command.Username, command.Code, cancellationToken)
+            codeChecker.CheckAsync(command.Email, command.Code, cancellationToken)
         );
 
         var password = await pwdGenerator.GenerateAsync(command.Password, cancellationToken);
 
-        User user = new(command.Username, password);
+        var user = new User(command.Username, password, command.Email);
 
         var token = jwtGenerator.Generate(user.Id, user._username, user._roles);
         user._refreshToken = token.RefreshToken;
@@ -97,6 +111,7 @@ public sealed class User : EntityBase<UserId>
         AddDomainEvent(new UsernameResetEvent(Id, _username));
     }
 
+    #region Profile
     public void UpdateNickname(UpdateNicknameCommand command)
     {
         AddDomainEvent(new NicknameUpdatedEvent(Id, command.Nickname));
@@ -116,4 +131,36 @@ public sealed class User : EntityBase<UserId>
     {
         AddDomainEvent(new HeaderUpdatedEvent(Id, command.Header));
     }
+
+    #endregion
+
+    #region GitHub OAuth
+
+    private ExternalId? _githubLink = null;
+
+    public JwtToken Login(GitHubLoginCommand _, IJwtTokenGenerator generator)
+    {
+        var token = generator.Generate(Id, _username, _roles);
+        _refreshToken = token.RefreshToken;
+        return token;
+    }
+
+    /// <summary>
+    /// Links the specified GitHub account to the current entity after verifying its uniqueness.
+    /// </summary>
+    /// <param name="command">The command containing the GitHub account identifier to link. Cannot be null.</param>
+    /// <param name="checker">The uniqueness checker used to ensure the GitHub account is not already linked. Cannot be null.</param>
+    /// <exception cref="IdentityDuplicateException">thrown if the GitHub account is already linked to another user.</exception>
+    public async Task LinkAsync(
+        GitHubLinkCommand command,
+        IIdentityUniquenessChecker checker,
+        CancellationToken cancellationToken
+    )
+    {
+        await checker.CheckAsync(command.GitHubId, cancellationToken);
+
+        _githubLink = command.GitHubId;
+    }
+
+    #endregion
 }

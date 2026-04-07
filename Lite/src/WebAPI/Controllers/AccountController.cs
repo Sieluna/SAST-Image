@@ -1,8 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Application.UserServices.Queries;
+using AspNet.Security.OAuth.GitHub;
+using Domain.Shared;
 using Domain.UserAggregate.Commands;
+using Domain.UserAggregate.Commands.OAuth.GitHub;
 using Domain.UserAggregate.UserEntity;
+using Infrastructure;
 using Mediator;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebAPI.Utilities;
@@ -16,6 +21,7 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
     public readonly record struct RegisterRequest(
         Username Username,
         Nickname Nickname,
+        Email Email,
         PasswordInput Password,
         RegistryCode Code
     );
@@ -29,11 +35,23 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
         RegisterCommand command = new(
             request.Username,
             request.Nickname,
+            request.Email,
             request.Password,
             request.Code
         );
         var result = await mediator.Send(command, cancellationToken);
         return Ok(result);
+    }
+
+    [HttpPost("register/code")]
+    public async Task<IActionResult> SendRegistryCode(
+        [FromQuery] [Required] Email email,
+        CancellationToken cancellationToken
+    )
+    {
+        SendRegistryCodeCommand command = new(email);
+        await mediator.Send(command, cancellationToken);
+        return NoContent();
     }
 
     public readonly record struct LoginRequest(Username Username, PasswordInput Password);
@@ -103,4 +121,53 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
         var result = await mediator.Send(query, cancellationToken);
         return Ok(!result.IsExist);
     }
+
+    #region GitHub OAuth
+
+    const string GitHubScheme = GitHubAuthenticationDefaults.AuthenticationScheme;
+
+    [HttpGet($"oauth/{GitHubScheme}")]
+    public async Task<IActionResult> GitHubOAuth()
+    {
+        var props = new AuthenticationProperties()
+        {
+            RedirectUri = Url.Action(nameof(GitHubOAuthRedirect)),
+        };
+        return Challenge(props, GitHubScheme);
+    }
+
+    [Authorize(AuthPolicies.OAuth)]
+    [HttpGet($"oauth/{GitHubScheme}/redirect")]
+    public async Task<IActionResult> GitHubOAuthRedirect(CancellationToken cancellationToken)
+    {
+        if (User.TryFetchId(out long id) is false)
+            return Unauthorized();
+
+        var command = new GitHubLoginCommand(new(id));
+        var token = await mediator.Send(command, cancellationToken);
+
+        return token is null ? NoContent() : Ok(token.Value);
+    }
+
+    [Authorize]
+    [HttpGet($"oauth/{GitHubScheme}/link")]
+    public async Task<IActionResult> GitHubOAuthLink(CancellationToken cancellationToken)
+    {
+        if (User.TryFetchId(out long userId) is false)
+            return Unauthorized();
+
+        var result = await HttpContext.AuthenticateAsync(GitHubScheme);
+        if (
+            result is not { Succeeded: true, Principal: { } user }
+            || user.TryFetchId(out long githubId) is false
+        )
+            return Unauthorized();
+
+        var command = new GitHubLinkCommand(new(userId), new(githubId));
+        await mediator.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    #endregion
 }

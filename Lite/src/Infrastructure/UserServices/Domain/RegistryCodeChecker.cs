@@ -8,13 +8,16 @@ namespace Infrastructure.UserServices.Domain;
 internal sealed class RegistryCodeChecker(IDistributedCache cache) : IRegistryCodeChecker
 {
     public async Task CheckAsync(
-        Username username,
+        Email email,
         RegistryCode code,
         CancellationToken cancellationToken
     )
     {
-        _ =
-            await cache.GetAsync(code.Value.ToString(), cancellationToken)
-            ?? throw new RegistryCodeException();
+        string? value = await cache.GetStringAsync(code.Value.ToString(), cancellationToken);
+
+        if (long.TryParse(value, out long stored) is false || stored != code.Value)
+        {
+            throw new RegistryCodeException();
+        }
     }
 }

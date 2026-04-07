@@ -2,7 +2,7 @@
 using Domain.UserAggregate.UserEntity;
 using Mediator;
 
-namespace Domain.UserAggregate.Commands;
+namespace Domain.UserAggregate.Commands.Profile;
 
 public sealed record class UpdateNicknameCommand(Nickname Nickname, Actor Actor) : ICommand { }
 

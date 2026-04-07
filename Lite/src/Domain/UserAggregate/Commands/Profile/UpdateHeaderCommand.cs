@@ -1,7 +1,7 @@
 ﻿using Domain.Shared;
 using Mediator;
 
-namespace Domain.UserAggregate.Commands;
+namespace Domain.UserAggregate.Commands.Profile;
 
 public sealed record UpdateHeaderCommand(IImageFile Header, Actor Actor) : ICommand { }
 
