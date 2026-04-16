@@ -1,4 +1,5 @@
-﻿using Domain.UserAggregate.UserEntity;
+﻿using Domain.UserAggregate.IdentityEntity;
+using Domain.UserAggregate.UserEntity;
 
 namespace Domain.UserAggregate;
 
@@ -8,7 +9,7 @@ internal interface IUserRepository
     public Task<User> GetAsync(UserId id, CancellationToken cancellationToken);
     public Task<User?> GetOrDefaultAsync(Username username, CancellationToken cancellationToken);
     public Task<User?> GetOrDefaultAsync(
-        ExternalId externalId,
+        IdentityId externalId,
         CancellationToken cancellationToken
     );
 }

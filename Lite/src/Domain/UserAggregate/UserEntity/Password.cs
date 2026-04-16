@@ -7,6 +7,9 @@ namespace Domain.UserAggregate.UserEntity;
 
 public readonly record struct Password
 {
+    [Obsolete("For ORM only", true)]
+    public Password() { }
+
     public const int HashLength = 32;
     public const int SaltLength = 16;
 

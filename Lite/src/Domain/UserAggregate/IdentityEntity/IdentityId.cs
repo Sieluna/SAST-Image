@@ -1,6 +1,6 @@
 ﻿using Domain.Entity;
 
-namespace Domain.UserAggregate.UserEntity;
+namespace Domain.UserAggregate.IdentityEntity;
 
 /// <summary>
 /// Represents a strongly-typed external (OAuth) identifier value object.
@@ -12,4 +12,12 @@ namespace Domain.UserAggregate.UserEntity;
 /// <br/>
 /// Currently, this struct is defined with a <seealso cref="long"/> value for <strong>GitHub</strong>.
 /// </remarks>
-public readonly record struct ExternalId(long Value) : IValueObject<ExternalId, long>;
+public readonly record struct IdentityId(long Value)
+    : ITypedId<IdentityId, long, long>,
+        IValueObject<IdentityId, long>
+{
+    public static IdentityId GenerateNew(long value)
+    {
+        return new IdentityId(value);
+    }
+}

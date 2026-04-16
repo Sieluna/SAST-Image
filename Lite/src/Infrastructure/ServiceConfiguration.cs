@@ -51,14 +51,17 @@ public static class ServiceConfiguration
     )
     {
         services
-            .AddScoped<DbConnection>(_ => new NpgsqlConnection(
+            .AddSingleton<DbConnection>(_ => new NpgsqlConnection(
                 configuration.GetConnectionString("Database")
             ))
             .AddDbContext<DomainDbContext>(
                 (services, options) =>
                 {
                     options
-                        .UseNpgsql(services.GetRequiredService<DbConnection>())
+                        .UseNpgsql(
+                            services.GetRequiredService<DbConnection>(),
+                            b => b.MigrationsAssembly(InfrastructureAssembly.Assembly)
+                        )
                         .UseSnakeCaseNamingConvention();
                 }
             )
@@ -66,7 +69,10 @@ public static class ServiceConfiguration
                 (services, options) =>
                 {
                     options
-                        .UseNpgsql(services.GetRequiredService<DbConnection>())
+                        .UseNpgsql(
+                            services.GetRequiredService<DbConnection>(),
+                            b => b.MigrationsAssembly(InfrastructureAssembly.Assembly)
+                        )
                         .UseSnakeCaseNamingConvention();
                 }
             )
@@ -81,7 +87,11 @@ public static class ServiceConfiguration
             {
                 options.NotificationPublisherType = typeof(ForeachAwaitPublisher);
                 options.Assemblies = [DomainAssembly.Assembly];
-                options.PipelineBehaviors = [(typeof(UnitOfWorkPostProcessor<,>))];
+                options.PipelineBehaviors =
+                [
+                    typeof(UnitOfWorkPostProcessor<,>),
+                    typeof(CommandValidator<,>),
+                ];
                 options.ServiceLifetime = ServiceLifetime.Scoped;
             })
             .AddScoped<IDomainEventPublisher, EventPublisher>()

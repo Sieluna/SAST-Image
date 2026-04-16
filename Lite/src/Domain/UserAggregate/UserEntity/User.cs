@@ -4,6 +4,7 @@ using Domain.UserAggregate.Commands.OAuth.GitHub;
 using Domain.UserAggregate.Commands.Profile;
 using Domain.UserAggregate.Events;
 using Domain.UserAggregate.Exceptions;
+using Domain.UserAggregate.IdentityEntity;
 using Domain.UserAggregate.Services;
 
 namespace Domain.UserAggregate.UserEntity;
@@ -12,10 +13,10 @@ namespace Domain.UserAggregate.UserEntity;
 /// Represents an authenticated user within the system.
 /// </summary>
 /// <remarks>
-/// The User class encapsulates user identity, authentication credentials, and profile-related actions.
-/// It supports both standard and external authentication flows, as well as operations for updating user profile
-/// information. Instances of this class are typically managed through repository and service abstractions.
-/// This class is sealed and cannot be inherited.
+/// The User class encapsulates user identity, authentication credentials, and profile-related actions. It supports both
+/// standard and external authentication flows, as well as operations for updating user profile information. Instances
+/// of this class are typically managed through repository and service abstractions. This class is sealed and cannot be
+/// inherited.
 /// </remarks>
 public sealed class User : EntityBase<UserId>
 {
@@ -28,6 +29,7 @@ public sealed class User : EntityBase<UserId>
     private RefreshToken _refreshToken;
     private Email _email;
     private readonly Roles _roles = [];
+    private readonly List<Identity> _identities = [];
 
     private User(Username username, Password password, Email email)
         : base(UserId.GenerateNew())
@@ -136,8 +138,6 @@ public sealed class User : EntityBase<UserId>
 
     #region GitHub OAuth
 
-    private ExternalId? _githubLink = null;
-
     public JwtToken Login(GitHubLoginCommand _, IJwtTokenGenerator generator)
     {
         var token = generator.Generate(Id, _username, _roles);
@@ -149,17 +149,21 @@ public sealed class User : EntityBase<UserId>
     /// Links the specified GitHub account to the current entity after verifying its uniqueness.
     /// </summary>
     /// <param name="command">The command containing the GitHub account identifier to link. Cannot be null.</param>
-    /// <param name="checker">The uniqueness checker used to ensure the GitHub account is not already linked. Cannot be null.</param>
-    /// <exception cref="IdentityDuplicateException">thrown if the GitHub account is already linked to another user.</exception>
+    /// <param name="checker">
+    /// The uniqueness checker used to ensure the GitHub account is not already linked. Cannot be null.
+    /// </param>
+    /// <exception cref="IdentityDuplicateException">
+    /// thrown if the GitHub account is already linked to another user.
+    /// </exception>
     public async Task LinkAsync(
         GitHubLinkCommand command,
         IIdentityUniquenessChecker checker,
         CancellationToken cancellationToken
     )
     {
-        await checker.CheckAsync(command.GitHubId, cancellationToken);
+        await checker.CheckAsync(command.GitHubId, IdentityProvider.GitHub, cancellationToken);
 
-        _githubLink = command.GitHubId;
+        _identities.LinkGitHub(command.GitHubId);
     }
 
     #endregion

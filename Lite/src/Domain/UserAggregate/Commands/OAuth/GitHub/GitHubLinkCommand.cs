@@ -1,10 +1,11 @@
-﻿using Domain.UserAggregate.Services;
+﻿using Domain.UserAggregate.IdentityEntity;
+using Domain.UserAggregate.Services;
 using Domain.UserAggregate.UserEntity;
 using Mediator;
 
 namespace Domain.UserAggregate.Commands.OAuth.GitHub;
 
-public sealed record class GitHubLinkCommand(UserId UserId, ExternalId GitHubId) : ICommand;
+public sealed record class GitHubLinkCommand(UserId UserId, IdentityId GitHubId) : ICommand;
 
 internal sealed class GitHubLinkCommandHandler(
     IUserRepository repository,

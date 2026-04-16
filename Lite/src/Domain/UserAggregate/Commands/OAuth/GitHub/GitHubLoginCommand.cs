@@ -1,4 +1,5 @@
-﻿using Domain.UserAggregate.Services;
+﻿using Domain.UserAggregate.IdentityEntity;
+using Domain.UserAggregate.Services;
 using Domain.UserAggregate.UserEntity;
 using Mediator;
 
@@ -11,7 +12,7 @@ namespace Domain.UserAggregate.Commands.OAuth.GitHub;
 /// This command will return null when user corresponding to the id doesn't exist.
 /// </remarks>
 /// <param name="GitHubLogin">The external identifier associated with the user's GitHub account. Cannot be null.</param>
-public sealed record GitHubLoginCommand(ExternalId GitHubLogin) : ICommand<JwtToken?>;
+public sealed record GitHubLoginCommand(IdentityId GitHubLogin) : ICommand<JwtToken?>;
 
 internal sealed class GitHubLoginCommandHandler(
     IUserRepository repository,

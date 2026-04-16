@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using Domain.Entity;
 
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel)]
+
 namespace Domain.Tests;
 
 internal static class RandomHelper

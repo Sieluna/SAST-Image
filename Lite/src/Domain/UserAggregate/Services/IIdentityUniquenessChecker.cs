@@ -1,8 +1,12 @@
-﻿using Domain.UserAggregate.UserEntity;
+﻿using Domain.UserAggregate.IdentityEntity;
 
 namespace Domain.UserAggregate.Services;
 
 public interface IIdentityUniquenessChecker
 {
-    public Task CheckAsync(ExternalId identityId, CancellationToken cancellationToken);
+    public Task CheckAsync(
+        IdentityId identityId,
+        IdentityProvider provider,
+        CancellationToken cancellationToken
+    );
 }

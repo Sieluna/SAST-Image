@@ -8,4 +8,5 @@
   <Project Path="src/Infrastructure/Infrastructure.csproj" />
   <Project Path="src/WebAPI/WebAPI.csproj" />
   <Project Path="test/Domain.Tests/Domain.Tests.csproj" />
+  <Project Path="test/Infrastructure.Tests/Infrastructure.Tests.csproj" Id="886a5879-c321-4518-a0ff-85913e407d2b" />
 </Solution>

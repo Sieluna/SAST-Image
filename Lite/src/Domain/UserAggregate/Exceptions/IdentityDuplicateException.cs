@@ -1,9 +1,9 @@
 ﻿using Domain.Extensions;
-using Domain.UserAggregate.UserEntity;
+using Domain.UserAggregate.IdentityEntity;
 
 namespace Domain.UserAggregate.Exceptions;
 
-public sealed class IdentityDuplicateException(ExternalId id) : DomainException
+public sealed class IdentityDuplicateException(IdentityId id) : DomainException
 {
-    public ExternalId Id { get; } = id;
+    public IdentityId Id { get; } = id;
 }

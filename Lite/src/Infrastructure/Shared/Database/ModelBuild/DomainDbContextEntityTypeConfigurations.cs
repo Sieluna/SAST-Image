@@ -1,6 +1,7 @@
 ﻿using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.ImageEntity;
 using Domain.CategoryAggregate.CategoryEntity;
+using Domain.UserAggregate.IdentityEntity;
 using Domain.UserAggregate.UserEntity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -142,6 +143,11 @@ internal class DomainDbContextEntityTypeConfigurations
             .HasConversion(t => t.Value, v => new(v));
 
         builder
+            .Property<Email>("_email")
+            .HasColumnName("email")
+            .HasConversion(t => t.Value, v => new(v));
+
+        builder
             .Property<RefreshToken>("_refreshToken")
             .HasColumnName("refresh_token")
             .HasConversion(t => t.Value, v => new(v));
@@ -154,21 +160,27 @@ internal class DomainDbContextEntityTypeConfigurations
                 new ValueComparer<Roles>((c1, c2) => c1.Equals(c2), c => c.GetHashCode())
             );
 
-        builder.HasIndex("_githubLink").IsUnique();
-        builder
-            .Property<ExternalId?>("_githubLink")
-            .HasColumnName("github_link")
-            .HasConversion<long?>(
-                id => id.HasValue ? id.Value.Value : null,
-                id => id.HasValue ? new(id.Value) : null
-            );
-
         builder.ComplexProperty<Password>(
             "_password",
             password =>
             {
                 password.Property(p => p.Hash).HasColumnName("password_hash").IsRequired();
                 password.Property(p => p.Hash).HasColumnName("password_hash").IsRequired();
+            }
+        );
+
+        builder.OwnsMany<Identity>(
+            "_identities",
+            entity =>
+            {
+                entity.WithOwner().HasForeignKey("user_id");
+                entity.HasKey(x => x.Id);
+                entity.Property(x => x.Id).HasColumnName("id");
+                entity.Property<IdentityProvider>("_provider").HasColumnName("provider");
+                entity
+                    .Property<IdentityId>("_providerUserId")
+                    .HasColumnName("provider_user_id")
+                    .HasConversion(x => x.Value, x => new(x));
             }
         );
     }

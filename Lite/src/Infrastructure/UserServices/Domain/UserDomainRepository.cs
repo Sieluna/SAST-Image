@@ -1,5 +1,6 @@
 ﻿using Domain.Shared;
 using Domain.UserAggregate;
+using Domain.UserAggregate.IdentityEntity;
 using Domain.UserAggregate.UserEntity;
 using Infrastructure.Shared.Database;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +22,7 @@ internal sealed class UserDomainRepository(DomainDbContext context) : IUserRepos
             ?? throw new EntityNotFoundException();
     }
 
-    public Task<User?> GetOrDefaultAsync(ExternalId id, CancellationToken cancellationToken)
+    public Task<User?> GetOrDefaultAsync(IdentityId id, CancellationToken cancellationToken)
     {
         return _context
             .Users.FromSql($"SELECT * FROM domain.users WHERE external_id = {id.Value}")
