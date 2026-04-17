@@ -5,7 +5,7 @@ namespace Domain.UserAggregate.IdentityEntity;
 
 public sealed class Identity : EntityBase<Guid>
 {
-    [Obsolete("For ORM use only.", true)]
+    [Obsolete("For ORM", true)]
     private Identity()
         : base(default) { }
 

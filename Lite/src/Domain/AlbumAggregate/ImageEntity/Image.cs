@@ -9,6 +9,7 @@ namespace Domain.AlbumAggregate.ImageEntity;
 
 internal sealed class Image : EntityBase<ImageId>
 {
+    [Obsolete("For ORM", true)]
     private Image()
         : base(default) { }
 

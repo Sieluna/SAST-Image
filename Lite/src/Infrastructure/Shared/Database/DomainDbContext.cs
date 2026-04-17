@@ -24,4 +24,11 @@ internal sealed class DomainDbContext(DbContextOptions<DomainDbContext> options)
         modelBuilder.ApplyConfiguration<Category>(configuration);
         modelBuilder.ApplyConfiguration<User>(configuration);
     }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+
+        configurationBuilder.UseDefaultMapping();
+    }
 }

@@ -14,7 +14,7 @@ public readonly struct AlbumTags
 
     internal AlbumTags(string[] array) => Value = array;
 
-    public string[] Value { get; } = [];
+    public string[] Value { get; init; } = [];
 
     public static bool TryCreateNew(string[] input, [NotNullWhen(true)] out AlbumTags entity)
     {

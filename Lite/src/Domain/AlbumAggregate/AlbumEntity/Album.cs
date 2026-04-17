@@ -12,6 +12,7 @@ namespace Domain.AlbumAggregate.AlbumEntity;
 
 public sealed class Album : EntityBase<AlbumId>
 {
+    [Obsolete("For ORM", true)]
     private Album()
         : base(default) { }
 

@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure.Shared.Database.ModelBuild;
 
-internal class DomainDbContextEntityTypeConfigurations
+internal sealed class DomainDbContextEntityTypeConfigurations
     : IEntityTypeConfiguration<Album>,
         IEntityTypeConfiguration<User>,
         IEntityTypeConfiguration<Category>
@@ -18,27 +18,17 @@ internal class DomainDbContextEntityTypeConfigurations
     public void Configure(EntityTypeBuilder<Album> builder)
     {
         builder.ToTable("albums");
-        builder.HasKey(x => x.Id);
-        builder.Property(x => x.Id).HasConversion(x => x.Value, x => new(x));
-
         builder.Ignore(album => album.DomainEvents);
 
-        builder
-            .Property<AccessLevel>("_accessLevel")
-            .HasColumnName("access_level")
-            .HasConversion(a => a.Value, v => new(v));
+        builder.HasKey(x => x.Id);
 
-        builder.Property<bool>("_removed").HasColumnName("removed");
-
+        builder.Field<AccessLevel>("_accessLevel", "access_level");
+        builder.Field<bool>("_removed", "removed");
+        builder.Field<UserId>("_author", "author_id");
         builder.HasOne<User>().WithMany().HasForeignKey("_author");
-        builder
-            .Property<UserId>("_author")
-            .HasColumnName("author_id")
-            .HasConversion(u => u.Value, v => new(v));
 
         builder
-            .Property<Collaborators>("_collaborators")
-            .HasColumnName("collaborators")
+            .Field<Collaborators>("_collaborators", "collaborators")
             .HasConversion(
                 new ValueConverter<Collaborators, long[]>(
                     c => Array.ConvertAll(c.Value, id => id.Value),
@@ -69,8 +59,8 @@ internal class DomainDbContextEntityTypeConfigurations
                 entity.HasOne<User>().WithMany().HasForeignKey(e => e.User);
                 entity.HasOne<Album>().WithMany().HasForeignKey(e => e.Album);
 
-                entity.Property(e => e.User).HasConversion(u => u.Value, v => new(v));
-                entity.Property(e => e.Album).HasConversion(a => a.Value, v => new(v));
+                entity.Property(e => e.User);
+                entity.Property(e => e.Album);
 
                 entity.HasKey(x => new { x.User, x.Album });
                 entity.WithOwner().HasForeignKey(e => e.Album);
@@ -84,24 +74,17 @@ internal class DomainDbContextEntityTypeConfigurations
             image =>
             {
                 image.HasKey(x => x.Id);
-                image
-                    .Property(x => x.Id)
-                    .HasColumnName("id")
-                    .HasConversion(x => x.Value, x => new(x));
 
                 image.HasOne<User>().WithMany().HasForeignKey("_uploader");
 
-                image
-                    .Property<UserId>("_uploader")
-                    .HasColumnName("uploader_id")
-                    .HasConversion(u => u.Value, v => new(v));
+                image.Field<UserId>("_uploader", "uploader_id");
 
                 image.OwnsOne<ImageStatus>(
                     "_status",
                     image =>
                     {
-                        image.Property(s => s.Value).HasColumnName("status");
-                        image.Property(s => s.RemovedAt).HasColumnName("removed_at");
+                        image.Property(s => s.Value);
+                        image.Property(s => s.RemovedAt);
                     }
                 );
 
@@ -117,9 +100,6 @@ internal class DomainDbContextEntityTypeConfigurations
                         entity.HasOne<User>().WithMany().HasForeignKey(like => like.User);
                         entity.HasOne<Image>().WithMany().HasForeignKey(like => like.Image);
 
-                        entity.Property(e => e.User).HasConversion(u => u.Value, v => new(v));
-                        entity.Property(e => e.Image).HasConversion(i => i.Value, v => new(v));
-
                         entity.WithOwner().HasForeignKey(like => like.Image);
                         entity.ToTable("likes");
                     }
@@ -132,29 +112,16 @@ internal class DomainDbContextEntityTypeConfigurations
     {
         builder.ToTable("users");
         builder.HasKey(x => x.Id);
-        builder.Property<UserId>("Id").HasColumnName("id").HasConversion(t => t.Value, v => new(v));
 
         builder.Ignore(x => x.DomainEvents);
 
         builder.HasIndex("_username").IsUnique();
-        builder
-            .Property<Username>("_username")
-            .HasColumnName("username")
-            .HasConversion(t => t.Value, v => new(v));
+        builder.Field<Username>("_username", "username");
+        builder.Field<Email>("_email", "email");
+        builder.Field<RefreshToken>("_refreshToken", "refresh_token");
 
         builder
-            .Property<Email>("_email")
-            .HasColumnName("email")
-            .HasConversion(t => t.Value, v => new(v));
-
-        builder
-            .Property<RefreshToken>("_refreshToken")
-            .HasColumnName("refresh_token")
-            .HasConversion(t => t.Value, v => new(v));
-
-        builder
-            .Property<Roles>("_roles")
-            .HasColumnName("roles")
+            .Field<Roles>("_roles", "roles")
             .HasConversion(
                 new ValueConverter<Roles, Role[]>(c => c.Value, values => new(values)),
                 new ValueComparer<Roles>((c1, c2) => c1.Equals(c2), c => c.GetHashCode())
@@ -165,7 +132,7 @@ internal class DomainDbContextEntityTypeConfigurations
             password =>
             {
                 password.Property(p => p.Hash).HasColumnName("password_hash").IsRequired();
-                password.Property(p => p.Hash).HasColumnName("password_hash").IsRequired();
+                password.Property(p => p.Salt).HasColumnName("password_salt").IsRequired();
             }
         );
 
@@ -173,14 +140,11 @@ internal class DomainDbContextEntityTypeConfigurations
             "_identities",
             entity =>
             {
+                entity.ToTable("identities");
                 entity.WithOwner().HasForeignKey("user_id");
                 entity.HasKey(x => x.Id);
-                entity.Property(x => x.Id).HasColumnName("id");
-                entity.Property<IdentityProvider>("_provider").HasColumnName("provider");
-                entity
-                    .Property<IdentityId>("_providerUserId")
-                    .HasColumnName("provider_user_id")
-                    .HasConversion(x => x.Value, x => new(x));
+                entity.Field<IdentityProvider>("_provider", "provider");
+                entity.Field<IdentityId>("_providerUserId", "provider_user_id");
             }
         );
     }
@@ -189,16 +153,8 @@ internal class DomainDbContextEntityTypeConfigurations
     {
         builder.ToTable("categories");
         builder.HasKey(x => x.Id);
-        builder
-            .Property<CategoryId>("Id")
-            .HasColumnName("id")
-            .HasConversion(t => t.Value, v => new(v));
-
         builder.Ignore(x => x.DomainEvents);
 
-        builder
-            .Property<CategoryName>("_name")
-            .HasColumnName("name")
-            .HasConversion(t => t.Value, v => new(v));
+        builder.Field<CategoryName>("_name", "name");
     }
 }

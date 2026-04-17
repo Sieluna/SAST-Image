@@ -21,9 +21,6 @@ public sealed class Verify
             .CreateTablesAsync(context.CancellationToken);
     }
 
-    [TestMethod]
-    public async Task VerifyDatabase() { }
-
     //[ClassCleanup]
     //public static async Task ClassCleanup(TestContext context)
     //{

@@ -5,19 +5,12 @@ using Domain.Shared.Converter;
 namespace Domain.AlbumAggregate.AlbumEntity;
 
 [OpenJsonConverter<AlbumDescription, string>]
-public readonly record struct AlbumDescription
+public readonly record struct AlbumDescription(string Value)
     : IValueObject<AlbumDescription, string>,
         IFactoryConstructor<AlbumDescription, string>
 {
     public const int MinLength = 3;
     public const int MaxLength = 60;
-
-    public readonly string Value { get; }
-
-    internal AlbumDescription(string value)
-    {
-        Value = value;
-    }
 
     public static bool TryCreateNew(
         string value,

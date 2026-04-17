@@ -17,7 +17,7 @@ public readonly struct Roles
         IValueObject<Roles, Role[]>,
         IFactoryConstructor<Roles, Role[]>
 {
-    public Role[] Value { get; }
+    public Role[] Value { get; init; }
 
     internal Roles(Role[] value) => Value = value;
 

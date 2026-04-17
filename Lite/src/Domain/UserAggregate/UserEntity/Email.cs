@@ -5,13 +5,10 @@ using Domain.Shared.Converter;
 namespace Domain.UserAggregate.UserEntity;
 
 [OpenJsonConverter<Email, string>]
-public readonly record struct Email
+public readonly record struct Email(string Value)
     : IValueObject<Email, string>,
         IFactoryConstructor<Email, string>
 {
-    internal Email(string value) => Value = value;
-
-    public string Value { get; } = string.Empty;
     public bool IsSet => Value != string.Empty;
 
     public static bool TryCreateNew(string input, [NotNullWhen(true)] out Email newObject)

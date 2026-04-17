@@ -19,7 +19,7 @@ public readonly struct Collaborators
 {
     public const int MaxCount = 32;
 
-    public UserId[] Value { get; }
+    public UserId[] Value { get; init; }
 
     internal Collaborators(UserId[] array) => Value = array;
 

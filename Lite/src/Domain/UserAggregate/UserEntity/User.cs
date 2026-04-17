@@ -20,7 +20,7 @@ namespace Domain.UserAggregate.UserEntity;
 /// </remarks>
 public sealed class User : EntityBase<UserId>
 {
-    [Obsolete("For ORM use only.", true)]
+    [Obsolete("For ORM", true)]
     private User()
         : base(default) { }
 

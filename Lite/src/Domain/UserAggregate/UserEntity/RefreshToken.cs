@@ -7,13 +7,11 @@ using Domain.Shared.Converter;
 namespace Domain.UserAggregate.UserEntity;
 
 [OpenJsonConverter<RefreshToken, string>]
-public readonly record struct RefreshToken
+public readonly record struct RefreshToken(string Value)
     : IValueObject<RefreshToken, string>,
         IFactoryConstructor<RefreshToken, string>
 {
     public const int ByteLength = 32;
-
-    public string Value { get; }
 
     internal UserId Id
     {
@@ -26,11 +24,6 @@ public readonly record struct RefreshToken
 
             return new(id);
         }
-    }
-
-    internal RefreshToken(string value)
-    {
-        Value = value;
     }
 
     public static bool TryCreateNew(string input, [NotNullWhen(true)] out RefreshToken newObject)

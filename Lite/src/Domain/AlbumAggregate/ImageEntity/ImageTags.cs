@@ -14,7 +14,7 @@ public readonly struct ImageTags
 
     internal ImageTags(string[] array) => Value = array;
 
-    public string[] Value { get; } = [];
+    public string[] Value { get; init; } = [];
 
     public static bool TryCreateNew(string[] input, [NotNullWhen(true)] out ImageTags entity)
     {

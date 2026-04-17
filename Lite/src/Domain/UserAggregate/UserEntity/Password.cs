@@ -24,19 +24,12 @@ public readonly record struct Password
 }
 
 [OpenJsonConverter<PasswordInput, string>]
-public readonly record struct PasswordInput
+public readonly record struct PasswordInput(string Value)
     : IValueObject<PasswordInput, string>,
         IFactoryConstructor<PasswordInput, string>
 {
     public const int MaxLength = 32;
     public const int MinLength = 6;
-
-    public string Value { get; }
-
-    internal PasswordInput(string value)
-    {
-        Value = value;
-    }
 
     public static bool TryCreateNew(string input, [NotNullWhen(true)] out PasswordInput newObject)
     {
