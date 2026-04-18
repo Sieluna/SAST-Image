@@ -5,14 +5,15 @@ using Domain.Shared.Converter;
 namespace Domain.AlbumAggregate.ImageEntity;
 
 [OpenJsonConverter<ImageTags, string[]>]
-public sealed class ImageTags
+public sealed class ImageTags()
     : ValueObjects<ImageTags, string>,
         IFactoryConstructor<ImageTags, string[]>
 {
     public const int MaxCount = 10;
     public const int MaxLength = 12;
 
-    internal ImageTags(params string[] array) => Value = array;
+    internal ImageTags(params string[] array)
+        : this() => Value = array;
 
     public static bool TryCreateNew(string[] input, [NotNullWhen(true)] out ImageTags? entity)
     {

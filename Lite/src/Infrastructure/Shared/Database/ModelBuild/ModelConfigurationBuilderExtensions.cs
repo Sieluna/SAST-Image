@@ -5,6 +5,7 @@ using Domain.Entity;
 using Domain.UserAggregate.IdentityEntity;
 using Domain.UserAggregate.UserEntity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -23,6 +24,11 @@ internal static class ModelConfigurationBuilderExtensions
             builder.MapValueObject<Username, string>();
             builder.MapValueObject<Email, string>();
 
+            builder.MapValueObjects<Roles, Role>();
+            builder.MapValueObjects<Collaborators, UserId>();
+            //builder.MapValueObjects<ImageTags, string>();
+            //builder.MapValueObjects<AlbumTags, string>();
+
             builder.MapTypedId<UserId>();
             builder.MapTypedId<ImageId>();
             builder.MapTypedId<AlbumId>();
@@ -36,6 +42,15 @@ internal static class ModelConfigurationBuilderExtensions
             return builder
                 .DefaultTypeMapping<TObject>()
                 .HasConversion<ValueObjectConverter<TObject, TValue>>();
+        }
+
+        private TypeMappingConfigurationBuilder<TObject> MapValueObjects<TObject, TValue>()
+            where TObject : ValueObjects<TObject, TValue>, new()
+        {
+            builder.Properties<TObject>().HaveConversion<ValueObjectsConverter<TObject, TValue>>();
+            return builder
+                .DefaultTypeMapping<TObject>()
+                .HasConversion<ValueObjectsConverter<TObject, TValue>>();
         }
 
         private TypeMappingConfigurationBuilder<TId> MapTypedId<TId, TValue>()
@@ -57,6 +72,17 @@ internal static class ModelConfigurationBuilderExtensions
 file sealed class ValueObjectConverter<TObject, TValue>()
     : ValueConverter<TObject, TValue>(id => id.Value, value => new() { Value = value })
     where TObject : IValueObject<TObject, TValue>, new() { }
+
+file sealed class ValueObjectsConverter<TObject, TValue>()
+    : ValueConverter<TObject, TValue[]>(obj => obj.Value, value => new() { Value = value })
+    where TObject : ValueObjects<TObject, TValue>, new() { }
+
+file sealed class ValueObjectsComparer<TObject, TValue>()
+    : ValueComparer<TObject>(
+        (c1, c2) => EqualityComparer<TObject>.Default.Equals(c1, c2),
+        c => c.GetHashCode()
+    )
+    where TObject : ValueObjects<TObject, TValue>, new() { }
 
 file sealed class TypedIdConverter<TId, TValue>()
     : ValueConverter<TId, TValue>(id => id.Value, value => new() { Value = value })

@@ -17,6 +17,7 @@ public abstract class ValueObjects<TObject, TValue>
         init => _value = value;
     }
     public int Count => Value.Length;
+    public bool IsEmpty => Value.Length == 0;
     public TValue this[int index] => Value[index];
 
     /// <summary>
@@ -77,5 +78,14 @@ public abstract class ValueObjects<TObject, TValue>
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();
+    }
+}
+
+public static class ValueObjectsExtensions
+{
+    extension<TObject>(TObject)
+        where TObject : IValueObjectsBase, new()
+    {
+        public static TObject Empty => new();
     }
 }

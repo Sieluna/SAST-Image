@@ -5,14 +5,15 @@ using Domain.Shared.Converter;
 namespace Domain.AlbumAggregate.AlbumEntity;
 
 [OpenJsonConverter<AlbumTags, string[]>]
-public sealed class AlbumTags
+public sealed class AlbumTags()
     : ValueObjects<AlbumTags, string>,
         IFactoryConstructor<AlbumTags, string[]>
 {
     public const int MaxCount = 10;
     public const int MaxLength = 12;
 
-    internal AlbumTags(params string[] array) => Value = array;
+    internal AlbumTags(params string[] array)
+        : this() => Value = array;
 
     public static bool TryCreateNew(string[] input, [NotNullWhen(true)] out AlbumTags? entity)
     {

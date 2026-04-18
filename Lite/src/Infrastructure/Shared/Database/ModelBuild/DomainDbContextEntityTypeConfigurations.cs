@@ -4,9 +4,7 @@ using Domain.CategoryAggregate.CategoryEntity;
 using Domain.UserAggregate.IdentityEntity;
 using Domain.UserAggregate.UserEntity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure.Shared.Database.ModelBuild;
 
@@ -25,20 +23,8 @@ internal sealed class DomainDbContextEntityTypeConfigurations
         builder.Field<AccessLevel>("_accessLevel", "access_level");
         builder.Field<bool>("_removed", "removed");
         builder.Field<UserId>("_author", "author_id");
+        builder.Field<Collaborators>("_collaborators", "collaborators");
         builder.HasOne<User>().WithMany().HasForeignKey("_author");
-
-        builder
-            .Field<Collaborators>("_collaborators", "collaborators")
-            .HasConversion(
-                new ValueConverter<Collaborators, long[]>(
-                    c => Array.ConvertAll(c.Value, id => id.Value),
-                    values => new(Array.ConvertAll(values, value => new UserId(value)))
-                ),
-                new ValueComparer<Collaborators>(
-                    (c1, c2) => EqualityComparer<Collaborators>.Default.Equals(c1, c2),
-                    c => c.GetHashCode()
-                )
-            );
 
         builder.OwnsOne<Cover>(
             "_cover",
@@ -122,13 +108,7 @@ internal sealed class DomainDbContextEntityTypeConfigurations
         builder.Field<Username>("_username", "username");
         builder.Field<Email>("_email", "email");
         builder.Field<RefreshToken>("_refreshToken", "refresh_token");
-
-        builder
-            .Field<Roles>("_roles", "roles")
-            .HasConversion(
-                new ValueConverter<Roles, Role[]>(c => c.Value, values => new(values)),
-                new ValueComparer<Roles>((c1, c2) => c1.Equals(c2), c => c.GetHashCode())
-            );
+        builder.Field<Roles>("_roles", "roles");
 
         builder.ComplexProperty<Password>(
             "_password",

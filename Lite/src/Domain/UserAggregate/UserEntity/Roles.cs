@@ -10,9 +10,10 @@ public enum Role : byte
     Admin = User << 1,
 }
 
-public sealed class Roles : ValueObjects<Roles, Role>, IFactoryConstructor<Roles, Role[]>
+public sealed class Roles() : ValueObjects<Roles, Role>, IFactoryConstructor<Roles, Role[]>
 {
-    internal Roles(params Role[] roles) => Value = roles;
+    internal Roles(params Role[] roles)
+        : this() => Value = roles;
 
     public static bool TryCreateNew(
         Role[] input,

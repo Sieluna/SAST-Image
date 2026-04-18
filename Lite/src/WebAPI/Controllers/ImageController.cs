@@ -4,6 +4,7 @@ using Application.ImageServices.Queries;
 using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.Commands;
 using Domain.AlbumAggregate.ImageEntity;
+using Domain.Entity;
 using Infrastructure.Shared;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
@@ -35,7 +36,7 @@ public class ImageController(IMediator mediator) : ControllerBase
         AddImageCommand command = new(
             albumId,
             title.Bind<ImageTitle>(),
-            tags is null ? default : tags.Bind<ImageTags, string[]>(),
+            tags is null ? ImageTags.Empty : tags.Bind<ImageTags, string[]>(),
             file,
             User
         );
