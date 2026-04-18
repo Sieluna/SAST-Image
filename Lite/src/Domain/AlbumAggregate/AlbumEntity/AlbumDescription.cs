@@ -17,19 +17,15 @@ public readonly record struct AlbumDescription(string Value)
         [MaybeNullWhen(false), NotNullWhen(true)] out AlbumDescription newObject
     )
     {
+        newObject = default;
+
         if (string.IsNullOrWhiteSpace(value))
-        {
-            newObject = default;
             return false;
-        }
 
         value = value.Trim();
 
         if (value.Length < MinLength || value.Length > MaxLength)
-        {
-            newObject = default;
             return false;
-        }
 
         newObject = new AlbumDescription(value);
         return true;

@@ -31,6 +31,7 @@ public class ImageTagsTests
 
         ImageTags.TryCreateNew(valid_ImageTags, out var imageTags);
 
+        Assert.IsNotNull(imageTags);
         imageTags.Value.Length.ShouldBe(collaborator_count);
     }
 
@@ -62,6 +63,7 @@ public class ImageTagsTests
 
         _ = ImageTags.TryCreateNew(imageTags_with_duplicate_ones, out var imageTags);
 
+        Assert.IsNotNull(imageTags);
         imageTags.Value.ShouldBeUnique();
     }
 
@@ -77,13 +79,14 @@ public class ImageTagsTests
 
         ImageTags.TryCreateNew(valid_ImageTags, out var imageTags);
 
+        Assert.IsNotNull(imageTags);
         imageTags.Value.Length.ShouldBe(collaborator_count);
     }
 
     [TestMethod]
     public void Return_True_When_Create_From_Empty()
     {
-        string[] empty_imageTags = [.. ImageTags.Empty.Value.Select(i => i.ToString())];
+        string[] empty_imageTags = [.. new ImageTags().Value.Select(i => i.ToString())];
 
         bool result = ImageTags.TryCreateNew(empty_imageTags, out var _);
 

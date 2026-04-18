@@ -34,7 +34,10 @@ internal sealed class DomainDbContextEntityTypeConfigurations
                     c => Array.ConvertAll(c.Value, id => id.Value),
                     values => new(Array.ConvertAll(values, value => new UserId(value)))
                 ),
-                new ValueComparer<Collaborators>((c1, c2) => c1.Equals(c2), c => c.GetHashCode())
+                new ValueComparer<Collaborators>(
+                    (c1, c2) => EqualityComparer<Collaborators>.Default.Equals(c1, c2),
+                    c => c.GetHashCode()
+                )
             );
 
         builder.OwnsOne<Cover>(

@@ -63,7 +63,7 @@ public sealed class AlbumModel
 
     internal void UpdateTags(AlbumTagsUpdatedEvent e)
     {
-        Tags = e.Tags;
+        Tags = e.Tags.Value;
     }
 
     internal void Remove(AlbumRemovedEvent e)

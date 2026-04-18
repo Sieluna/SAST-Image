@@ -70,7 +70,7 @@ public sealed class ImageModel
 
     internal void UpdateTags(ImageTagsUpdatedEvent e)
     {
-        Tags = e.Tags;
+        Tags = e.Tags.Value;
     }
 }
 

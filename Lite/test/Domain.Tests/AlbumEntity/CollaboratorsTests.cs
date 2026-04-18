@@ -35,6 +35,7 @@ public class CollaboratorsTests
 
         Collaborators.TryCreateNew(valid_Collaborators, out var collaborators);
 
+        Assert.IsNotNull(collaborators);
         collaborators.Value.Length.ShouldBe(collaborator_count);
     }
 
@@ -67,6 +68,7 @@ public class CollaboratorsTests
 
         _ = Collaborators.TryCreateNew(collaborators_with_duplicate_ones, out var collaborators);
 
+        Assert.IsNotNull(collaborators);
         collaborators.Value.ShouldBeUnique();
     }
 
@@ -82,14 +84,15 @@ public class CollaboratorsTests
 
         Collaborators.TryCreateNew(valid_Collaborators, out var collaborators);
 
+        Assert.IsNotNull(collaborators);
         collaborators.Value.Length.ShouldBe(collaborator_count);
     }
 
     [TestMethod]
     public void Return_True_When_Create_From_Empty()
     {
-        var empty_collaborators = Collaborators
-            .Empty.Value.Select(c => new UserId(c.Value))
+        var empty_collaborators = new Collaborators()
+            .Value.Select(c => new UserId(c.Value))
             .ToArray();
 
         bool result = Collaborators.TryCreateNew(empty_collaborators, out var _);

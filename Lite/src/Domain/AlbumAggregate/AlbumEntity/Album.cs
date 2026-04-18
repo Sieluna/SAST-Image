@@ -107,7 +107,7 @@ public sealed class Album : EntityBase<AlbumId>
         if (_removed)
             throw new AlbumRemovedException();
 
-        if (_collaborators.SequenceEqual(command.Collaborators.Value))
+        if (_collaborators == command.Collaborators)
             return;
 
         await checker.CheckAsync(command.Collaborators);
@@ -149,6 +149,7 @@ public sealed class Album : EntityBase<AlbumId>
         if (_removed)
             throw new AlbumRemovedException();
 
+        // If the cover image is null, set the cover to the latest image or empty if there are no images.
         if (command.CoverImage is null)
         {
             var imageId = _images.LatestImage()?.Id;
@@ -157,10 +158,72 @@ public sealed class Album : EntityBase<AlbumId>
             return;
         }
 
+        // If the cover image is not null, set the cover to the user custom cover.
         _cover = Cover.UserCustomCover;
         AddDomainEvent(AlbumCoverUpdatedEvent.UserCustomImage(Id, command.CoverImage));
     }
 
+    public void Remove(RemoveAlbumCommand command)
+    {
+        if (CanNotManage(command.Actor))
+            throw new NoPermissionException();
+        if (_removed)
+            return;
+
+        _removed = true;
+
+        AddDomainEvent(new AlbumRemovedEvent(Id));
+        foreach (var image in _images)
+        {
+            image.AlbumRemoved(command);
+        }
+    }
+
+    public void Restore(RestoreAlbumCommand command)
+    {
+        if (CanNotManage(command.Actor))
+            throw new NoPermissionException();
+        if (_removed == false)
+            return;
+
+        _removed = false;
+
+        AddDomainEvent(new AlbumRestoredEvent(Id));
+        foreach (var image in _images)
+        {
+            image.AlbumRestored(command);
+        }
+    }
+
+    public void Subscribe(SubscribeCommand command)
+    {
+        if (_removed)
+            throw new AlbumRemovedException();
+        if (_subscribes.ContainsUser(command.Actor.Id))
+            return;
+        if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
+            throw new NoPermissionException();
+
+        _subscribes.Add(new(Id, command.Actor.Id));
+
+        AddDomainEvent(new AlbumSubscribedEvent(Id, command.Actor.Id));
+    }
+
+    public void Unsubscribe(UnsubscribeCommand command)
+    {
+        if (_removed)
+            throw new AlbumRemovedException();
+        if (_subscribes.NotContainsUser(command.Actor.Id))
+            return;
+        if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
+            throw new NoPermissionException();
+
+        _subscribes.RemoveUser(command.Actor.Id);
+
+        AddDomainEvent(new AlbumUnsubscribedEvent(Id, command.Actor.Id));
+    }
+
+    #region Image
     public ImageId AddImage(AddImageCommand command)
     {
         if (CanNotManageImages(command.Actor) && _accessLevel.OthersCanNotWrite)
@@ -250,66 +313,6 @@ public sealed class Album : EntityBase<AlbumId>
         }
     }
 
-    public void Remove(RemoveAlbumCommand command)
-    {
-        if (CanNotManage(command.Actor))
-            throw new NoPermissionException();
-        if (_removed)
-            return;
-
-        _removed = true;
-
-        AddDomainEvent(new AlbumRemovedEvent(Id));
-        foreach (var image in _images)
-        {
-            image.AlbumRemoved(command);
-        }
-    }
-
-    public void Restore(RestoreAlbumCommand command)
-    {
-        if (CanNotManage(command.Actor))
-            throw new NoPermissionException();
-        if (_removed == false)
-            return;
-
-        _removed = false;
-
-        AddDomainEvent(new AlbumRestoredEvent(Id));
-        foreach (var image in _images)
-        {
-            image.AlbumRestored(command);
-        }
-    }
-
-    public void Subscribe(SubscribeCommand command)
-    {
-        if (_removed)
-            throw new AlbumRemovedException();
-        if (_subscribes.ContainsUser(command.Actor.Id))
-            return;
-        if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
-            throw new NoPermissionException();
-
-        _subscribes.Add(new(Id, command.Actor.Id));
-
-        AddDomainEvent(new AlbumSubscribedEvent(Id, command.Actor.Id));
-    }
-
-    public void Unsubscribe(UnsubscribeCommand command)
-    {
-        if (_removed)
-            throw new AlbumRemovedException();
-        if (_subscribes.NotContainsUser(command.Actor.Id))
-            return;
-        if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
-            throw new NoPermissionException();
-
-        _subscribes.RemoveUser(command.Actor.Id);
-
-        AddDomainEvent(new AlbumUnsubscribedEvent(Id, command.Actor.Id));
-    }
-
     public void LikeImage(LikeImageCommand command)
     {
         if (_removed)
@@ -346,6 +349,9 @@ public sealed class Album : EntityBase<AlbumId>
         image.UpdateTags(command);
     }
 
+    #endregion
+
+    #region Helper
     private bool IsOwnedBy(Actor actor) => _author == actor.Id;
 
     private bool CanManage(Actor actor) => IsOwnedBy(actor) || actor.IsAdmin;
@@ -356,4 +362,6 @@ public sealed class Album : EntityBase<AlbumId>
         CanManage(actor) || _collaborators.Contains(actor.Id);
 
     private bool CanNotManageImages(Actor actor) => !CanManageImages(actor);
+
+    #endregion
 }

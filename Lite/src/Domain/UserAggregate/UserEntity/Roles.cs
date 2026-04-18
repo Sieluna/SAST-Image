@@ -1,77 +1,41 @@
-﻿using System.Collections;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
 using Domain.Entity;
 
 namespace Domain.UserAggregate.UserEntity;
 
-public enum Role
+[Flags]
+public enum Role : byte
 {
-    User,
-    Admin,
+    User = 1,
+    Admin = User << 1,
 }
 
-[CollectionBuilder(typeof(RolesCollectionBuilder), nameof(RolesCollectionBuilder.Build))]
-public readonly struct Roles
-    : IEnumerable<Role>,
-        IValueObject<Roles, Role[]>,
-        IFactoryConstructor<Roles, Role[]>
+public sealed class Roles : ValueObjects<Roles, Role>, IFactoryConstructor<Roles, Role[]>
 {
-    public Role[] Value { get; init; }
-
-    internal Roles(Role[] value) => Value = value;
+    internal Roles(params Role[] roles) => Value = roles;
 
     public static bool TryCreateNew(
         Role[] input,
-        [MaybeNullWhen(false), NotNullWhen(true)] out Roles newObject
+        [MaybeNullWhen(false), NotNullWhen(true)] out Roles? newObject
     )
     {
-        if (input.Any(role => !Enum.IsDefined(role)))
+        newObject = default;
+        if (input.Length == 0)
         {
-            newObject = default;
-            return false;
+            newObject = new();
+            return true;
         }
 
-        var mid = input.Distinct().ToArray();
+        HashSet<Role> set = [];
+        for (int i = 0; i < input.Length; i++)
+        {
+            if (Enum.IsDefined(input[i]) is false)
+                return false;
 
-        newObject = new(mid);
+            set.Add(input[i]);
+        }
+
+        newObject = new() { Value = [.. set] };
         return true;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is Roles roles && Equals(roles);
-    }
-
-    public bool Equals(Roles other)
-    {
-        return Value.SequenceEqual(other.Value); // TODO: optimize sorting and comparing.
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Value);
-    }
-
-    public IEnumerator<Role> GetEnumerator() => (Value as IEnumerable<Role>).GetEnumerator();
-
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public static bool operator ==(Roles left, Roles right)
-    {
-        return left.Equals(right);
-    }
-
-    public static bool operator !=(Roles left, Roles right)
-    {
-        return !(left == right);
-    }
-}
-
-file sealed class RolesCollectionBuilder
-{
-    public static Roles Build(ReadOnlySpan<Role> span)
-    {
-        return new Roles(span.ToArray());
     }
 }

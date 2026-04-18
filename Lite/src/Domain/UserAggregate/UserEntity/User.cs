@@ -27,18 +27,20 @@ public sealed class User : EntityBase<UserId>
     private Username _username;
     private Password _password;
     private RefreshToken _refreshToken;
-    private Email _email;
+    private Email _email; // TODO: ?
     private readonly Roles _roles = [];
     private readonly List<Identity> _identities = [];
 
     private User(Username username, Password password, Email email)
         : base(UserId.GenerateNew())
     {
+        _email = email;
         _username = username;
         _password = password;
-        _email = email;
-        _roles = [Role.User];
+        _roles = new(Role.User);
     }
+
+    #region Auth
 
     internal static async Task<JwtToken> RegisterAsync(
         RegisterCommand command,
@@ -112,6 +114,8 @@ public sealed class User : EntityBase<UserId>
 
         AddDomainEvent(new UsernameResetEvent(Id, _username));
     }
+
+    #endregion
 
     #region Profile
     public void UpdateNickname(UpdateNicknameCommand command)
