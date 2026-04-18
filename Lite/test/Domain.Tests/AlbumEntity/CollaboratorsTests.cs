@@ -8,7 +8,7 @@ namespace Domain.Tests.AlbumEntity;
 public class CollaboratorsTests
 {
     [TestMethod]
-    public void Return_False_When_Too_Many_Collaborators()
+    public void Return_False_When_Too_Many_Elements()
     {
         var collaborators_more_than_MaxCount = Enumerable
             .Range(default, Collaborators.MaxCount + 1)
@@ -58,7 +58,7 @@ public class CollaboratorsTests
     }
 
     [TestMethod]
-    public void Should_Not_Contain_Duplicate_Collaborators()
+    public void Should_Not_Contain_Duplicate_Elements()
     {
         const int duplicate_id = 0;
         const int duplicate_count = Collaborators.MaxCount / 2;
@@ -86,6 +86,27 @@ public class CollaboratorsTests
 
         Assert.IsNotNull(collaborators);
         collaborators.Value.Length.ShouldBe(collaborator_count);
+    }
+
+    [TestMethod]
+    public void Should_Equal_When_Create_From_Same_Set_With_No_Order()
+    {
+        var collaborators = Enumerable
+            .Range(default, Collaborators.MaxCount - 1)
+            .Select(index => new UserId(index))
+            .ToArray();
+
+        Collaborators.TryCreateNew(collaborators, out var collaborators1);
+        Random.Shared.Shuffle(collaborators);
+        Collaborators.TryCreateNew(collaborators, out var collaborators2);
+        Assert.IsNotNull(collaborators1);
+        Assert.IsNotNull(collaborators2);
+
+        collaborators1.Equals(collaborators2).ShouldBeTrue();
+        (collaborators1 == collaborators2).ShouldBeTrue();
+        EqualityComparer<Collaborators>
+            .Default.Equals(collaborators1, collaborators2)
+            .ShouldBeTrue();
     }
 
     [TestMethod]
