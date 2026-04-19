@@ -1,7 +1,6 @@
-﻿using Domain.Extensions;
-using Mediator;
+﻿using Mediator;
 
-namespace Application.Shared;
+namespace Domain.Extensions;
 
 public sealed class UnitOfWorkPostProcessor<TCommand, TResponse>(IUnitOfWork unitOfWork)
     : MessagePostProcessor<TCommand, TResponse>

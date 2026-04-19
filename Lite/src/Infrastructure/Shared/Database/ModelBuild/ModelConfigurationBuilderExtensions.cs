@@ -25,7 +25,7 @@ internal static class ModelConfigurationBuilderExtensions
             builder.MapValueObject<Email, string>();
 
             builder.MapValueObjects<Roles, Role>();
-            builder.MapValueObjects<Collaborators, UserId>();
+            builder.MapValueObjects<Collaborators, UserId, long>();
             //builder.MapValueObjects<ImageTags, string>();
             //builder.MapValueObjects<AlbumTags, string>();
 
@@ -35,37 +35,37 @@ internal static class ModelConfigurationBuilderExtensions
             builder.MapTypedId<CategoryId>();
         }
 
-        private TypeMappingConfigurationBuilder<TObject> MapValueObject<TObject, TValue>()
-            where TObject : IValueObject<TObject, TValue>, new()
-        {
+        private PropertiesConfigurationBuilder<TObject> MapValueObject<TObject, TValue>()
+            where TObject : IValueObject<TObject, TValue>, new() =>
             builder.Properties<TObject>().HaveConversion<ValueObjectConverter<TObject, TValue>>();
-            return builder
-                .DefaultTypeMapping<TObject>()
-                .HasConversion<ValueObjectConverter<TObject, TValue>>();
-        }
 
-        private TypeMappingConfigurationBuilder<TObject> MapValueObjects<TObject, TValue>()
-            where TObject : ValueObjects<TObject, TValue>, new()
-        {
-            builder.Properties<TObject>().HaveConversion<ValueObjectsConverter<TObject, TValue>>();
-            return builder
-                .DefaultTypeMapping<TObject>()
-                .HasConversion<ValueObjectsConverter<TObject, TValue>>();
-        }
+        private PropertiesConfigurationBuilder<TObject> MapValueObjects<TObject, TValue>()
+            where TObject : ValueObjects<TObject, TValue>, new() =>
+            builder
+                .Properties<TObject>()
+                .HaveConversion<
+                    ValueObjectsConverter<TObject, TValue>,
+                    ValueObjectsComparer<TObject, TValue>
+                >();
 
-        private TypeMappingConfigurationBuilder<TId> MapTypedId<TId, TValue>()
+        private PropertiesConfigurationBuilder<TObject> MapValueObjects<TObject, TElement, TValue>()
+            where TObject : ValueObjects<TObject, TElement>, new()
+            where TElement : ITypedId<TElement, TValue>, new()
+            where TValue : IEquatable<TValue> =>
+            builder
+                .Properties<TObject>()
+                .HaveConversion<
+                    ValueObjectsConverter<TObject, TElement, TValue>,
+                    ValueObjectsComparer<TObject, TElement, TValue>
+                >();
+
+        private PropertiesConfigurationBuilder<TId> MapTypedId<TId, TValue>()
             where TId : ITypedId<TId, TValue>, new()
-            where TValue : IEquatable<TValue>
-        {
+            where TValue : IEquatable<TValue> =>
             builder.Properties<TId>().HaveConversion<TypedIdConverter<TId, TValue>>();
-            return builder.DefaultTypeMapping<TId>().HasConversion<TypedIdConverter<TId, TValue>>();
-        }
 
-        private TypeMappingConfigurationBuilder<TId> MapTypedId<TId>()
-            where TId : ITypedId<TId, long>, new()
-        {
-            return builder.MapTypedId<TId, long>();
-        }
+        private PropertiesConfigurationBuilder<TId> MapTypedId<TId>()
+            where TId : ITypedId<TId, long>, new() => builder.MapTypedId<TId, long>();
     }
 }
 
@@ -77,12 +77,31 @@ file sealed class ValueObjectsConverter<TObject, TValue>()
     : ValueConverter<TObject, TValue[]>(obj => obj.Value, value => new() { Value = value })
     where TObject : ValueObjects<TObject, TValue>, new() { }
 
+file sealed class ValueObjectsConverter<TObject, TElement, TValue>()
+    : ValueConverter<TObject, TValue[]>(
+        objs => Array.ConvertAll(objs.Value, elem => elem.Value),
+        values =>
+            new() { Value = Array.ConvertAll(values, value => new TElement() { Value = value }) }
+    )
+    where TObject : ValueObjects<TObject, TElement>, new()
+    where TElement : ITypedId<TElement, TValue>, new()
+    where TValue : IEquatable<TValue> { }
+
 file sealed class ValueObjectsComparer<TObject, TValue>()
     : ValueComparer<TObject>(
         (c1, c2) => EqualityComparer<TObject>.Default.Equals(c1, c2),
         c => c.GetHashCode()
     )
     where TObject : ValueObjects<TObject, TValue>, new() { }
+
+file sealed class ValueObjectsComparer<TObject, TElement, TValue>()
+    : ValueComparer<TObject>(
+        (c1, c2) => EqualityComparer<TObject>.Default.Equals(c1, c2),
+        c => c.GetHashCode()
+    )
+    where TObject : ValueObjects<TObject, TElement>, new()
+    where TElement : ITypedId<TElement, TValue>, new()
+    where TValue : IEquatable<TValue> { }
 
 file sealed class TypedIdConverter<TId, TValue>()
     : ValueConverter<TId, TValue>(id => id.Value, value => new() { Value = value })

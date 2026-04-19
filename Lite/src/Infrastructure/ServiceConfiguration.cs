@@ -51,7 +51,7 @@ public static class ServiceConfiguration
     )
     {
         services
-            .AddSingleton<DbConnection>(_ => new NpgsqlConnection(
+            .AddScoped<DbConnection>(_ => new NpgsqlConnection(
                 configuration.GetConnectionString("Database")
             ))
             .AddDbContext<DomainDbContext>(
@@ -87,11 +87,7 @@ public static class ServiceConfiguration
             {
                 options.NotificationPublisherType = typeof(ForeachAwaitPublisher);
                 options.Assemblies = [DomainAssembly.Assembly];
-                options.PipelineBehaviors =
-                [
-                    typeof(UnitOfWorkPostProcessor<,>),
-                    typeof(CommandValidator<,>),
-                ];
+                options.PipelineBehaviors = [typeof(UnitOfWorkPostProcessor<,>)];
                 options.ServiceLifetime = ServiceLifetime.Scoped;
             })
             .AddScoped<IDomainEventPublisher, EventPublisher>()
