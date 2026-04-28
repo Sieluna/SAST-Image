@@ -307,7 +307,7 @@ public sealed class UserTests(TestContext context)
     public void Raise_Event_When_UpdateAvatar()
     {
         var user = User.New(id: 123, username: Username.New(), password: Password.New);
-        UpdateAvatarCommand command = new(new Mock<IImageFile>().Object, Actor.Author);
+        UpdateAvatarCommand command = new(ImageFile.New, Actor.Author);
 
         user.UpdateAvatar(command);
 
@@ -323,7 +323,7 @@ public sealed class UserTests(TestContext context)
     public void Raise_Event_When_UpdateHeader()
     {
         var user = User.New(id: 123, username: Username.New(), password: Password.New);
-        UpdateHeaderCommand command = new(new Mock<IImageFile>().Object, Actor.Author);
+        UpdateHeaderCommand command = new(ImageFile.New, Actor.Author);
 
         user.UpdateHeader(command);
 
@@ -476,5 +476,13 @@ file static class EmailTestHelper
     extension(Email)
     {
         public static Email New => new("123456@example.com");
+    }
+}
+
+file static class ImageFileTestHelper
+{
+    extension(ImageFile)
+    {
+        public static ImageFile New => default;
     }
 }

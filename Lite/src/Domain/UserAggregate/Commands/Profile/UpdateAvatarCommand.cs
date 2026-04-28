@@ -3,7 +3,7 @@ using Mediator;
 
 namespace Domain.UserAggregate.Commands.Profile;
 
-public sealed record class UpdateAvatarCommand(IImageFile Avatar, Actor Actor) : ICommand { }
+public sealed record class UpdateAvatarCommand(ImageFile Avatar, Actor Actor) : ICommand { }
 
 internal sealed class UpdateAvatarCommandHandler(IUserRepository repository)
     : ICommandHandler<UpdateAvatarCommand>

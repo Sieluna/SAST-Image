@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.AlbumServices.Queries;
 using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.Commands;
 using Domain.CategoryAggregate.CategoryEntity;
 using Domain.Shared;
-using Infrastructure.Shared;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Query.Albums.Queries;
+using Storage.Albums.Queries;
 using WebAPI.Utilities;
 using WebAPI.Utilities.Attributes;
 
@@ -145,19 +145,17 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("{id:long}/cover")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1024 * 1024 * 20)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 1024 * 1024 * 10)]
     public async Task<IActionResult> UpdateCover(
         [FromRoute] AlbumId id,
-        [FromForm] [FileValidator(0, 5)] IFormFile? file = null,
+        [FromForm] [FileValidator(0, 10)] IFormFile? file = null,
         CancellationToken cancellationToken = default
     )
     {
-        IImageFile? cover = null;
+        ImageFile? cover = null;
         if (file is not null)
         {
-            var image = ImageFile.Create(file.OpenReadStream());
-            Response.RegisterForDispose(image);
-            cover = image;
+            cover = await file.GetAsync(cancellationToken);
         }
 
         UpdateCoverCommand command = new(id, cover, User);

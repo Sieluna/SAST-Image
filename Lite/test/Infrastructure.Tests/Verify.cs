@@ -1,7 +1,8 @@
-﻿using Infrastructure.Shared.Database;
+﻿using Domain.Database;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
+using Query.Database;
 
 namespace Infrastructure.Tests;
 

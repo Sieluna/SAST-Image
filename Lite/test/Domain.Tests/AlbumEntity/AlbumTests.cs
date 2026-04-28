@@ -381,14 +381,14 @@ public class AlbumTests(TestContext context)
         var album = Album.New;
         UpdateCoverCommand command = new(
             AlbumId.New,
-            IImageFile.Default,
+            ImageFile.Default,
             Actor.New(actorId, isAdmin)
         );
 
         album.UpdateCover(command);
 
         album.DomainEvents.Count.ShouldBe(1);
-        album.DomainEvents.First().ShouldBeOfType<AlbumCoverUpdatedEvent>();
+        album.DomainEvents.First().ShouldBeOfType<AlbumCoverUpdatedManuallyEvent>();
     }
 
     #endregion
@@ -403,7 +403,7 @@ public class AlbumTests(TestContext context)
             AlbumId.New,
             ImageTitle.New,
             ImageTags.New,
-            IImageFile.Default,
+            ImageFile.Default,
             Actor.Author
         );
 
@@ -418,7 +418,7 @@ public class AlbumTests(TestContext context)
             AlbumId.New,
             ImageTitle.New,
             ImageTags.New,
-            IImageFile.Default,
+            ImageFile.Default,
             Actor.New(VisitorId)
         );
 
@@ -438,7 +438,7 @@ public class AlbumTests(TestContext context)
             AlbumId.New,
             ImageTitle.New,
             ImageTags.New,
-            IImageFile.Default,
+            ImageFile.Default,
             Actor.New(actorId, isAdmin)
         );
 
@@ -456,26 +456,29 @@ public class AlbumTests(TestContext context)
             AlbumId.New,
             ImageTitle.New,
             ImageTags.New,
-            IImageFile.Default,
+            ImageFile.Default,
             Actor.Author
         );
 
         album.AddImage(command);
 
         album.DomainEvents.Count.ShouldBe(2);
-        album.DomainEvents.ShouldBeOfTypes(typeof(ImageAddedEvent), typeof(AlbumCoverUpdatedEvent));
+        album.DomainEvents.ShouldBeOfTypes(
+            typeof(ImageAddedEvent),
+            typeof(AlbumCoverUpdatedAutomaticallyEvent)
+        );
     }
 
     [TestMethod]
     public void Not_Raise_AlbumCoverUpdatedEvent_When_Not_IsLatestImage_As_Image_Added()
     {
         var album = Album.New;
-        album.Cover = Cover.UserCustomCover;
+        album.CustomCover = true;
         AddImageCommand command = new(
             AlbumId.New,
             ImageTitle.New,
             ImageTags.New,
-            IImageFile.Default,
+            ImageFile.Default,
             Actor.Author
         );
 
@@ -511,24 +514,30 @@ public class AlbumTests(TestContext context)
     [TestMethod]
     public void Raise_CoverUpdatedEvent_When_Image_As_LatestImage_Removed()
     {
+        var imageToBeRemoved = Image.New(new(5));
+        var imageOnSecondPlace = Image.New(new(4));
+        List<Image> images = [imageOnSecondPlace, imageToBeRemoved, Image.New(new(2))];
         var album = Album.New;
-        var imageToBeRemoved = album.Images.LatestImage();
-        Assert.IsNotNull(imageToBeRemoved);
-        album.Cover = new Cover(imageToBeRemoved.Id, true);
+        album.Images = images;
+
         RemoveImageCommand command = new(AlbumId.New, imageToBeRemoved.Id, Actor.Author);
 
         album.RemoveImage(command);
 
-        album.DomainEvents.Count.ShouldBe(1);
-        album.DomainEvents.First().ShouldBeOfType<AlbumCoverUpdatedEvent>();
-        album.Cover.Id.ShouldBe(album.Images.LatestImage()?.Id);
+        album
+            .DomainEvents.ShouldHaveSingleItem()
+            .ShouldBeOfType<AlbumCoverUpdatedAutomaticallyEvent>()
+            .Image.ShouldBe(imageOnSecondPlace.Id);
     }
 
     [TestMethod]
     public void Not_Raise_CoverUpdatedEvent_When_Image_Not_As_LatestImage_Removed()
     {
+        var imageToBeRemoved = Image.New(new(4));
+        List<Image> images = [Image.New(new(5)), imageToBeRemoved, Image.New(new(3))];
         var album = Album.New;
-        var imageToBeRemoved = album.Images.Where(i => i != album.Images.LatestImage()!).Random;
+        album.Images = images;
+
         RemoveImageCommand command = new(AlbumId.New, imageToBeRemoved.Id, Actor.Author);
 
         album.RemoveImage(command);
@@ -565,23 +574,27 @@ public class AlbumTests(TestContext context)
     [TestMethod]
     public void Raise_CoverUpdatedEvent_When_Image_As_LatestImage_Restored()
     {
+        var imageToBeRestored = Image.Removed(new(5));
+        List<Image> images = [Image.New(new(2)), imageToBeRestored, Image.New(new(3))];
         var album = Album.New;
-        var imageToBeRestored = album.Images.OrderByDescending(i => i.Id.Value).First();
+        album.Images = images;
         RestoreImageCommand command = new(AlbumId.New, imageToBeRestored.Id, Actor.Author);
 
         album.RestoreImage(command);
 
-        album.DomainEvents.Count.ShouldBe(1);
-        album.DomainEvents.First().ShouldBeOfType<AlbumCoverUpdatedEvent>();
-        album.Cover.Id.ShouldBe(imageToBeRestored.Id);
+        album
+            .DomainEvents.ShouldHaveSingleItem()
+            .ShouldBeOfType<AlbumCoverUpdatedAutomaticallyEvent>()
+            .Image.ShouldBe(imageToBeRestored.Id);
     }
 
     [TestMethod]
     public void Not_Raise_CoverUpdatedEvent_When_Image_Not_As_LatestImage_Restored()
     {
+        var imageToBeRestored = Image.Removed(new(4));
+        List<Image> images = [Image.New(new(5)), imageToBeRestored, Image.New(new(3))];
         var album = Album.New;
-        album.Cover = new Cover(null, false);
-        var imageToBeRestored = album.Images.OrderByDescending(i => i.Id.Value).Skip(1).First();
+        album.Images = images;
         RestoreImageCommand command = new(AlbumId.New, imageToBeRestored.Id, Actor.Author);
 
         album.RestoreImage(command);
@@ -687,16 +700,15 @@ internal static class TestAlbum
         public UserId Author => album.GetValue<UserId>();
 
         public bool IsRemoved => album.GetValue<bool>();
+        public bool CustomCover
+        {
+            get => album.GetValue<Album, bool>("_customCover");
+            set => album.SetValue("_customCover", value);
+        }
 
         public List<Image> Images
         {
             get => album.GetValue<List<Image>>();
-            set => album.SetValue(value);
-        }
-
-        public Cover Cover
-        {
-            get => album.GetValue<Cover>();
             set => album.SetValue(value);
         }
 
@@ -713,7 +725,6 @@ internal static class TestAlbum
                     Image.Removed(new(3)),
                     Image.New(new(4)),
                 ];
-                a.Cover = (Cover.Default);
                 a.SetValue(Actor.Author.Id);
                 a.SetValue(Subscribe.Default(a.Id));
                 a.SetValue(Collaborators.Default);
@@ -824,9 +835,9 @@ file static class ImageTagsTestHelper
 
 file static class ImageFileTestHelper
 {
-    extension(IImageFile)
+    extension(ImageFile)
     {
-        public static IImageFile Default => null!;
+        public static ImageFile Default => default;
     }
 }
 

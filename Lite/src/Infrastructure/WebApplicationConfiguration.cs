@@ -1,4 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Query;
+using Storage;
+using Storage.Albums;
+using Storage.Images;
 
 namespace Infrastructure;
 
@@ -38,11 +42,15 @@ public static class WebApplicationBuilderConfiguration
         {
             builder.Services.AddInfrastructureServices(builder.Configuration);
             builder.Services.AddAlbumServices();
-            builder.Services.AddImageServices();
             builder.Services.AddCategoryServices();
             builder
                 .Services.AddUserServices(builder.Configuration)
                 .AddJwtAuth(builder.Configuration);
+
+            builder.Services.AddQueryServices(builder.Configuration);
+            builder.Services.AddStorageServices<AlbumAvailabilityChecker, ImageAvailabilityChecker>(
+                builder.Configuration
+            );
         }
     }
 }

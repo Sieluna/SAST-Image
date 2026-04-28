@@ -48,7 +48,7 @@ public readonly record struct AccessLevel(AccessLevelValue Value)
     public static bool operator >(AccessLevel left, AccessLevel right) => left.CompareTo(right) > 0;
 }
 
-public enum AccessLevelValue
+public enum AccessLevelValue : byte
 {
     Private,
     AuthReadOnly,

@@ -52,6 +52,20 @@ public static class AccessHelper
             return (TValue)value;
         }
 
+        public TValue GetValue<TValue>(string fieldName)
+        {
+            var field = typeof(TObject)
+                .GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+                .First(f =>
+                    f.FieldType == typeof(TValue)
+                    && f.Name.Contains(fieldName, StringComparison.OrdinalIgnoreCase)
+                );
+            Assert.IsNotNull(field);
+            object? value = field.GetValue(obj);
+            Assert.IsNotNull(value);
+            return (TValue)value;
+        }
+
         public void SetValue<TValue>(TValue value)
         {
             var field = typeof(TObject)

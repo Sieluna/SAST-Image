@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.UserServices.Queries;
 using AspNet.Security.OAuth.GitHub;
 using Domain.Shared;
 using Domain.UserAggregate.Commands;
@@ -10,6 +9,7 @@ using Mediator;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Query.Users.Queries;
 using WebAPI.Utilities;
 
 namespace WebAPI.Controllers;

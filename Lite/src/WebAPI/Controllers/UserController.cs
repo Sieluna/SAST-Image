@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.UserServices.Queries;
 using Domain.UserAggregate.Commands.Profile;
 using Domain.UserAggregate.UserEntity;
-using Infrastructure.Shared;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Query.Users.Queries;
+using Storage.Users.Queries;
 using WebAPI.Utilities;
 using WebAPI.Utilities.Attributes;
 
@@ -49,13 +49,12 @@ public sealed class UserController(IMediator mediator) : ControllerBase
     [Authorize]
     [HttpPost("avatar")]
     public async Task<IActionResult> UpdateAvatar(
-        [FromForm] [FileValidator(0, 3)] [Required] IFormFile avatar,
+        [FromForm] [FileValidator(0, 3)] [Required] IFormFile file,
         CancellationToken cancellationToken
     )
     {
-        using var file = ImageFile.Create(avatar.OpenReadStream());
-
-        UpdateAvatarCommand command = new(file, User);
+        var avatar = await file.GetAsync(cancellationToken);
+        UpdateAvatarCommand command = new(avatar, User);
         await mediator.Send(command, cancellationToken);
         return NoContent();
     }
@@ -63,13 +62,12 @@ public sealed class UserController(IMediator mediator) : ControllerBase
     [Authorize]
     [HttpPost("header")]
     public async Task<IActionResult> UpdateHeader(
-        [FromForm] [FileValidator(0, 10)] [Required] IFormFile header,
+        [FromForm] [FileValidator(0, 10)] [Required] IFormFile file,
         CancellationToken cancellationToken
     )
     {
-        using var file = ImageFile.Create(header.OpenReadStream());
-
-        UpdateHeaderCommand command = new(file, User);
+        var header = await file.GetAsync(cancellationToken);
+        UpdateHeaderCommand command = new(header, User);
         await mediator.Send(command, cancellationToken);
         return NoContent();
     }

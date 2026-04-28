@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.CategoryServices.Queries;
 using Domain.CategoryAggregate.CategoryEntity;
 using Domain.CategoryAggregate.Commands;
 using Infrastructure;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Query.Categories.Queries;
 
 namespace WebAPI.Controllers;
 

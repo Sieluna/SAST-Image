@@ -14,7 +14,7 @@ public sealed record class ImageAddedEvent(
     ImageTags Tags,
     AccessLevel AccessLevel,
     Collaborators Collaborators,
-    IImageFile ImageFile,
+    ImageFile File,
     DateTime CreatedAt,
     UserId Uploader
 ) : IDomainEvent { }

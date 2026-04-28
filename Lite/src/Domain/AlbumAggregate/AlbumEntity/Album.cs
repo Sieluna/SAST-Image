@@ -18,7 +18,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     private bool _removed = false;
 
-    private Cover _cover = Cover.Default;
+    private bool _customCover = false;
 
     private AccessLevel _accessLevel;
 
@@ -149,18 +149,21 @@ public sealed class Album : EntityBase<AlbumId>
         if (_removed)
             throw new AlbumRemovedException();
 
-        // If the cover image is null, set the cover to the latest image or empty if there are no images.
         if (command.CoverImage is null)
         {
-            var imageId = _images.LatestImage()?.Id;
-            _cover = new(imageId, true);
-            AddDomainEvent(AlbumCoverUpdatedEvent.ContainedImageOrEmpty(Id, imageId));
+            _customCover = false;
+            var imageId = _images.LatestAvailableImage?.Id;
+
+            if (imageId is null)
+                AddDomainEvent(new AlbumCoverUpdatedEmptyEvent(Id));
+            else
+                AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId.Value));
+
             return;
         }
 
-        // If the cover image is not null, set the cover to the user custom cover.
-        _cover = Cover.UserCustomCover;
-        AddDomainEvent(AlbumCoverUpdatedEvent.UserCustomImage(Id, command.CoverImage));
+        _customCover = true;
+        AddDomainEvent(new AlbumCoverUpdatedManuallyEvent(Id, command.CoverImage.Value));
     }
 
     public void Remove(RemoveAlbumCommand command)
@@ -244,18 +247,16 @@ public sealed class Album : EntityBase<AlbumId>
                 command.Tags,
                 _accessLevel,
                 _collaborators,
-                command.ImageFile,
+                command.File,
                 DateTime.UtcNow,
                 command.Actor.Id
             )
         );
 
-        if (_cover.IsLatestImage)
-        {
-            _cover = _cover with { Id = image.Id };
-            AddDomainEvent(AlbumCoverUpdatedEvent.NewAddedImage(Id, command.ImageFile));
-        }
+        if (_customCover)
+            return image.Id;
 
+        AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, image.Id));
         return image.Id;
     }
 
@@ -270,15 +271,25 @@ public sealed class Album : EntityBase<AlbumId>
             throw new NoPermissionException();
         if (_removed)
             throw new AlbumRemovedException();
+        if (image.IsRemoved)
+            return;
+
+        bool isLatestImage = image.Equals(_images.LatestAvailableImage);
 
         image.Remove(command);
 
-        if (_cover.Id == command.Image)
-        {
-            var imageId = _images.LatestImage()?.Id;
-            _cover = _cover with { Id = imageId };
-            AddDomainEvent(AlbumCoverUpdatedEvent.ContainedImageOrEmpty(Id, imageId));
-        }
+        if (_customCover)
+            return;
+
+        if (isLatestImage is false)
+            return;
+
+        var imageId = _images.LatestAvailableImage?.Id;
+
+        if (imageId is null)
+            AddDomainEvent(new AlbumCoverUpdatedEmptyEvent(Id));
+        else
+            AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId.Value));
     }
 
     public void RestoreImage(RestoreImageCommand command)
@@ -289,12 +300,14 @@ public sealed class Album : EntityBase<AlbumId>
             throw new AlbumRemovedException();
 
         var image = _images.FindById(command.Image);
+        if (image.IsRemoved is false)
+            return;
+
         image.Restore(command);
 
-        if (_cover.IsLatestImage && image.Equals(_images.LatestImage()))
+        if (image.Equals(_images.LatestAvailableImage))
         {
-            _cover = new(image.Id, true);
-            AddDomainEvent(AlbumCoverUpdatedEvent.ContainedImageOrEmpty(Id, image.Id));
+            AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, image.Id));
         }
     }
 
@@ -303,14 +316,21 @@ public sealed class Album : EntityBase<AlbumId>
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
 
+        bool isLatestImage = _images.LatestAvailableImage?.Id == command.Image;
+
         _images.DeleteImage(command.Image);
 
-        if (_cover.Id == command.Image)
-        {
-            var imageId = _images.LatestImage()?.Id;
-            _cover = _cover with { Id = imageId };
-            AddDomainEvent(AlbumCoverUpdatedEvent.ContainedImageOrEmpty(Id, imageId));
-        }
+        if (_customCover)
+            return;
+        if (isLatestImage is false)
+            return;
+
+        var imageId = _images.LatestAvailableImage?.Id;
+
+        if (imageId is null)
+            AddDomainEvent(new AlbumCoverUpdatedEmptyEvent(Id));
+        else
+            AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId.Value));
     }
 
     public void LikeImage(LikeImageCommand command)

@@ -1,14 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.ImageServices;
-using Application.ImageServices.Queries;
 using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.Commands;
 using Domain.AlbumAggregate.ImageEntity;
 using Domain.Entity;
-using Infrastructure.Shared;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Query.Images.Queries;
+using Storage.Images;
+using Storage.Images.Queries;
 using WebAPI.Utilities;
 using WebAPI.Utilities.Attributes;
 
@@ -25,22 +25,23 @@ public class ImageController(IMediator mediator) : ControllerBase
     [HttpPost("albums/{albumId:long}/add")]
     public async Task<IActionResult> AddImage(
         [FromRoute] AlbumId albumId,
-        [FromForm] [Required] [FileValidator(0, 50)] IFormFile image,
+        [FromForm] [Required] [FileValidator(0, 50)] IFormFile file,
         [FromForm] [MaxLength(ImageTitle.MaxLength)] string title,
         [FromForm] [Length(0, 10)] string[]? tags = null,
         CancellationToken cancellationToken = default
     )
     {
-        using var file = ImageFile.Create(image.OpenReadStream());
+        var image = await file.GetAsync(cancellationToken);
 
         AddImageCommand command = new(
             albumId,
             title.Bind<ImageTitle>(),
             tags is null ? ImageTags.Empty : tags.Bind<ImageTags, string[]>(),
-            file,
+            image,
             User
         );
         var id = await mediator.Send(command, cancellationToken);
+
         return Ok(id);
     }
 
