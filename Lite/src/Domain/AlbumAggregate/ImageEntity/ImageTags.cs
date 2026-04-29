@@ -19,7 +19,7 @@ public sealed class ImageTags()
     {
         entity = default;
 
-        if (input.Length == 0)
+        if (input is null || input.Length == 0)
         {
             entity = new();
             return true;

@@ -145,10 +145,10 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("{id:long}/cover")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 1024 * 1024 * 10)]
+    [RequestFormLimits(MultipartBodyLengthLimit = ImageFile.MaxBytes)]
     public async Task<IActionResult> UpdateCover(
         [FromRoute] AlbumId id,
-        [FromForm] [FileValidator(0, 10)] IFormFile? file = null,
+        [FromForm] [FileValidator(ImageFile.MaxBytes)] IFormFile? file = null,
         CancellationToken cancellationToken = default
     )
     {

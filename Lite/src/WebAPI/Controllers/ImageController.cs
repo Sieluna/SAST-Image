@@ -1,12 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.Commands;
 using Domain.AlbumAggregate.ImageEntity;
-using Domain.Entity;
 using Domain.Shared;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Query.Images.Queries;
 using Storage.Images;
 using Storage.Images.Queries;
@@ -17,9 +18,12 @@ namespace WebAPI.Controllers;
 
 [Route("api")]
 [ApiController]
-public class ImageController(IMediator mediator) : ControllerBase
+public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptions) : ControllerBase
 {
     #region [Command/Post]
+
+
+    public readonly record struct AddImageRequestMetadata(ImageTitle Title, ImageTags Tags = null);
 
     [Authorize]
     [RequestSizeLimit(ImageFile.MaxBytes)]
@@ -27,20 +31,18 @@ public class ImageController(IMediator mediator) : ControllerBase
     public async Task<IActionResult> AddImage(
         [FromRoute] AlbumId albumId,
         [FromForm] [Required] [FileValidator(ImageFile.MaxBytes)] IFormFile file,
-        [FromForm] [MaxLength(ImageTitle.MaxLength)] string title,
-        [FromForm] [Length(0, 10)] string[]? tags = null,
+        [FromForm] [Required] string metadata,
         CancellationToken cancellationToken = default
     )
     {
+        var (title, tags) = JsonSerializer.Deserialize<AddImageRequestMetadata>(
+            metadata,
+            jsonOptions.Value.JsonSerializerOptions
+        );
+
         var image = await file.GetAsync(cancellationToken);
 
-        AddImageCommand command = new(
-            albumId,
-            title.Bind<ImageTitle>(),
-            tags is null ? ImageTags.Empty : tags.Bind<ImageTags, string[]>(),
-            image,
-            User
-        );
+        AddImageCommand command = new(albumId, title, tags, image, User);
         var id = await mediator.Send(command, cancellationToken);
 
         return Ok(id);
