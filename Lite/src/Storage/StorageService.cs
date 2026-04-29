@@ -62,7 +62,6 @@ internal sealed partial class StorageService(
                             + TimeSpan.FromSeconds(
                                 Random.Shared.Next(0, retryIntervals[message.RetryCount])
                             );
-                        ;
                     }
                 }
 

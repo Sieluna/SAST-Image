@@ -118,14 +118,11 @@ public sealed class User : EntityBase<UserId>
     #endregion
 
     #region Profile
-    public void UpdateNickname(UpdateNicknameCommand command)
-    {
-        AddDomainEvent(new NicknameUpdatedEvent(Id, command.Nickname));
-    }
 
-    public void UpdateBiography(UpdateBiographyCommand command)
+
+    public void UpdateProfile(UpdateProfileCommand command)
     {
-        AddDomainEvent(new BiographyUpdatedEvent(Id, command.Biography));
+        AddDomainEvent(new ProfileUpdatedEvent(Id, command.Nickname, command.Biography));
     }
 
     public void UpdateAvatar(UpdateAvatarCommand command)

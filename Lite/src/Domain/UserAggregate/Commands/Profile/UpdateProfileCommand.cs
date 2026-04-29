@@ -4,19 +4,20 @@ using Mediator;
 
 namespace Domain.UserAggregate.Commands.Profile;
 
-public sealed record class UpdateNicknameCommand(Nickname Nickname, Actor Actor) : ICommand { }
+public sealed record class UpdateProfileCommand(Nickname Nickname, Biography Biography, Actor Actor)
+    : ICommand;
 
-internal sealed class UpdateNicknameCommandHandler(IUserRepository repository)
-    : ICommandHandler<UpdateNicknameCommand>
+internal sealed class UpdateProfileCommandHandler(IUserRepository repository)
+    : ICommandHandler<UpdateProfileCommand>
 {
     public async ValueTask<Unit> Handle(
-        UpdateNicknameCommand command,
+        UpdateProfileCommand command,
         CancellationToken cancellationToken
     )
     {
         var user = await repository.GetAsync(command.Actor.Id, cancellationToken);
 
-        user.UpdateNickname(command);
+        user.UpdateProfile(command);
 
         return Unit.Value;
     }

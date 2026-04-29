@@ -270,33 +270,22 @@ public sealed class UserTests(TestContext context)
 
     #endregion
 
-    #region UpdateNickname
+    #region UpdateProfile
 
     [TestMethod]
-    public void Raise_Event_When_UpdateNickname()
+    public void Raise_Event_When_UpdateProfile()
     {
         var user = User.New(id: 123, username: Username.New(), password: Password.New);
-        UpdateNicknameCommand command = new(Nickname.New("new_nickname"), Actor.Author);
+        UpdateProfileCommand command = new(
+            Nickname.New("new_nickname"),
+            Biography.New("new_biography"),
+            Actor.Author
+        );
 
-        user.UpdateNickname(command);
-
-        user.DomainEvents.Count.ShouldBe(1);
-        user.DomainEvents.First().ShouldBeOfType<NicknameUpdatedEvent>();
-    }
-
-    #endregion
-
-    #region UpdateBiography
-    [TestMethod]
-    public void Raise_Event_When_UpdateBiography()
-    {
-        var user = User.New(id: 123, username: Username.New(), password: Password.New);
-        UpdateBiographyCommand command = new(Biography.New("new biography"), Actor.Author);
-
-        user.UpdateBiography(command);
+        user.UpdateProfile(command);
 
         user.DomainEvents.Count.ShouldBe(1);
-        user.DomainEvents.First().ShouldBeOfType<BiographyUpdatedEvent>();
+        user.DomainEvents.First().ShouldBeOfType<ProfileUpdatedEvent>();
     }
 
     #endregion

@@ -19,30 +19,16 @@ public sealed class UserController(IMediator mediator) : ControllerBase
     #region [Command/Post]
 
 
-    public readonly record struct UpdateNicknameRequest(Nickname Nickname);
+    public readonly record struct UpdateProfileRequest(Nickname Nickname, Biography Biography);
 
     [Authorize]
-    [HttpPost("nickname")]
-    public async Task<IActionResult> UpdateNickname(
-        [FromBody] [Required] UpdateNicknameRequest request,
+    [HttpPost("profile")]
+    public async Task<IActionResult> UpdateProfile(
+        [FromBody] [Required] UpdateProfileRequest request,
         CancellationToken cancellationToken
     )
     {
-        UpdateNicknameCommand command = new(request.Nickname, User);
-        await mediator.Send(command, cancellationToken);
-        return NoContent();
-    }
-
-    public readonly record struct UpdateBiographyRequest(Biography Biography);
-
-    [Authorize]
-    [HttpPost("biography")]
-    public async Task<IActionResult> UpdateBiography(
-        [FromBody] [Required] UpdateBiographyRequest request,
-        CancellationToken cancellationToken
-    )
-    {
-        UpdateBiographyCommand command = new(request.Biography, User);
+        UpdateProfileCommand command = new(request.Nickname, request.Biography, User);
         await mediator.Send(command, cancellationToken);
         return NoContent();
     }
