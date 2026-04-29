@@ -32,8 +32,4 @@
     <ProjectReference Include="..\Query\Query.csproj" />
     <ProjectReference Include="..\Storage\Storage.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
 </Project>

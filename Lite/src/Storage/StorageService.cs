@@ -29,9 +29,10 @@ internal sealed partial class StorageService(
                     scope.ServiceProvider.GetRequiredService<StorageDbContext>();
                 var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
 
+                var now = DateTime.UtcNow;
                 var messages = await context
                     .Messages.Where(m => m.Status == MessageStatus.Staging)
-                    .Where(m => m.RetryAt == null || m.RetryAt <= DateTime.UtcNow)
+                    .Where(m => m.RetryAt == null || m.RetryAt <= now)
                     .OrderBy(m => m.Time)
                     .ToArrayAsync(stoppingToken);
 
