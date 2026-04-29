@@ -23,7 +23,7 @@ public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptio
     #region [Command/Post]
 
 
-    public readonly record struct AddImageRequestMetadata(ImageTitle Title, ImageTags Tags = null);
+    public readonly record struct AddImageRequestMetadata(ImageTitle Title, ImageTags Tags);
 
     [Authorize]
     [RequestSizeLimit(ImageFile.MaxBytes)]
