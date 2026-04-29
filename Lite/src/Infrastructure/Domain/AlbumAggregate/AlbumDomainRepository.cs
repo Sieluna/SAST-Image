@@ -1,10 +1,9 @@
-﻿using Domain.AlbumAggregate;
-using Domain.AlbumAggregate.AlbumEntity;
+﻿using Domain.AlbumAggregate.AlbumEntity;
 using Domain.Database;
 using Domain.Shared;
 using Microsoft.EntityFrameworkCore;
 
-namespace Domain.AlbumAggregate.Services;
+namespace Domain.AlbumAggregate;
 
 internal sealed class AlbumDomainRepository(DomainDbContext context) : IAlbumRepository
 {

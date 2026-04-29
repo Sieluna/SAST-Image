@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Domain.Shared;
 using Domain.UserAggregate.Commands.Profile;
 using Domain.UserAggregate.UserEntity;
 using Mediator;
@@ -48,8 +49,9 @@ public sealed class UserController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("avatar")]
+    [RequestSizeLimit(ImageFile.MaxBytes)]
     public async Task<IActionResult> UpdateAvatar(
-        [FromForm] [FileValidator(0, 3)] [Required] IFormFile file,
+        [FromForm] [FileValidator(ImageFile.MaxBytes)] [Required] IFormFile file,
         CancellationToken cancellationToken
     )
     {
@@ -61,8 +63,9 @@ public sealed class UserController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("header")]
+    [RequestSizeLimit(ImageFile.MaxBytes)]
     public async Task<IActionResult> UpdateHeader(
-        [FromForm] [FileValidator(0, 10)] [Required] IFormFile file,
+        [FromForm] [FileValidator(ImageFile.MaxBytes)] [Required] IFormFile file,
         CancellationToken cancellationToken
     )
     {

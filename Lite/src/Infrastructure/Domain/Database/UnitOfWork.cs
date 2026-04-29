@@ -4,18 +4,21 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 using Query.Database;
+using Storage.Database;
 
 namespace Domain.Database;
 
 internal sealed class UnitOfWork(
     DomainDbContext domainContext,
     QueryDbContext queryContext,
+    StorageDbContext storageContext,
     ILogger<IUnitOfWork> logger,
     IDomainEventPublisher publisher
 ) : IUnitOfWork
 {
     private readonly DomainDbContext _domainContext = domainContext;
     private readonly QueryDbContext _queryContext = queryContext;
+    private readonly StorageDbContext _storageContext = storageContext;
     private readonly ILogger<IUnitOfWork> _logger = logger;
     private readonly IDomainEventPublisher _publisher = publisher;
 
@@ -30,6 +33,10 @@ internal sealed class UnitOfWork(
             cancellationToken
         );
         await using var _ = await _queryContext.Database.UseTransactionAsync(
+            transaction.GetDbTransaction(),
+            cancellationToken
+        );
+        await using var __ = await _storageContext.Database.UseTransactionAsync(
             transaction.GetDbTransaction(),
             cancellationToken
         );
@@ -53,6 +60,7 @@ internal sealed class UnitOfWork(
 
             await _domainContext.SaveChangesAsync(cancellationToken);
             await _queryContext.SaveChangesAsync(cancellationToken);
+            await _storageContext.SaveChangesAsync(cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
         }

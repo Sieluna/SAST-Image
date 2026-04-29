@@ -3,6 +3,7 @@ using Domain.AlbumAggregate.AlbumEntity;
 using Domain.AlbumAggregate.Commands;
 using Domain.AlbumAggregate.ImageEntity;
 using Domain.Entity;
+using Domain.Shared;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,11 +22,11 @@ public class ImageController(IMediator mediator) : ControllerBase
     #region [Command/Post]
 
     [Authorize]
-    [RequestSizeLimit(1024 * 1024 * 50)]
+    [RequestSizeLimit(ImageFile.MaxBytes)]
     [HttpPost("albums/{albumId:long}/add")]
     public async Task<IActionResult> AddImage(
         [FromRoute] AlbumId albumId,
-        [FromForm] [Required] [FileValidator(0, 50)] IFormFile file,
+        [FromForm] [Required] [FileValidator(ImageFile.MaxBytes)] IFormFile file,
         [FromForm] [MaxLength(ImageTitle.MaxLength)] string title,
         [FromForm] [Length(0, 10)] string[]? tags = null,
         CancellationToken cancellationToken = default

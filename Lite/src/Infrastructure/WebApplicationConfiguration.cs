@@ -40,13 +40,7 @@ public static class WebApplicationBuilderConfiguration
     {
         public void AddServices()
         {
-            builder.Services.AddInfrastructureServices(builder.Configuration);
-            builder.Services.AddAlbumServices();
-            builder.Services.AddCategoryServices();
-            builder
-                .Services.AddUserServices(builder.Configuration)
-                .AddJwtAuth(builder.Configuration);
-
+            builder.Services.AddDomainServices(builder.Configuration);
             builder.Services.AddQueryServices(builder.Configuration);
             builder.Services.AddStorageServices<AlbumAvailabilityChecker, ImageAvailabilityChecker>(
                 builder.Configuration

@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
                 (provider, options) =>
                     options
                         .UseNpgsql(provider.GetRequiredService<DbConnection>())
+                        .UseModel(QueryDbContextModel.Instance)
                         .UseSnakeCaseNamingConvention()
             );
             return services;

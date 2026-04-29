@@ -4,18 +4,21 @@ using NetVips;
 namespace WebAPI.Utilities.Attributes;
 
 [AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property, AllowMultiple = false)]
-public sealed class FileValidator(int minMB, int maxMB) : ValidationAttribute
+public sealed class FileValidator(long minSize, long maxSize) : ValidationAttribute
 {
+    public FileValidator(long maxSize)
+        : this(0, maxSize) { }
+
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
     {
         if (value is null)
             return ValidationResult.Success;
         if (value is not IFormFile file)
             return new ValidationResult("No file is provided.");
-        if (file.Length < minMB * 1024 * 1024)
-            return new ValidationResult("Too small file. Min " + minMB + " MBs.");
-        if (file.Length > maxMB * 1024 * 1024)
-            return new ValidationResult("Too large file. Max " + maxMB + " MBs.");
+        if (file.Length < minSize)
+            return new ValidationResult("Too small file. Min " + minSize + " Bytes.");
+        if (file.Length > maxSize)
+            return new ValidationResult("Too large file. Max " + maxSize + " Bytes.");
         if (file.ContentType.Contains("image") == false)
             return new ValidationResult("Not supported file type.");
         using var stream = file.OpenReadStream();

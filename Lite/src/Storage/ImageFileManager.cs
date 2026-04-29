@@ -66,7 +66,7 @@ internal sealed class LocalImageFileManager : IImageFileManager
     )
         where TId : ITypedId<TId, long>
     {
-        if (File.Exists(file.Value) is false)
+        if (file.TryGetValue(out string? value) is false)
         {
             throw new InvalidOperationException("The source must be a local file path.");
         }
@@ -74,7 +74,7 @@ internal sealed class LocalImageFileManager : IImageFileManager
         string destination = id.AbsolutePath(basePath, extension);
 
         EnsureDirectory(destination);
-        File.Move(file.Value, destination, overwrite: true);
+        File.Move(value, destination, overwrite: true);
     }
 
     public bool TryGet<TId>(TId id, [NotNullWhen(true)] out ImageFile? file)

@@ -10,8 +10,5 @@ public abstract record class AlbumCoverUpdatedEvent(AlbumId Album) : IDomainEven
 public sealed record class AlbumCoverUpdatedManuallyEvent(AlbumId Album, ImageFile File)
     : AlbumCoverUpdatedEvent(Album);
 
-public sealed record class AlbumCoverUpdatedAutomaticallyEvent(AlbumId Album, ImageId Image)
-    : AlbumCoverUpdatedEvent(Album);
-
-public sealed record class AlbumCoverUpdatedEmptyEvent(AlbumId Album)
+public sealed record class AlbumCoverUpdatedAutomaticallyEvent(AlbumId Album, ImageId? Image)
     : AlbumCoverUpdatedEvent(Album);

@@ -22,96 +22,80 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
-using Storage;
-using Storage.Albums;
 
 namespace Infrastructure;
 
 public static class ServiceConfiguration
 {
-    public static IServiceCollection AddInfrastructureServices(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
+    extension(IServiceCollection services)
     {
-        services
-            .AddScoped<DbConnection>(_ => new NpgsqlConnection(
-                configuration.GetConnectionString("Database")
-            ))
-            .AddDbContext<DomainDbContext>(
-                (services, options) =>
+        public IServiceCollection AddDomainServices(IConfigurationRoot configuration)
+        {
+            // domain db and required cache
+            services
+                .AddScoped<DbConnection>(_ => new NpgsqlConnection(
+                    configuration.GetConnectionString("Database")
+                ))
+                .AddDbContext<DomainDbContext>(
+                    (services, options) =>
+                    {
+                        options
+                            .UseNpgsql(
+                                services.GetRequiredService<DbConnection>(),
+                                b => b.MigrationsAssembly(InfrastructureAssembly.Assembly)
+                            )
+                            .UseSnakeCaseNamingConvention();
+                    }
+                )
+                .AddDistributedPostgresCache(options =>
                 {
-                    options
-                        .UseNpgsql(
-                            services.GetRequiredService<DbConnection>(),
-                            b => b.MigrationsAssembly(InfrastructureAssembly.Assembly)
-                        )
-                        .UseSnakeCaseNamingConvention();
-                }
-            )
-            .AddDistributedPostgresCache(options =>
-            {
-                options.CreateIfNotExists = true;
-                options.ConnectionString = configuration.GetConnectionString("Database");
-            });
+                    options.TableName = "cache";
+                    options.SchemaName = "domain";
+                    options.CreateIfNotExists = true;
+                    options.ConnectionString = configuration.GetConnectionString("Database");
+                });
 
-        services
-            .AddMediator(options =>
-            {
-                options.NotificationPublisherType = typeof(ForeachAwaitPublisher);
-                options.Assemblies = [DomainAssembly.Assembly];
-                options.PipelineBehaviors = [typeof(UnitOfWorkPostProcessor<,>)];
-                options.ServiceLifetime = ServiceLifetime.Scoped;
-            })
-            .AddScoped<IDomainEventPublisher, EventPublisher>()
-            .AddScoped<IUnitOfWork, UnitOfWork>();
+            // infrastructure for domain events and unit of work
+            services
+                .AddMediator(options =>
+                {
+                    options.NotificationPublisherType = typeof(ForeachAwaitPublisher);
+                    options.Assemblies = [DomainAssembly.Assembly];
+                    options.PipelineBehaviors = [typeof(UnitOfWorkPostProcessor<,>)];
+                    options.ServiceLifetime = ServiceLifetime.Scoped;
+                })
+                .AddScoped<IDomainEventPublisher, EventPublisher>()
+                .AddScoped<IUnitOfWork, UnitOfWork>();
 
-        services.Configure<StorageOptions>(configuration.GetRequiredSection("Storage"));
+            // user services
+            services
+                .AddScoped<IUserRepository, UserDomainRepository>()
+                .AddScoped<IUsernameUniquenessChecker, UsernameUniquenessChecker>()
+                .AddScoped<IRegistryCodeChecker, RegistryCodeChecker>()
+                .AddScoped<IIdentityUniquenessChecker, IdentityUniquenessChecker>();
+            services
+                .Configure<JwtAuthOptions>(configuration.GetRequiredSection("Auth"))
+                .AddSingleton<IPasswordGenerator, PasswordGenerator>()
+                .AddSingleton<IPasswordValidator, PasswordValidator>()
+                .AddSingleton<IJwtTokenGenerator, JwtTokenManager>()
+                .AddJwtAuth(configuration);
 
-        return services;
+            // album services
+            services
+                .AddScoped<IAlbumRepository, AlbumDomainRepository>()
+                .AddScoped<ICategoryExistenceChecker, CategoryExistenceChecker>()
+                .AddScoped<ICollaboratorsExistenceChecker, CollaboratorsExistenceChecker>();
+
+            // category services
+            services
+                .AddScoped<ICategoryRepository, CategoryDomainRepository>()
+                .AddScoped<ICategoryNameUniquenessChecker, CategoryNameUniquenessChecker>();
+
+            return services;
+        }
     }
 
-    public static IServiceCollection AddAlbumServices(this IServiceCollection services)
-    {
-        services
-            .AddScoped<IAlbumRepository, AlbumDomainRepository>()
-            .AddScoped<ICategoryExistenceChecker, CategoryExistenceChecker>()
-            .AddScoped<ICollaboratorsExistenceChecker, CollaboratorsExistenceChecker>()
-            .AddScoped<IAlbumAvailabilityChecker, AlbumAvailabilityChecker>();
-
-        return services;
-    }
-
-    public static IServiceCollection AddUserServices(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
-    {
-        services
-            .AddScoped<IUserRepository, UserDomainRepository>()
-            .AddScoped<IUsernameUniquenessChecker, UsernameUniquenessChecker>()
-            .AddScoped<IRegistryCodeChecker, RegistryCodeChecker>()
-            .AddScoped<IIdentityUniquenessChecker, IdentityUniquenessChecker>();
-
-        services
-            .Configure<JwtAuthOptions>(configuration.GetRequiredSection("Auth"))
-            .AddSingleton<IPasswordGenerator, PasswordGenerator>()
-            .AddSingleton<IPasswordValidator, PasswordValidator>()
-            .AddSingleton<IJwtTokenGenerator, JwtTokenManager>();
-
-        return services;
-    }
-
-    public static IServiceCollection AddCategoryServices(this IServiceCollection services)
-    {
-        services
-            .AddScoped<ICategoryRepository, CategoryDomainRepository>()
-            .AddScoped<ICategoryNameUniquenessChecker, CategoryNameUniquenessChecker>();
-
-        return services;
-    }
-
-    public static IServiceCollection AddJwtAuth(
+    private static IServiceCollection AddJwtAuth(
         this IServiceCollection services,
         IConfiguration configuration
     )

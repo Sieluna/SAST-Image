@@ -55,11 +55,11 @@ public static class DomainModelExtensions
         {
             get
             {
-                if (File.Exists(file.Value) is false)
+                if (file.TryGetValue(out string? value) is false)
                     return null;
-                string loader = NetVips.Image.FindLoad(file.Value);
+                string loader = NetVips.Image.FindLoad(value);
 
-                if (string.IsNullOrWhiteSpace(null))
+                if (string.IsNullOrWhiteSpace(loader))
                     return null;
 
                 var span = loader.AsSpan();

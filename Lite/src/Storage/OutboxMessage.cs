@@ -2,14 +2,14 @@
 
 namespace Storage;
 
-internal abstract record class OutboxMessage(DateTime Time) : IRequest
+public abstract record class OutboxMessage(DateTime Time) : IRequest
 {
     public virtual Guid Id { get; } = Guid.CreateVersion7();
     public MessageStatus Status { get; set; } = MessageStatus.Staging;
     public int RetryCount { get; set; } = 0;
     public DateTime? RetryAt { get; set; } = null;
 
-    internal enum MessageStatus : byte
+    public enum MessageStatus : byte
     {
         Unknown = 0,
         Staging,

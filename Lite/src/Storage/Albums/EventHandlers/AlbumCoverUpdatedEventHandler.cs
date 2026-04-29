@@ -1,35 +1,35 @@
 ﻿using Domain.AlbumAggregate.Events;
 using Domain.Event;
+using Storage.Albums.Messages;
+using Storage.Database;
 
 namespace Storage.Albums.EventHandlers;
 
 internal sealed class AlbumCoverUpdatedEventHandler(
     IImageFileManager manager,
-    ICompressProcessor compressor
+    StorageDbContext context
 ) : IDomainEventHandler<AlbumCoverUpdatedEvent>
 {
     public async ValueTask Handle(AlbumCoverUpdatedEvent e, CancellationToken cancellationToken)
     {
-        var task = e switch
+        var message = e switch
         {
             AlbumCoverUpdatedManuallyEvent { Album: var album, File: var file } =>
-                manager.SaveAsync(file, album, cancellationToken),
-            AlbumCoverUpdatedEmptyEvent { Album: var album } => manager.DeleteAsync(
+                new AlbumCoverUpdatedMessage(DateTime.UtcNow, album, file),
+            AlbumCoverUpdatedAutomaticallyEvent { Album: var album, Image: not { } } =>
+                new AlbumCoverUpdatedMessage(DateTime.UtcNow, album, null),
+            AlbumCoverUpdatedAutomaticallyEvent { Album: var album, Image: { } image }
+                when manager.TryGet(image, out var file) => new AlbumCoverUpdatedMessage(
+                DateTime.UtcNow,
                 album,
-                cancellationToken
+                file
             ),
-            AlbumCoverUpdatedAutomaticallyEvent { Album: var album, Image: var image }
-                when manager.TryGet(image, out var file) => manager.SaveAsync(
-                file.Value,
-                album,
-                cancellationToken
-            ),
+
             _ => throw new InvalidOperationException(
                 $"Unsupported event type: {e.GetType().FullName}"
             ),
         };
 
-        await task;
-        await compressor.CompressAsync(e.Album, cancellationToken);
+        await context.Messages.AddAsync(message, cancellationToken);
     }
 }

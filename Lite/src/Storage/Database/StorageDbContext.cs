@@ -6,12 +6,13 @@ using Domain.UserAggregate.UserEntity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Storage.Albums.Messages;
 using Storage.Images.Messages;
 using Storage.Users.Messages;
 
 namespace Storage.Database;
 
-internal sealed class StorageDbContext(DbContextOptions<StorageDbContext> options)
+public sealed class StorageDbContext(DbContextOptions<StorageDbContext> options)
     : DbContext(options)
 {
     public required DbSet<OutboxMessage> Messages { get; init; }
@@ -20,16 +21,16 @@ internal sealed class StorageDbContext(DbContextOptions<StorageDbContext> option
     {
         builder.HasDefaultSchema("storage");
 
-        builder
-            .Entity<OutboxMessage>()
+        var messages = builder.Entity<OutboxMessage>();
+        messages.HasKey(m => m.Id);
+        messages
             .HasDiscriminator<string>("type")
             .HasMessage<ImageAddedMessage>()
             .HasMessage<ImageDeletedMessage>()
             .HasMessage<AvatarUpdatedMessage>()
             .HasMessage<HeaderUpdatedMessage>()
+            .HasMessage<AlbumCoverUpdatedMessage>()
             .IsComplete();
-
-        builder.Entity<OutboxMessage>().HasKey(m => m.Id);
 
         base.OnModelCreating(builder);
     }
@@ -61,6 +62,7 @@ file static class Extensions
         public void Id<TId>()
             where TId : ITypedId<TId, long>, new()
         {
+            builder.DefaultTypeMapping<TId>(b => b.HasConversion<TypedIdConverter<TId, long>>());
             builder.Properties<TId>().HaveConversion<TypedIdConverter<TId, long>>();
         }
     }

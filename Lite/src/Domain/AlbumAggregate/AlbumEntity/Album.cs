@@ -154,10 +154,7 @@ public sealed class Album : EntityBase<AlbumId>
             _customCover = false;
             var imageId = _images.LatestAvailableImage?.Id;
 
-            if (imageId is null)
-                AddDomainEvent(new AlbumCoverUpdatedEmptyEvent(Id));
-            else
-                AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId.Value));
+            AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId));
 
             return;
         }
@@ -286,10 +283,7 @@ public sealed class Album : EntityBase<AlbumId>
 
         var imageId = _images.LatestAvailableImage?.Id;
 
-        if (imageId is null)
-            AddDomainEvent(new AlbumCoverUpdatedEmptyEvent(Id));
-        else
-            AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId.Value));
+        AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId));
     }
 
     public void RestoreImage(RestoreImageCommand command)
@@ -327,10 +321,7 @@ public sealed class Album : EntityBase<AlbumId>
 
         var imageId = _images.LatestAvailableImage?.Id;
 
-        if (imageId is null)
-            AddDomainEvent(new AlbumCoverUpdatedEmptyEvent(Id));
-        else
-            AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId.Value));
+        AddDomainEvent(new AlbumCoverUpdatedAutomaticallyEvent(Id, imageId));
     }
 
     public void LikeImage(LikeImageCommand command)
