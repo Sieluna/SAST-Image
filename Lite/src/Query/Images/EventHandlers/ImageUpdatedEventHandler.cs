@@ -5,18 +5,18 @@ using Query.Database;
 namespace Query.Images.EventHandlers;
 
 internal sealed class ImageUpdatedEventHandler(QueryDbContext context)
-    : IDomainEventHandler<ImageInfoUpdatedEvent>
+    : IDomainEventHandler<ImageUpdatedEvent>
 {
-    public async ValueTask Handle(ImageInfoUpdatedEvent e, CancellationToken cancellationToken)
+    public async ValueTask Handle(ImageUpdatedEvent e, CancellationToken cancellationToken)
     {
         var image = await context.Images.GetAsync(
             image => image.Id == e.Id.Value,
             cancellationToken
         );
 
-        if (e.Title is { Value: { } title })
+        if (e.Title is { Value: var title })
             image.Title = title;
-        if (e.Tags is { Value: { } tags })
+        if (e.Tags is { Value: var tags })
             image.Tags = tags;
     }
 }

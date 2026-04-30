@@ -4,8 +4,11 @@ using Mediator;
 
 namespace Domain.UserAggregate.Commands.Profile;
 
-public sealed record class UpdateProfileCommand(Nickname Nickname, Biography Biography, Actor Actor)
-    : ICommand;
+public sealed record class UpdateProfileCommand(
+    Nickname? Nickname,
+    Biography? Biography,
+    Actor Actor
+) : ICommand;
 
 internal sealed class UpdateProfileCommandHandler(IUserRepository repository)
     : ICommandHandler<UpdateProfileCommand>

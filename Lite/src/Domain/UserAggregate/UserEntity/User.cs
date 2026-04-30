@@ -122,6 +122,9 @@ public sealed class User : EntityBase<UserId>
 
     public void UpdateProfile(UpdateProfileCommand command)
     {
+        if (command.Nickname is null && command.Biography is null)
+            return;
+
         AddDomainEvent(new ProfileUpdatedEvent(Id, command.Nickname, command.Biography));
     }
 

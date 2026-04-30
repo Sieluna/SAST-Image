@@ -14,11 +14,11 @@ internal sealed class AlbumInfoUpdatedEventHandler(QueryDbContext context)
             cancellationToken
         );
 
-        if (e.Title is { Value: { } title })
+        if (e.Title is { Value: var title })
             album.Title = title;
-        if (e.Description is { Value: { } description })
+        if (e.Description is { Value: var description })
             album.Description = description;
-        if (e.Tags is { Value: { } tags })
+        if (e.Tags is { Value: var tags })
             album.Tags = tags;
     }
 }

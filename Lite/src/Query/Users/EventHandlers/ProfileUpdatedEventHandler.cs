@@ -11,7 +11,9 @@ internal sealed class ProfileUpdatedEventHandler(QueryDbContext context)
     {
         var user = await context.Users.GetAsync(u => u.Id == e.Id.Value, cancellationToken);
 
-        user.Biography = e.Biography.Value;
-        user.Nickname = e.Nickname.Value;
+        if (e.Biography is { Value: var biography })
+            user.Biography = biography;
+        if (e.Nickname is { Value: var nickname })
+            user.Nickname = nickname;
     }
 }

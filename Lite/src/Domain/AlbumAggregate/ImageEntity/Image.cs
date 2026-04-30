@@ -51,7 +51,7 @@ internal sealed class Image : EntityBase<ImageId>
     {
         CheckAvailability();
 
-        AddDomainEvent(new ImageInfoUpdatedEvent(Id, command.Title, command.Tags));
+        AddDomainEvent(new ImageUpdatedEvent(Id, command.Title, command.Tags));
     }
 
     public void Remove(RemoveImageCommand command)

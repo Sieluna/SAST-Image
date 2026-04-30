@@ -118,6 +118,8 @@ public sealed class Album : EntityBase<AlbumId>
             throw new NoPermissionException();
         if (_removed)
             throw new AlbumRemovedException();
+        if (command.Title is null && command.Description is null && command.Tags is null)
+            return;
 
         AddDomainEvent(
             new AlbumInfoUpdatedEvent(Id, command.Title, command.Description, command.Tags)
@@ -336,6 +338,8 @@ public sealed class Album : EntityBase<AlbumId>
             throw new AlbumRemovedException();
         if (_accessLevel == AccessLevel.Private && CanNotManage(command.Actor))
             throw new NoPermissionException();
+        if (command.Title is null && command.Tags is null)
+            return;
 
         var image = _images.FindById(command.ImageId);
 

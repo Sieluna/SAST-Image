@@ -21,12 +21,12 @@ public sealed class UserController(IMediator mediator) : AdvancedController
 
 
     public readonly record struct UpdateProfileRequest(
-        [property: Required] Nickname Nickname,
-        [property: Required] Biography Biography
+        Nickname? Nickname = null,
+        Biography? Biography = null
     );
 
     [Authorize]
-    [HttpPost("profile")]
+    [HttpPatch("profile")]
     [EndpointName("Update Profile")]
     [EndpointDescription("Update the current user's profile information.")]
     [MaybeNotFound]
@@ -41,7 +41,7 @@ public sealed class UserController(IMediator mediator) : AdvancedController
     }
 
     [Authorize]
-    [HttpPost("avatar")]
+    [HttpPut("avatar")]
     [RequestSizeLimit(ImageFile.MaxBytes)]
     [EndpointName("Update Avatar")]
     [EndpointDescription("Update the current user's avatar image.")]
@@ -58,7 +58,7 @@ public sealed class UserController(IMediator mediator) : AdvancedController
     }
 
     [Authorize]
-    [HttpPost("header")]
+    [HttpPut("header")]
     [RequestSizeLimit(ImageFile.MaxBytes)]
     [EndpointName("Update Header")]
     [EndpointDescription("Update the current user's header image.")]
