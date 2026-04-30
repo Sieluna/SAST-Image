@@ -59,9 +59,9 @@ public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptio
     [Authorize]
     [HttpPatch("albums/{albumId:long}/images/{imageId:long}")]
     [EndpointName("Update Image Metadata")]
-    [EndpointDescription("Update the title and tags of an image in an album.")]
+    [EndpointDescription("Update an image's title and tags.")]
     [MaybeNotFound]
-    public async Task<NoContent> UpdateTags(
+    public async Task<NoContent> Update(
         [FromRoute] AlbumId albumId,
         [FromRoute] ImageId imageId,
         [FromBody] UpdateImageRequest request
@@ -178,9 +178,9 @@ public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptio
     }
 
     [HttpGet("images/{id:long}")]
-    [EndpointName("Get Image")]
+    [EndpointName("Get Image File")]
     [EndpointDescription("Get an image file by ID and kind.")]
-    public async Task<Results<NotFound, PhysicalFileHttpResult>> GetImage(
+    public async Task<Results<NotFound, PhysicalFileHttpResult>> GetImageFile(
         [FromRoute] ImageId id,
         [FromQuery] ImageKind kind = ImageKind.Thumbnail,
         CancellationToken cancellationToken = default
@@ -189,20 +189,6 @@ public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptio
         ImageFileQuery query = new(id, kind, User);
         var image = await mediator.Send(query, cancellationToken);
         return image is null ? NotFound() : Image(image.Value);
-    }
-
-    [Authorize]
-    [HttpGet("images/{id:long}/info")]
-    [EndpointName("Get Image Info")]
-    [EndpointDescription("Get detailed image metadata by ID.")]
-    public async Task<Results<NotFound, Ok<DetailedImage>>> GetDetailedImage(
-        [FromRoute] ImageId id,
-        CancellationToken cancellationToken
-    )
-    {
-        DetailedImageQuery query = new(id, User);
-        var image = await mediator.Send(query, cancellationToken);
-        return image is null ? NotFound() : Ok(image);
     }
 
     [Authorize]

@@ -6,6 +6,20 @@ using Query.Database;
 
 namespace Query.Images.Queries;
 
+public readonly record struct ImageDto
+{
+    public required long Id { get; init; }
+    public required long AlbumId { get; init; }
+    public required long UploaderId { get; init; }
+    public required string Title { get; init; }
+    public required DateTime UploadedAt { get; init; }
+    public required string[] Tags { get; init; }
+    public required int Likes { get; init; }
+    public required RequesterInfo Requester { get; init; }
+
+    public readonly record struct RequesterInfo(bool Liked);
+}
+
 public sealed record class ImagesQuery(long? AuthorId, long? AlbumId, long? Cursor, Actor Actor)
     : IQuery<ImageDto[]>
 {
@@ -39,15 +53,17 @@ public sealed record class ImagesQuery(long? AuthorId, long? AlbumId, long? Curs
                 .OrderByDescending(i => i.Id)
                 .SkipWhile(i => cursor != null && i.Id != cursor)
                 .Take(PageSize)
-                .Select(i => new ImageDto(
-                    i.Id,
-                    i.UploaderId,
-                    i.AlbumId,
-                    i.Title,
-                    i.Tags,
-                    i.UploadedAt,
-                    i.RemovedAt
-                ))
+                .Select(i => new ImageDto
+                {
+                    Id = i.Id,
+                    UploaderId = i.UploaderId,
+                    AlbumId = i.AlbumId,
+                    Title = i.Title,
+                    Tags = i.Tags,
+                    UploadedAt = i.UploadedAt,
+                    Likes = i.Likes.Count,
+                    Requester = new(i.Likes.Select(l => l.User).Contains(actorId)),
+                })
     );
 }
 

@@ -22,15 +22,17 @@ public sealed record RemovedImagesQuery(AlbumId Album, Actor Actor) : IQuery<Ima
                 .Where(i => i.Status == ImageStatusValue.Removed)
                 .Where(i => i.AlbumId == albumId)
                 .Where(i => i.AuthorId == actorId || i.Collaborators.Contains(actorId) || isAdmin)
-                .Select(i => new ImageDto(
-                    i.Id,
-                    i.UploaderId,
-                    i.AlbumId,
-                    i.Title,
-                    i.Tags,
-                    i.UploadedAt,
-                    i.RemovedAt
-                ))
+                .Select(i => new ImageDto
+                {
+                    Id = i.Id,
+                    UploaderId = i.UploaderId,
+                    AlbumId = i.AlbumId,
+                    Title = i.Title,
+                    Tags = i.Tags,
+                    UploadedAt = i.UploadedAt,
+                    Likes = i.Likes.Count,
+                    Requester = new(i.Likes.Select(l => l.User).Contains(actorId)),
+                })
     );
 }
 
