@@ -3,7 +3,8 @@ using Domain.Event;
 
 namespace Domain.CategoryAggregate.Events;
 
-public sealed record class CategoryDescriptionUpdatedEvent(
+public sealed record class CategoryUpdatedEvent(
     CategoryId Id,
-    CategoryDescription Description
-) : IDomainEvent { }
+    CategoryName? Name,
+    CategoryDescription? Description
+) : IDomainEvent;

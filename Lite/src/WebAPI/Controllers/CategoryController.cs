@@ -39,39 +39,23 @@ public sealed class CategoryController(IMediator mediator) : AdvancedController
         return Ok(id);
     }
 
-    public readonly record struct UpdateCategoryNameRequest([property: Required] CategoryName Name);
-
-    [HttpPost("{id:long}/name")]
-    [Authorize(AuthPolicies.Admin)]
-    [EndpointName("Update Category Name")]
-    [EndpointDescription("Update a category's name.")]
-    [MaybeConflict]
-    public async Task<NoContent> UpdateName(
-        [FromRoute] CategoryId id,
-        [FromBody, Required] UpdateCategoryNameRequest request,
-        CancellationToken cancellationToken
-    )
-    {
-        UpdateCategoryNameCommand command = new(id, request.Name, User);
-        await mediator.Send(command, cancellationToken);
-        return NoContent();
-    }
-
-    public readonly record struct UpdateCategoryDescriptionRequest(
-        [property: Required] CategoryDescription Description
+    public readonly record struct UpdateCategoryRequest(
+        CategoryName? Name = null,
+        CategoryDescription? Description = null
     );
 
-    [HttpPost("{id:long}/description")]
+    [HttpPatch("{id:long}")]
     [Authorize(AuthPolicies.Admin)]
-    [EndpointName("Update Category Description")]
-    [EndpointDescription("Update a category's description.")]
-    public async Task<NoContent> UpdateDescription(
+    [EndpointName("Update Category")]
+    [EndpointDescription("Update an existing category.")]
+    [MaybeConflict]
+    public async Task<NoContent> Update(
         [FromRoute] CategoryId id,
-        [FromBody, Required] UpdateCategoryDescriptionRequest request,
+        [FromBody, Required] UpdateCategoryRequest request,
         CancellationToken cancellationToken
     )
     {
-        UpdateCategoryDescriptionCommand command = new(id, request.Description, User);
+        UpdateCategoryCommand command = new(id, request.Name, request.Description, User);
         await mediator.Send(command, cancellationToken);
         return NoContent();
     }

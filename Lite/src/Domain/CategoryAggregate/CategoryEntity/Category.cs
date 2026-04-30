@@ -40,19 +40,19 @@ public sealed class Category : EntityBase<CategoryId>
 
     private CategoryName _name;
 
-    public void UpdateName(UpdateCategoryNameCommand command)
+    public async Task Update(
+        UpdateCategoryCommand command,
+        ICategoryNameUniquenessChecker checker,
+        CancellationToken cancellationToken
+    )
     {
         if (command.Actor.IsAdmin == false)
             throw new NoPermissionException();
+        if (command.Description is null && (command.Name is not { } n || n == _name))
+            return;
+        if (command.Name is { } name)
+            await checker.CheckAsync(name, cancellationToken);
 
-        _name = command.Name;
-        AddDomainEvent(new CategoryNameUpdatedEvent(Id, command.Name));
-    }
-
-    public void UpdateDescription(UpdateCategoryDescriptionCommand command)
-    {
-        if (command.Actor.IsAdmin == false)
-            throw new NoPermissionException();
-        AddDomainEvent(new CategoryDescriptionUpdatedEvent(Id, command.Description));
+        AddDomainEvent(new CategoryUpdatedEvent(Id, command.Name, command.Description));
     }
 }
