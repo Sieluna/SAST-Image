@@ -1,9 +1,8 @@
 ﻿using Domain.Shared;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
-using WebAPI.Utilities;
 
-namespace WebAPI.Controllers;
+namespace WebAPI.Utilities;
 
 [ProducesErrorResponseType(typeof(ProblemDetails))]
 [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest, "application/problem+json")]
