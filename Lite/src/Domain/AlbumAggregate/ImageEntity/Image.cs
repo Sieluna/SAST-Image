@@ -47,11 +47,11 @@ internal sealed class Image : EntityBase<ImageId>
         AddDomainEvent(new ImageUnlikedEvent(Id, command.Actor.Id));
     }
 
-    public void UpdateTags(UpdateImageTagsCommand command)
+    public void Update(UpdateImageCommand command)
     {
         CheckAvailability();
 
-        AddDomainEvent(new ImageTagsUpdatedEvent(Id, command.Tags));
+        AddDomainEvent(new ImageInfoUpdatedEvent(Id, command.Title, command.Tags));
     }
 
     public void Remove(RemoveImageCommand command)

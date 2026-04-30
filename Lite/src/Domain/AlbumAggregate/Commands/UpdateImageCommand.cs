@@ -5,24 +5,25 @@ using Mediator;
 
 namespace Domain.AlbumAggregate.Commands;
 
-public sealed record class UpdateImageTagsCommand(
+public sealed record class UpdateImageCommand(
     AlbumId AlbumId,
     ImageId ImageId,
-    ImageTags Tags,
+    ImageTitle? Title,
+    ImageTags? Tags,
     Actor Actor
 ) : ICommand;
 
-internal sealed class UpdateImageTagsCommandHandler(IAlbumRepository repository)
-    : ICommandHandler<UpdateImageTagsCommand>
+internal sealed class UpdateImageCommandHandler(IAlbumRepository repository)
+    : ICommandHandler<UpdateImageCommand>
 {
     public async ValueTask<Unit> Handle(
-        UpdateImageTagsCommand command,
+        UpdateImageCommand command,
         CancellationToken cancellationToken
     )
     {
         var album = await repository.GetAsync(command.AlbumId, cancellationToken);
 
-        album.UpdateImageTags(command);
+        album.UpdateImage(command);
 
         return Unit.Value;
     }

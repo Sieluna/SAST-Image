@@ -10,7 +10,7 @@ public sealed class ImageModel
     private ImageModel() { }
 
     public long Id { get; }
-    public string Title { get; } = null!;
+    public string Title { get; internal set; } = null!;
     public long AlbumId { get; }
     public long AuthorId { get; }
     public long UploaderId { get; }

@@ -51,20 +51,23 @@ public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptio
         return Ok(id);
     }
 
-    public readonly record struct UpdateImageTagsRequest(ImageTags Tags);
+    public readonly record struct UpdateImageRequest(
+        ImageTitle? Title = null,
+        ImageTags? Tags = null
+    );
 
     [Authorize]
-    [HttpPost("albums/{albumId:long}/images/{imageId:long}/tags")]
-    [EndpointName("Update Image Tags")]
-    [EndpointDescription("Update tags for an image in an album.")]
+    [HttpPatch("albums/{albumId:long}/images/{imageId:long}")]
+    [EndpointName("Update Image Metadata")]
+    [EndpointDescription("Update the title and tags of an image in an album.")]
     [MaybeNotFound]
     public async Task<NoContent> UpdateTags(
         [FromRoute] AlbumId albumId,
         [FromRoute] ImageId imageId,
-        [FromBody] UpdateImageTagsRequest request
+        [FromBody] UpdateImageRequest request
     )
     {
-        UpdateImageTagsCommand command = new(albumId, imageId, request.Tags, User);
+        UpdateImageCommand command = new(albumId, imageId, request.Title, request.Tags, User);
         await mediator.Send(command);
         return NoContent();
     }

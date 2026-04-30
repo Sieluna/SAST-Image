@@ -330,7 +330,7 @@ public sealed class Album : EntityBase<AlbumId>
         image.Unlike(command);
     }
 
-    public void UpdateImageTags(UpdateImageTagsCommand command)
+    public void UpdateImage(UpdateImageCommand command)
     {
         if (_removed)
             throw new AlbumRemovedException();
@@ -339,7 +339,7 @@ public sealed class Album : EntityBase<AlbumId>
 
         var image = _images.FindById(command.ImageId);
 
-        image.UpdateTags(command);
+        image.Update(command);
     }
 
     #endregion
