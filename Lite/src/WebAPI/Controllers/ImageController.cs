@@ -121,7 +121,7 @@ public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptio
     }
 
     [Authorize]
-    [HttpPost("albums/{albumId:long}/images/{imageId:long}/unlike")]
+    [HttpDelete("albums/{albumId:long}/images/{imageId:long}/like")]
     [EndpointName("Unlike Image")]
     [EndpointDescription("Remove a like from an image.")]
     [MaybeNotFound]

@@ -143,7 +143,7 @@ public sealed class AlbumController(IMediator mediator) : AdvancedController
     }
 
     [Authorize]
-    [HttpPost("{id:long}/cover")]
+    [HttpPut("{id:long}/cover")]
     [RequestFormLimits(MultipartBodyLengthLimit = ImageFile.MaxBytes)]
     [EndpointName("Update Album Cover")]
     [EndpointDescription("Update or clear an album's cover image.")]
@@ -181,7 +181,7 @@ public sealed class AlbumController(IMediator mediator) : AdvancedController
     }
 
     [Authorize]
-    [HttpPost("{id:long}/unsubscribe")]
+    [HttpDelete("{id:long}/subscribe")]
     [EndpointName("Unsubscribe Album")]
     [EndpointDescription("Unsubscribe the current user from an album.")]
     [MaybeNotFound]
