@@ -39,7 +39,7 @@ public sealed record class RemovedAlbumsQuery(Actor Actor) : IQuery<RemovedAlbum
     );
 }
 
-internal sealed class RemovedAlbumsQueryHandler(QueryDbContext context)
+public sealed class RemovedAlbumsQueryHandler(QueryDbContext context)
     : IQueryHandler<RemovedAlbumsQuery, RemovedAlbumDto[]>
 {
     public async ValueTask<RemovedAlbumDto[]> Handle(

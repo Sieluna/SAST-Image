@@ -6,7 +6,7 @@ namespace Storage.Users.Queries;
 
 public sealed record class UserAvatarQuery(UserId User) : IQuery<ImageFile?> { }
 
-internal sealed class UserAvatarQueryHandler(IImageFileManager manager)
+public sealed class UserAvatarQueryHandler(IImageFileManager manager)
     : IQueryHandler<UserAvatarQuery, ImageFile?>
 {
     public async ValueTask<ImageFile?> Handle(

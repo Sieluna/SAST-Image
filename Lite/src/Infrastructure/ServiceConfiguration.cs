@@ -2,7 +2,6 @@
 using System.Security.Claims;
 using System.Text;
 using AspNet.Security.OAuth.GitHub;
-using Domain;
 using Domain.AlbumAggregate;
 using Domain.AlbumAggregate.Services;
 using Domain.CategoryAggregate;
@@ -60,7 +59,6 @@ public static class ServiceConfiguration
                 .AddMediator(options =>
                 {
                     options.NotificationPublisherType = typeof(ForeachAwaitPublisher);
-                    options.Assemblies = [DomainAssembly.Assembly];
                     options.PipelineBehaviors = [typeof(UnitOfWorkPostProcessor<,>)];
                     options.ServiceLifetime = ServiceLifetime.Scoped;
                 })
@@ -72,6 +70,7 @@ public static class ServiceConfiguration
                 .AddScoped<IUserRepository, UserDomainRepository>()
                 .AddScoped<IUsernameUniquenessChecker, UsernameUniquenessChecker>()
                 .AddScoped<IRegistryCodeChecker, RegistryCodeChecker>()
+                .AddScoped<IRegistryCodeEmailClient, RegistryCodeEmailClient>()
                 .AddScoped<IIdentityUniquenessChecker, IdentityUniquenessChecker>();
             services
                 .Configure<JwtAuthOptions>(configuration.GetRequiredSection("Auth"))

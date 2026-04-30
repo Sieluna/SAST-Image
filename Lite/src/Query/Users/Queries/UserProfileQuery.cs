@@ -30,7 +30,7 @@ public sealed record UserProfileQuery(UserId User) : IQuery<UserProfileDto?>
         );
 }
 
-internal sealed class UserProfileQueryHandler(QueryDbContext context)
+public sealed class UserProfileQueryHandler(QueryDbContext context)
     : IQueryHandler<UserProfileQuery, UserProfileDto?>
 {
     public async ValueTask<UserProfileDto?> Handle(

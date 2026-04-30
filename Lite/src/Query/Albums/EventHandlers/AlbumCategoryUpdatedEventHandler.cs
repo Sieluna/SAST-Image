@@ -4,7 +4,7 @@ using Query.Database;
 
 namespace Query.Albums.EventHandlers;
 
-internal sealed class AlbumCategoryUpdatedEventHandler(QueryDbContext context)
+public sealed class AlbumCategoryUpdatedEventHandler(QueryDbContext context)
     : IDomainEventHandler<AlbumCategoryUpdatedEvent>
 {
     public async ValueTask Handle(AlbumCategoryUpdatedEvent e, CancellationToken cancellationToken)

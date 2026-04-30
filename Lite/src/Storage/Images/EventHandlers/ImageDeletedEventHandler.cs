@@ -5,7 +5,7 @@ using Storage.Images.Messages;
 
 namespace Storage.Images.EventHandlers;
 
-internal sealed class ImageDeletedEventHandler(StorageDbContext context)
+public sealed class ImageDeletedEventHandler(StorageDbContext context)
     : IDomainEventHandler<ImageDeletedEvent>
 {
     public async ValueTask Handle(ImageDeletedEvent e, CancellationToken cancellationToken)

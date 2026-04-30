@@ -4,7 +4,7 @@ using Query.Database;
 
 namespace Query.Users.EventHandlers;
 
-internal sealed class UsernameUpdatedEventHandler(QueryDbContext context)
+public sealed class UsernameUpdatedEventHandler(QueryDbContext context)
     : IDomainEventHandler<UsernameResetEvent>
 {
     public async ValueTask Handle(UsernameResetEvent e, CancellationToken cancellationToken)

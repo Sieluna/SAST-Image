@@ -53,7 +53,7 @@ public sealed record class DetailedAlbumQuery(AlbumId Id, Actor Actor) : IQuery<
     );
 }
 
-internal sealed class DetailedAlbumQueryHandler(QueryDbContext context)
+public sealed class DetailedAlbumQueryHandler(QueryDbContext context)
     : IQueryHandler<DetailedAlbumQuery, DetailedAlbum?>
 {
     public async ValueTask<DetailedAlbum?> Handle(

@@ -15,7 +15,7 @@ public record class CategoriesQuery() : IQuery<CategoryDto[]>
         );
 }
 
-internal sealed class CategoriesQueryHandler(QueryDbContext context)
+public sealed class CategoriesQueryHandler(QueryDbContext context)
     : IQueryHandler<CategoriesQuery, CategoryDto[]>
 {
     public async ValueTask<CategoryDto[]> Handle(

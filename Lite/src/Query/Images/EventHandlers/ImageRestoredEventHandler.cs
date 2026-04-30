@@ -4,7 +4,7 @@ using Query.Database;
 
 namespace Query.Images.EventHandlers;
 
-internal sealed class ImageRestoredEventHandler(QueryDbContext context)
+public sealed class ImageRestoredEventHandler(QueryDbContext context)
     : IDomainEventHandler<ImageRestoredEvent>
 {
     public async ValueTask Handle(ImageRestoredEvent e, CancellationToken cancellationToken)

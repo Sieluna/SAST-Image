@@ -67,7 +67,7 @@ public sealed record class ImagesQuery(long? AuthorId, long? AlbumId, long? Curs
     );
 }
 
-internal sealed class ImagesQueryHandler(QueryDbContext context)
+public sealed class ImagesQueryHandler(QueryDbContext context)
     : IQueryHandler<ImagesQuery, ImageDto[]>
 {
     public async ValueTask<ImageDto[]> Handle(

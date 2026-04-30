@@ -5,7 +5,7 @@ using Storage.Database;
 
 namespace Storage.Albums.EventHandlers;
 
-internal sealed class AlbumCoverUpdatedEventHandler(
+public sealed class AlbumCoverUpdatedEventHandler(
     IImageFileManager manager,
     StorageDbContext context
 ) : IDomainEventHandler<AlbumCoverUpdatedEvent>

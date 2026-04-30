@@ -5,7 +5,7 @@ using Query.Database;
 
 namespace Query.Images.EventHandlers;
 
-internal sealed class ImageUnlikedEventHandler(QueryDbContext context)
+public sealed class ImageUnlikedEventHandler(QueryDbContext context)
     : IDomainEventHandler<ImageUnlikedEvent>
 {
     public async ValueTask Handle(ImageUnlikedEvent e, CancellationToken cancellationToken)

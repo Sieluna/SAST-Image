@@ -4,7 +4,7 @@ using Query.Database;
 
 namespace Query.Albums.EventHandlers;
 
-internal sealed class AlbumAccessLevelUpdatedEventHandler(QueryDbContext context)
+public sealed class AlbumAccessLevelUpdatedEventHandler(QueryDbContext context)
     : IDomainEventHandler<AlbumAccessLevelUpdatedEvent>
 {
     public async ValueTask Handle(

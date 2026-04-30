@@ -68,7 +68,7 @@ public sealed record class AlbumsQuery(
     );
 }
 
-internal sealed class AlbumsQueryHandler(QueryDbContext context)
+public sealed class AlbumsQueryHandler(QueryDbContext context)
     : IQueryHandler<AlbumsQuery, AlbumDto[]>
 {
     public async ValueTask<AlbumDto[]> Handle(

@@ -6,7 +6,7 @@ namespace Storage.Albums.Queries;
 
 public sealed record class AlbumCoverQuery(AlbumId Id, Actor Actor) : IQuery<ImageFile?>;
 
-internal sealed class AlbumCoverQueryHandler(
+public sealed class AlbumCoverQueryHandler(
     IImageFileManager manager,
     IAlbumAvailabilityChecker checker
 ) : IQueryHandler<AlbumCoverQuery, ImageFile?>

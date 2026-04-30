@@ -6,7 +6,7 @@ namespace Storage.Users.Queries;
 
 public sealed record UserHeaderQuery(UserId User) : IQuery<ImageFile?> { }
 
-internal sealed class UserHeaderQueryHandler(IImageFileManager manager)
+public sealed class UserHeaderQueryHandler(IImageFileManager manager)
     : IQueryHandler<UserHeaderQuery, ImageFile?>
 {
     public async ValueTask<ImageFile?> Handle(

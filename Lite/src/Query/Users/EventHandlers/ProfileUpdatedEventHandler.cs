@@ -4,7 +4,7 @@ using Query.Database;
 
 namespace Query.Users.EventHandlers;
 
-internal sealed class ProfileUpdatedEventHandler(QueryDbContext context)
+public sealed class ProfileUpdatedEventHandler(QueryDbContext context)
     : IDomainEventHandler<ProfileUpdatedEvent>
 {
     public async ValueTask Handle(ProfileUpdatedEvent e, CancellationToken cancellationToken)

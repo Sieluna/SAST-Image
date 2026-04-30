@@ -7,7 +7,7 @@ namespace Storage.Images.Queries;
 public sealed record ImageFileQuery(ImageId Image, ImageKind Kind, Actor Actor)
     : IQuery<ImageFile?>;
 
-internal sealed class ImageFileQueryHandler(
+public sealed class ImageFileQueryHandler(
     IImageFileManager manager,
     IImageAvailabilityChecker checker
 ) : IQueryHandler<ImageFileQuery, ImageFile?>

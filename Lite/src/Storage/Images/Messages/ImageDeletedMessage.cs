@@ -3,7 +3,7 @@ using Mediator;
 
 namespace Storage.Images.Messages;
 
-internal sealed record class ImageDeletedMessage(DateTime Time, ImageId ImageId)
+public sealed record class ImageDeletedMessage(DateTime Time, ImageId ImageId)
     : OutboxMessage(Time),
         IOutboxMessage
 {
@@ -14,7 +14,7 @@ internal sealed record class ImageDeletedMessage(DateTime Time, ImageId ImageId)
         : this(null!) { }
 }
 
-internal sealed class ImageDeletedMessageHandler(IImageFileManager manager)
+public sealed class ImageDeletedMessageHandler(IImageFileManager manager)
     : IOutboxMessageHandler<ImageDeletedMessage>
 {
     public async ValueTask<Unit> Handle(

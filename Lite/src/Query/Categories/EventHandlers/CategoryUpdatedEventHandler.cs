@@ -1,14 +1,18 @@
 ﻿using Domain.CategoryAggregate.Events;
 using Domain.Event;
+using Query.Database;
 
 namespace Query.Categories.EventHandlers;
 
-internal sealed class CategoryUpdatedEventHandler(ICategoryModelRepository repository)
+public sealed class CategoryUpdatedEventHandler(QueryDbContext context)
     : IDomainEventHandler<CategoryUpdatedEvent>
 {
     public async ValueTask Handle(CategoryUpdatedEvent e, CancellationToken cancellationToken)
     {
-        var category = await repository.GetAsync(e.Id.Value, cancellationToken);
+        var category = await context.Categories.GetAsync(
+            c => c.Id == e.Id.Value,
+            cancellationToken
+        );
 
         if (e.Name is { Value: var name })
             category.Name = name;

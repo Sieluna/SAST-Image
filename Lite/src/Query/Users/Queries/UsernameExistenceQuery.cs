@@ -18,7 +18,7 @@ public sealed record class UsernameExistenceQuery(Username Username) : IQuery<Us
     );
 }
 
-internal sealed class UsernameExistenceQueryHandler(QueryDbContext context)
+public sealed class UsernameExistenceQueryHandler(QueryDbContext context)
     : IQueryHandler<UsernameExistenceQuery, UsernameExistence>
 {
     public async ValueTask<UsernameExistence> Handle(

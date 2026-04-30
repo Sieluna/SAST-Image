@@ -4,7 +4,7 @@ using Mediator;
 
 namespace Storage.Images.Messages;
 
-internal sealed record class ImageAddedMessage(DateTime Time, ImageFile File, ImageId ImageId)
+public sealed record class ImageAddedMessage(DateTime Time, ImageFile File, ImageId ImageId)
     : OutboxMessage(Time),
         IOutboxMessage
 {
@@ -15,8 +15,10 @@ internal sealed record class ImageAddedMessage(DateTime Time, ImageFile File, Im
         : this(null!) { }
 }
 
-file sealed class ImageAddedMessageHandler(IImageFileManager manager, ICompressProcessor compressor)
-    : IOutboxMessageHandler<ImageAddedMessage>
+public sealed class ImageAddedMessageHandler(
+    IImageFileManager manager,
+    ICompressProcessor compressor
+) : IOutboxMessageHandler<ImageAddedMessage>
 {
     public async ValueTask<Unit> Handle(
         ImageAddedMessage message,

@@ -4,14 +4,14 @@ using Mediator;
 
 namespace Storage.Albums.Messages;
 
-internal sealed record class AlbumCoverUpdatedMessage(DateTime Time, AlbumId Album, ImageFile? File)
+public sealed record class AlbumCoverUpdatedMessage(DateTime Time, AlbumId Album, ImageFile? File)
     : OutboxMessage(Time),
         IOutboxMessage
 {
     public static string Type => "cover_updated";
 }
 
-internal sealed class AlbumCoverUpdatedMessageHandler(
+public sealed class AlbumCoverUpdatedMessageHandler(
     IImageFileManager manager,
     ICompressProcessor compressor
 ) : IOutboxMessageHandler<AlbumCoverUpdatedMessage>

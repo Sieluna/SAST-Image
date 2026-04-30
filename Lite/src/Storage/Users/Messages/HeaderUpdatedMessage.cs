@@ -4,7 +4,7 @@ using Mediator;
 
 namespace Storage.Users.Messages;
 
-internal sealed record class HeaderUpdatedMessage(DateTime Time, ImageFile Image, UserId UserId)
+public sealed record class HeaderUpdatedMessage(DateTime Time, ImageFile Image, UserId UserId)
     : OutboxMessage(Time),
         IOutboxMessage
 {
@@ -15,7 +15,7 @@ internal sealed record class HeaderUpdatedMessage(DateTime Time, ImageFile Image
         : this(null!) { }
 }
 
-internal sealed class HeaderUpdatedMessageHandler(
+public sealed class HeaderUpdatedMessageHandler(
     IImageFileManager manager,
     ICompressProcessor compressor
 ) : IOutboxMessageHandler<HeaderUpdatedMessage>

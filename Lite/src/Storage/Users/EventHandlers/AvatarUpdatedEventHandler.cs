@@ -5,7 +5,7 @@ using Storage.Users.Messages;
 
 namespace Storage.Users.EventHandlers;
 
-internal sealed class AvatarUpdatedEventHandler(StorageDbContext context)
+public sealed class AvatarUpdatedEventHandler(StorageDbContext context)
     : IDomainEventHandler<AvatarUpdatedEvent>
 {
     public async ValueTask Handle(AvatarUpdatedEvent e, CancellationToken cancellationToken)

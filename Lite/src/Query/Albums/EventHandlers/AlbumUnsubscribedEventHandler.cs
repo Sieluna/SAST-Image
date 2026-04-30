@@ -5,7 +5,7 @@ using Query.Database;
 
 namespace Query.Albums.EventHandlers;
 
-internal sealed class AlbumUnsubscribedEventHandler(QueryDbContext context)
+public sealed class AlbumUnsubscribedEventHandler(QueryDbContext context)
     : IDomainEventHandler<AlbumUnsubscribedEvent>
 {
     public async ValueTask Handle(AlbumUnsubscribedEvent e, CancellationToken cancellationToken)

@@ -4,7 +4,7 @@ using Query.Database;
 
 namespace Query.Albums.EventHandlers;
 
-internal sealed class AlbumCollaboratorsUpdatedEventHandler(QueryDbContext context)
+public sealed class AlbumCollaboratorsUpdatedEventHandler(QueryDbContext context)
     : IDomainEventHandler<AlbumCollaboratorsUpdatedEvent>
 {
     public async ValueTask Handle(

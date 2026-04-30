@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Storage;
 
-internal interface IImageFileManager
+public interface IImageFileManager
 {
     public ValueTask SaveAsync<TId>(
         ImageFile file,
