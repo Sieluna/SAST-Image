@@ -7,6 +7,7 @@ using Domain.AlbumAggregate.Exceptions;
 using Domain.AlbumAggregate.ImageEntity;
 using Domain.AlbumAggregate.Services;
 using Domain.CategoryAggregate.CategoryEntity;
+using Domain.Entity;
 using Domain.Shared;
 using Domain.Tests;
 using Domain.Tests.ImageEntity;
@@ -89,94 +90,58 @@ public class AlbumTests(TestContext context)
 
     #endregion
 
-    #region UpdateDescription
+    #region UpdateInfo
 
     [TestMethod]
-    public void Throw_When_UpdateDescription_In_Immutable_Album()
+    public void Throw_When_UpdateInfo_In_Immutable_Album()
     {
         var album = Album.Removed;
-        UpdateAlbumDescriptionCommand command = new(
+        UpdateAlbumInfoCommand command = new(
             AlbumId.New,
+            AlbumTitle.New,
             AlbumDescription.New,
+            AlbumTags.Empty,
             Actor.Author
         );
 
-        Should.Throw<AlbumRemovedException>(() => album.UpdateDescription(command));
+        Should.Throw<AlbumRemovedException>(() => album.UpdateInfo(command));
     }
 
     [DataRow(VisitorId)]
     [DataRow(Collaborator1Id)]
     [TestMethod]
-    public void Throw_When_UpdateDescription_As_Not_Author_Or_Admin(long actorId)
+    public void Throw_When_UpdateInfo_As_Not_Author_Or_Admin(long actorId)
     {
         var album = Album.New;
-        UpdateAlbumDescriptionCommand command = new(
+        UpdateAlbumInfoCommand command = new(
             AlbumId.New,
+            AlbumTitle.New,
             AlbumDescription.New,
+            AlbumTags.Empty,
             Actor.New(actorId)
         );
 
-        Should.Throw<NoPermissionException>(() => album.UpdateDescription(command));
+        Should.Throw<NoPermissionException>(() => album.UpdateInfo(command));
     }
 
     [DataRow(AdminId, true)]
     [DataRow(AuthorId, false)]
     [TestMethod]
-    public void Raise_Event_When_Description_Updated(long actorId, bool isAdmin)
+    public void Raise_Event_When_Info_Updated(long actorId, bool isAdmin)
     {
         var album = Album.New;
-        UpdateAlbumDescriptionCommand command = new(
-            AlbumId.New,
-            AlbumDescription.New,
-            Actor.New(actorId, isAdmin)
-        );
-
-        album.UpdateDescription(command);
-
-        album.DomainEvents.Count.ShouldBe(1);
-        album.DomainEvents.First().ShouldBeOfType<AlbumDescriptionUpdatedEvent>();
-    }
-
-    #endregion
-
-    #region UpdateTitle
-
-    [TestMethod]
-    public void Throw_When_UpdateTitle_In_Immutable_Album()
-    {
-        var album = Album.Removed;
-        UpdateAlbumTitleCommand command = new(AlbumId.New, AlbumTitle.New, Actor.Author);
-
-        Should.Throw<AlbumRemovedException>(() => album.UpdateTitle(command));
-    }
-
-    [DataRow(VisitorId)]
-    [DataRow(Collaborator1Id)]
-    [TestMethod]
-    public void Throw_When_UpdateTitle_As_Not_Author_Or_Admin(long actorId)
-    {
-        var album = Album.New;
-        UpdateAlbumTitleCommand command = new(AlbumId.New, AlbumTitle.New, Actor.New(actorId));
-
-        Should.Throw<NoPermissionException>(() => album.UpdateTitle(command));
-    }
-
-    [DataRow(AdminId, true)]
-    [DataRow(AuthorId, false)]
-    [TestMethod]
-    public void Raise_Event_When_Title_Updated(long actorId, bool isAdmin)
-    {
-        var album = Album.New;
-        UpdateAlbumTitleCommand command = new(
+        UpdateAlbumInfoCommand command = new(
             AlbumId.New,
             AlbumTitle.New,
+            AlbumDescription.New,
+            AlbumTags.Empty,
             Actor.New(actorId, isAdmin)
         );
 
-        album.UpdateTitle(command);
+        album.UpdateInfo(command);
 
         album.DomainEvents.Count.ShouldBe(1);
-        album.DomainEvents.First().ShouldBeOfType<AlbumTitleUpdatedEvent>();
+        album.DomainEvents.First().ShouldBeOfType<AlbumInfoUpdatedEvent>();
     }
 
     #endregion

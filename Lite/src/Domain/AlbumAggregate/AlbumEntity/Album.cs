@@ -63,16 +63,6 @@ public sealed class Album : EntityBase<AlbumId>
         return album.Id;
     }
 
-    public void UpdateDescription(UpdateAlbumDescriptionCommand command)
-    {
-        if (CanNotManage(command.Actor))
-            throw new NoPermissionException();
-        if (_removed)
-            throw new AlbumRemovedException();
-
-        AddDomainEvent(new AlbumDescriptionUpdatedEvent(Id, command.Description));
-    }
-
     public void UpdateAccessLevel(UpdateAccessLevelCommand command)
     {
         if (CanNotManage(command.Actor))
@@ -85,16 +75,6 @@ public sealed class Album : EntityBase<AlbumId>
         _accessLevel = command.AccessLevel;
 
         AddDomainEvent(new AlbumAccessLevelUpdatedEvent(Id, command.AccessLevel));
-    }
-
-    public void UpdateTitle(UpdateAlbumTitleCommand command)
-    {
-        if (CanNotManage(command.Actor))
-            throw new NoPermissionException();
-        if (_removed)
-            throw new AlbumRemovedException();
-
-        AddDomainEvent(new AlbumTitleUpdatedEvent(Id, command.Title));
     }
 
     public async Task UpdateCollaborators(
@@ -132,14 +112,16 @@ public sealed class Album : EntityBase<AlbumId>
         AddDomainEvent(new AlbumCategoryUpdatedEvent(Id, command.Category));
     }
 
-    public void UpdateTags(UpdateAlbumTagsCommand command)
+    internal void UpdateInfo(UpdateAlbumInfoCommand command)
     {
         if (CanNotManage(command.Actor))
             throw new NoPermissionException();
         if (_removed)
             throw new AlbumRemovedException();
 
-        AddDomainEvent(new AlbumTagsUpdatedEvent(Id, command.Tags));
+        AddDomainEvent(
+            new AlbumInfoUpdatedEvent(Id, command.Title, command.Description, command.Tags)
+        );
     }
 
     public void UpdateCover(UpdateCoverCommand command)

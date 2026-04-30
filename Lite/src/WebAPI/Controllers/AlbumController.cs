@@ -95,58 +95,30 @@ public sealed class AlbumController(IMediator mediator) : AdvancedController
         return NoContent();
     }
 
-    public readonly record struct UpdateDescriptionRequest(
-        [property: Required] AlbumDescription Description
+    public readonly record struct UpdateInfoRequest(
+        AlbumTitle? Title = null,
+        AlbumDescription? Description = null,
+        AlbumTags? Tags = null
     );
 
     [Authorize]
-    [HttpPost("{id:long}/description")]
-    [EndpointName("Update Album Description")]
-    [EndpointDescription("Update an album's description.")]
+    [HttpPatch("{id:long}/info")]
+    [EndpointName("Update Album Info")]
+    [EndpointDescription("Update an album's title, description, or tags.")]
     [MaybeNotFound]
-    public async Task<NoContent> UpdateDescription(
+    public async Task<NoContent> UpdateInfo(
         [FromRoute] AlbumId id,
-        [FromBody, Required] UpdateDescriptionRequest request,
+        [FromBody, Required] UpdateInfoRequest request,
         CancellationToken cancellationToken
     )
     {
-        UpdateAlbumDescriptionCommand command = new(id, request.Description, User);
-        await mediator.Send(command, cancellationToken);
-        return NoContent();
-    }
-
-    public readonly record struct UpdateTitleRequest([property: Required] AlbumTitle Title);
-
-    [Authorize]
-    [HttpPost("{id:long}/title")]
-    [EndpointName("Update Album Title")]
-    [EndpointDescription("Update an album's title.")]
-    [MaybeNotFound]
-    public async Task<NoContent> UpdateTitle(
-        [FromRoute] AlbumId id,
-        [FromBody, Required] UpdateTitleRequest request,
-        CancellationToken cancellationToken
-    )
-    {
-        UpdateAlbumTitleCommand command = new(id, request.Title, User);
-        await mediator.Send(command, cancellationToken);
-        return NoContent();
-    }
-
-    public readonly record struct UpdateAlbumTagsRequest([property: Required] AlbumTags Tags);
-
-    [Authorize]
-    [HttpPost("{id:long}/tags")]
-    [EndpointName("Update Album Tags")]
-    [EndpointDescription("Update an album's tags.")]
-    [MaybeNotFound]
-    public async Task<NoContent> UpdateTags(
-        [FromRoute] AlbumId id,
-        [FromBody, Required] UpdateAlbumTagsRequest request,
-        CancellationToken cancellationToken
-    )
-    {
-        UpdateAlbumTagsCommand command = new(id, request.Tags, User);
+        UpdateAlbumInfoCommand command = new(
+            id,
+            request.Title,
+            request.Description,
+            request.Tags,
+            User
+        );
         await mediator.Send(command, cancellationToken);
         return NoContent();
     }
