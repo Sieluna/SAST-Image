@@ -9,8 +9,6 @@ public readonly record struct Email(string Value)
     : IValueObject<Email, string>,
         IFactoryConstructor<Email, string>
 {
-    public bool IsSet => Value != string.Empty;
-
     public static bool TryCreateNew(string input, [NotNullWhen(true)] out Email newObject)
     {
         if (

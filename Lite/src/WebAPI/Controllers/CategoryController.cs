@@ -4,42 +4,50 @@ using Domain.CategoryAggregate.Commands;
 using Infrastructure;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Query.Categories.Queries;
+using WebAPI.Utilities.Attributes;
 
 namespace WebAPI.Controllers;
 
 [Route("api/categories")]
 [ApiController]
 [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Client)]
-public sealed class CategoryController(IMediator mediator) : ControllerBase
+public sealed class CategoryController(IMediator mediator) : AdvancedController
 {
     #region [Command/Post]
 
     public readonly record struct CreateCategoryRequest(
-        CategoryName Name,
-        CategoryDescription Description
+        [property: Required] CategoryName Name,
+        [property: Required] CategoryDescription Description
     );
 
     [HttpPost]
     [Authorize(AuthPolicies.Admin)]
-    public async Task<IActionResult> Create(
-        [FromBody] [Required] CreateCategoryRequest request,
+    [EndpointName("Create Category")]
+    [EndpointDescription("Create a new category.")]
+    [MaybeConflict]
+    public async Task<Ok<CategoryId>> Create(
+        [FromBody, Required] CreateCategoryRequest request,
         CancellationToken cancellationToken
     )
     {
         CreateCategoryCommand command = new(request.Name, request.Description, User);
         var id = await mediator.Send(command, cancellationToken);
-        return Ok(new { id });
+        return Ok(id);
     }
 
-    public readonly record struct UpdateCategoryNameRequest(CategoryName Name);
+    public readonly record struct UpdateCategoryNameRequest([property: Required] CategoryName Name);
 
     [HttpPost("{id:long}/name")]
     [Authorize(AuthPolicies.Admin)]
-    public async Task<IActionResult> UpdateName(
+    [EndpointName("Update Category Name")]
+    [EndpointDescription("Update a category's name.")]
+    [MaybeConflict]
+    public async Task<NoContent> UpdateName(
         [FromRoute] CategoryId id,
-        [FromBody] [Required] UpdateCategoryNameRequest request,
+        [FromBody, Required] UpdateCategoryNameRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -48,13 +56,17 @@ public sealed class CategoryController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    public readonly record struct UpdateCategoryDescriptionRequest(CategoryDescription Description);
+    public readonly record struct UpdateCategoryDescriptionRequest(
+        [property: Required] CategoryDescription Description
+    );
 
     [HttpPost("{id:long}/description")]
     [Authorize(AuthPolicies.Admin)]
-    public async Task<IActionResult> UpdateDescription(
+    [EndpointName("Update Category Description")]
+    [EndpointDescription("Update a category's description.")]
+    public async Task<NoContent> UpdateDescription(
         [FromRoute] CategoryId id,
-        [FromBody] [Required] UpdateCategoryDescriptionRequest request,
+        [FromBody, Required] UpdateCategoryDescriptionRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -79,7 +91,9 @@ public sealed class CategoryController(IMediator mediator) : ControllerBase
     #region [Query/Get]
 
     [HttpGet]
-    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    [EndpointName("Get Categories")]
+    [EndpointDescription("Get all categories.")]
+    public async Task<Ok<CategoryDto[]>> Get(CancellationToken cancellationToken)
     {
         CategoriesQuery query = new();
         var result = await mediator.Send(query, cancellationToken);

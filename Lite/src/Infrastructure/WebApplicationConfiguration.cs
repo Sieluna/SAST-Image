@@ -12,13 +12,6 @@ public static class WebApplicationConfiguration
     {
         public void RunBackend()
         {
-            app.UseCors(cors =>
-                cors.AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .SetIsOriginAllowed(origin => true)
-                    .AllowCredentials()
-            );
-
             app.UseResponseCaching();
 
             app.UseExceptionHandler(op => { });

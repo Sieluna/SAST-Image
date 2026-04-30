@@ -5,6 +5,7 @@ using Domain.CategoryAggregate.CategoryEntity;
 using Domain.Shared;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Query.Albums.Queries;
 using Storage.Albums.Queries;
@@ -16,21 +17,23 @@ namespace WebAPI.Controllers;
 [Route("api/albums")]
 [ApiController]
 [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Client)]
-public sealed class AlbumController(IMediator mediator) : ControllerBase
+public sealed class AlbumController(IMediator mediator) : AdvancedController
 {
     #region [Command/Post]
 
     public readonly record struct CreateAlbumRequest(
-        AlbumTitle Title,
-        AlbumDescription Description,
-        CategoryId CategoryId,
-        AccessLevel AccessLevel
+        [property: Required] AlbumTitle Title,
+        [property: Required] AlbumDescription Description,
+        [property: Required] CategoryId CategoryId,
+        [property: Required] AccessLevel AccessLevel
     );
 
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] [Required] CreateAlbumRequest request,
+    [EndpointName("Create Album")]
+    [EndpointDescription("Create a new album for the current user.")]
+    public async Task<Ok<AlbumId>> Create(
+        [FromBody, Required] CreateAlbumRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -47,10 +50,10 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("{id:long}/remove")]
-    public async Task<IActionResult> Remove(
-        [FromRoute] AlbumId id,
-        CancellationToken cancellationToken
-    )
+    [EndpointName("Remove Album")]
+    [EndpointDescription("Soft-delete an album by ID.")]
+    [MaybeNotFound]
+    public async Task<NoContent> Remove([FromRoute] AlbumId id, CancellationToken cancellationToken)
     {
         RemoveAlbumCommand command = new(id, User);
         await mediator.Send(command, cancellationToken);
@@ -59,7 +62,10 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("{id:long}/restore")]
-    public async Task<IActionResult> Restore(
+    [EndpointName("Restore Album")]
+    [EndpointDescription("Restore a previously removed album by ID.")]
+    [MaybeNotFound]
+    public async Task<NoContent> Restore(
         [FromRoute] AlbumId id,
         CancellationToken cancellationToken
     )
@@ -69,13 +75,18 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    public readonly record struct UpdateAccessLevelRequest(AccessLevel AccessLevel);
+    public readonly record struct UpdateAccessLevelRequest(
+        [property: Required] AccessLevel AccessLevel
+    );
 
     [Authorize]
     [HttpPost("{id:long}/accessLevel")]
-    public async Task<IActionResult> UpdateAccessLevel(
+    [EndpointName("Update Album Access Level")]
+    [EndpointDescription("Update an album's access level.")]
+    [MaybeNotFound]
+    public async Task<NoContent> UpdateAccessLevel(
         [FromRoute] AlbumId id,
-        [FromBody] [Required] UpdateAccessLevelRequest request,
+        [FromBody, Required] UpdateAccessLevelRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -84,13 +95,18 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    public readonly record struct UpdateDescriptionRequest(AlbumDescription Description);
+    public readonly record struct UpdateDescriptionRequest(
+        [property: Required] AlbumDescription Description
+    );
 
     [Authorize]
     [HttpPost("{id:long}/description")]
-    public async Task<IActionResult> UpdateDescription(
+    [EndpointName("Update Album Description")]
+    [EndpointDescription("Update an album's description.")]
+    [MaybeNotFound]
+    public async Task<NoContent> UpdateDescription(
         [FromRoute] AlbumId id,
-        [FromBody] [Required] UpdateDescriptionRequest request,
+        [FromBody, Required] UpdateDescriptionRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -99,13 +115,16 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    public readonly record struct UpdateTitleRequest(AlbumTitle Title);
+    public readonly record struct UpdateTitleRequest([property: Required] AlbumTitle Title);
 
     [Authorize]
     [HttpPost("{id:long}/title")]
-    public async Task<IActionResult> UpdateTitle(
+    [EndpointName("Update Album Title")]
+    [EndpointDescription("Update an album's title.")]
+    [MaybeNotFound]
+    public async Task<NoContent> UpdateTitle(
         [FromRoute] AlbumId id,
-        [FromBody] [Required] UpdateTitleRequest request,
+        [FromBody, Required] UpdateTitleRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -114,13 +133,16 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    public readonly record struct UpdateAlbumTagsRequest(AlbumTags Tags);
+    public readonly record struct UpdateAlbumTagsRequest([property: Required] AlbumTags Tags);
 
     [Authorize]
     [HttpPost("{id:long}/tags")]
-    public async Task<IActionResult> UpdateTags(
+    [EndpointName("Update Album Tags")]
+    [EndpointDescription("Update an album's tags.")]
+    [MaybeNotFound]
+    public async Task<NoContent> UpdateTags(
         [FromRoute] AlbumId id,
-        [FromBody] [Required] UpdateAlbumTagsRequest request,
+        [FromBody, Required] UpdateAlbumTagsRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -129,13 +151,18 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    public readonly record struct UpdateCollaboratorsRequest(Collaborators Collaborators);
+    public readonly record struct UpdateCollaboratorsRequest(
+        [property: Required] Collaborators Collaborators
+    );
 
     [Authorize]
     [HttpPost("{id:long}/collaborators")]
-    public async Task<IActionResult> UpdateCollaborators(
+    [EndpointName("Update Album Collaborators")]
+    [EndpointDescription("Update the collaborators for an album.")]
+    [MaybeNotFound]
+    public async Task<NoContent> UpdateCollaborators(
         [FromRoute] AlbumId id,
-        [FromBody] [Required] UpdateCollaboratorsRequest request
+        [FromBody, Required] UpdateCollaboratorsRequest request
     )
     {
         UpdateCollaboratorsCommand command = new(id, request.Collaborators, User);
@@ -146,7 +173,10 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
     [Authorize]
     [HttpPost("{id:long}/cover")]
     [RequestFormLimits(MultipartBodyLengthLimit = ImageFile.MaxBytes)]
-    public async Task<IActionResult> UpdateCover(
+    [EndpointName("Update Album Cover")]
+    [EndpointDescription("Update or clear an album's cover image.")]
+    [MaybeNotFound]
+    public async Task<NoContent> UpdateCover(
         [FromRoute] AlbumId id,
         [FromForm] [FileValidator(ImageFile.MaxBytes)] IFormFile? file = null,
         CancellationToken cancellationToken = default
@@ -165,7 +195,10 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("{id:long}/subscribe")]
-    public async Task<IActionResult> Subscribe(
+    [EndpointName("Subscribe Album")]
+    [EndpointDescription("Subscribe the current user to an album.")]
+    [MaybeNotFound]
+    public async Task<NoContent> Subscribe(
         [FromRoute] AlbumId id,
         CancellationToken cancellationToken
     )
@@ -177,7 +210,10 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpPost("{id:long}/unsubscribe")]
-    public async Task<IActionResult> Unsubscribe(
+    [EndpointName("Unsubscribe Album")]
+    [EndpointDescription("Unsubscribe the current user from an album.")]
+    [MaybeNotFound]
+    public async Task<NoContent> Unsubscribe(
         [FromRoute] AlbumId id,
         CancellationToken cancellationToken
     )
@@ -197,7 +233,9 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
         Location = ResponseCacheLocation.Any,
         VaryByQueryKeys = ["category", "author", "title"]
     )]
-    public async Task<IActionResult> GetAlbums(
+    [EndpointName("Get Albums")]
+    [EndpointDescription("Get albums filtered by category, author, or title.")]
+    public async Task<Ok<AlbumDto[]>> GetAlbums(
         [FromQuery] long? category = null,
         [FromQuery] long? author = null,
         [FromQuery] [MaxLength(AlbumTitle.MaxLength)] string? title = null,
@@ -209,36 +247,42 @@ public sealed class AlbumController(IMediator mediator) : ControllerBase
             new AlbumsQuery(category, author, title, cursor, User),
             cancellationToken
         );
-        return this.DataOrNotFound(result);
+        return Ok(result);
     }
 
     [HttpGet("{id:long}")]
-    public async Task<IActionResult> GetDetailedAlbum(
+    [EndpointName("Get Album")]
+    [EndpointDescription("Get detailed album information by ID.")]
+    public async Task<Results<NotFound, Ok<DetailedAlbum>>> GetDetailedAlbum(
         [FromRoute] AlbumId id,
         CancellationToken cancellationToken
     )
     {
         var result = await mediator.Send(new DetailedAlbumQuery(id, User), cancellationToken);
-        return this.DataOrNotFound(result);
+        return result is null ? NotFound() : Ok(result);
     }
 
     [HttpGet("removed")]
     [ResponseCache(NoStore = true)]
-    public async Task<IActionResult> GetRemovedAlbums()
+    [EndpointName("Get Removed Albums")]
+    [EndpointDescription("Get albums removed by the current user.")]
+    public async Task<Ok<RemovedAlbumDto[]>> GetRemovedAlbums()
     {
         var result = await mediator.Send(new RemovedAlbumsQuery(User));
-        return this.DataOrNotFound(result);
+        return Ok(result);
     }
 
     [HttpGet("{id:long}/cover")]
     [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)]
-    public async Task<IActionResult> GetCover(
+    [EndpointName("Get Album Cover")]
+    [EndpointDescription("Get an album's cover image by ID.")]
+    public async Task<Results<NotFound, PhysicalFileHttpResult>> GetCover(
         [FromRoute] AlbumId id,
         CancellationToken cancellationToken
     )
     {
         var result = await mediator.Send(new AlbumCoverQuery(id, User), cancellationToken);
-        return this.ImageOrNotFound(result);
+        return result is null ? NotFound() : Image(result.Value);
     }
 
     #endregion

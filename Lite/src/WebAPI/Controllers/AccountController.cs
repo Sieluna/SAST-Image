@@ -8,27 +8,34 @@ using Infrastructure;
 using Mediator;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Query.Users.Queries;
 using WebAPI.Utilities;
+using WebAPI.Utilities.Attributes;
 
 namespace WebAPI.Controllers;
 
 [Route("api/account")]
 [ApiController]
-public sealed class AccountController(IMediator mediator) : ControllerBase
+public sealed class AccountController(IMediator mediator) : AdvancedController
 {
     public readonly record struct RegisterRequest(
-        Username Username,
-        Nickname Nickname,
-        Email Email,
-        PasswordInput Password,
-        RegistryCode Code
+        [property: Required] Username Username,
+        [property: Required] Nickname Nickname,
+        [property: Required] Email Email,
+        [property: Required] PasswordInput Password,
+        [property: Required] RegistryCode Code
     );
 
     [HttpPost("register")]
-    public async Task<IActionResult> Register(
-        [FromBody] [Required] RegisterRequest request,
+    [EndpointName("Register")]
+    [EndpointDescription(
+        "Register a new user account with the provided information and registry code."
+    )]
+    [MaybeConflict]
+    public async Task<Ok<JwtToken>> Register(
+        [FromBody, Required] RegisterRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -43,22 +50,31 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
+    public readonly record struct SendRegistryCodeRequest([property: Required] Email Email);
+
     [HttpPost("register/code")]
-    public async Task<IActionResult> SendRegistryCode(
-        [FromQuery] [Required] Email email,
+    [EndpointName("Send Registry Code")]
+    [EndpointDescription("Send a registry code to the specified email address.")]
+    public async Task<NoContent> SendRegistryCode(
+        [FromBody, Required] SendRegistryCodeRequest request,
         CancellationToken cancellationToken
     )
     {
-        SendRegistryCodeCommand command = new(email);
+        SendRegistryCodeCommand command = new(request.Email);
         await mediator.Send(command, cancellationToken);
         return NoContent();
     }
 
-    public readonly record struct LoginRequest(Username Username, PasswordInput Password);
+    public readonly record struct LoginRequest(
+        [property: Required] Username Username,
+        [property: Required] PasswordInput Password
+    );
 
     [HttpPost("login")]
-    public async Task<IActionResult> Login(
-        [FromBody] [Required] LoginRequest request,
+    [EndpointName("Login")]
+    [EndpointDescription("Authenticate a user and return a JWT token.")]
+    public async Task<Ok<JwtToken>> Login(
+        [FromBody, Required] LoginRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -67,11 +83,16 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
         return Ok(result);
     }
 
-    public readonly record struct RefreshTokenRequest(RefreshToken RefreshToken);
+    public readonly record struct RefreshTokenRequest(
+        [property: Required] RefreshToken RefreshToken
+    );
 
     [HttpPost("refresh")]
-    public async Task<IActionResult> RefreshAccessToken(
-        [FromBody] [Required] RefreshTokenRequest request,
+    [EndpointName("Refresh Access Token")]
+    [EndpointDescription("Refresh the access token using a valid refresh token.")]
+    [MaybeNotFound]
+    public async Task<Ok<JwtToken>> RefreshAccessToken(
+        [FromBody, Required] RefreshTokenRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -81,14 +102,17 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
     }
 
     public readonly record struct ResetPasswordRequest(
-        PasswordInput OldPassword,
-        PasswordInput NewPassword
+        [property: Required] PasswordInput OldPassword,
+        [property: Required] PasswordInput NewPassword
     );
 
     [Authorize]
     [HttpPost("reset/password")]
-    public async Task<IActionResult> ResetPassword(
-        [FromBody] [Required] ResetPasswordRequest request,
+    [EndpointName("Reset Password")]
+    [EndpointDescription("Reset the current user's password.")]
+    [MaybeNotFound]
+    public async Task<NoContent> ResetPassword(
+        [FromBody, Required] ResetPasswordRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -97,12 +121,16 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    public readonly record struct ResetUsernameRequest(Username Username);
+    public readonly record struct ResetUsernameRequest([property: Required] Username Username);
 
     [Authorize]
     [HttpPost("reset/username")]
-    public async Task<IActionResult> ResetUsername(
-        [FromBody] [Required] ResetUsernameRequest request,
+    [EndpointName("Reset Username")]
+    [EndpointDescription("Reset the current user's username.")]
+    [MaybeNotFound]
+    [MaybeConflict]
+    public async Task<NoContent> ResetUsername(
+        [FromBody, Required] ResetUsernameRequest request,
         CancellationToken cancellationToken
     )
     {
@@ -112,12 +140,14 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
     }
 
     [HttpGet("username/check")]
-    public async Task<IActionResult> CheckUsername(
-        [FromQuery] [Required] [Length(Username.MinLength, Username.MaxLength)] string username,
+    [EndpointName("Check Username")]
+    [EndpointDescription("Check whether a username is available.")]
+    public async Task<Ok<bool>> CheckUsername(
+        [FromQuery, Required] [Length(Username.MinLength, Username.MaxLength)] string username,
         CancellationToken cancellationToken
     )
     {
-        var query = new UsernameExistenceQuery(username.Bind<Username>());
+        var query = new UsernameExistenceQuery(Username.Bind(username));
         var result = await mediator.Send(query, cancellationToken);
         return Ok(!result.IsExist);
     }
@@ -127,6 +157,8 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
     const string GitHubScheme = GitHubAuthenticationDefaults.AuthenticationScheme;
 
     [HttpGet($"oauth/{GitHubScheme}")]
+    [EndpointName("GitHub OAuth")]
+    [EndpointDescription("Start GitHub OAuth authentication flow.")]
     public async Task<IActionResult> GitHubOAuth()
     {
         var props = new AuthenticationProperties()
@@ -138,7 +170,11 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
 
     [Authorize(AuthPolicies.OAuth)]
     [HttpGet($"oauth/{GitHubScheme}/redirect")]
-    public async Task<IActionResult> GitHubOAuthRedirect(CancellationToken cancellationToken)
+    [EndpointName("GitHub OAuth Redirect")]
+    [EndpointDescription("Handle GitHub OAuth redirect and issue a JWT token if linked.")]
+    public async Task<Results<NoContent, Ok<JwtToken>, UnauthorizedHttpResult>> GitHubOAuthRedirect(
+        CancellationToken cancellationToken
+    )
     {
         if (User.TryFetchId(out long id) is false)
             return Unauthorized();
@@ -151,7 +187,11 @@ public sealed class AccountController(IMediator mediator) : ControllerBase
 
     [Authorize]
     [HttpGet($"oauth/{GitHubScheme}/link")]
-    public async Task<IActionResult> GitHubOAuthLink(CancellationToken cancellationToken)
+    [EndpointName("Link GitHub OAuth")]
+    [EndpointDescription("Link the authenticated GitHub account to the current user.")]
+    public async Task<Results<NoContent, UnauthorizedHttpResult>> GitHubOAuthLink(
+        CancellationToken cancellationToken
+    )
     {
         if (User.TryFetchId(out long userId) is false)
             return Unauthorized();

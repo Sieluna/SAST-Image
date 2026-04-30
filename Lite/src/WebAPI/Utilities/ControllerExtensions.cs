@@ -1,26 +1,7 @@
 ﻿using Domain.Shared;
-using Microsoft.AspNetCore.Mvc;
 using Storage;
 
 namespace WebAPI.Utilities;
-
-public static class ControllerExtensions
-{
-    extension(ControllerBase controller)
-    {
-        public IActionResult ImageOrNotFound(ImageFile? image) =>
-            image is null
-                ? controller.NotFound()
-                : controller.PhysicalFile(
-                    image.Value.Value,
-                    contentType: "image/*",
-                    fileDownloadName: image.Value.DownloadName
-                );
-
-        public IActionResult DataOrNotFound(object? data) =>
-            data is null ? controller.NotFound() : controller.Ok(data);
-    }
-}
 
 internal static class ImageFileExtension
 {
@@ -32,6 +13,28 @@ internal static class ImageFileExtension
             {
                 string filename = Path.GetFileName(file.Value);
                 return Path.ChangeExtension(filename, file.Extension);
+            }
+        }
+    }
+}
+
+internal static class IEndpointRouteBuilderExtensions
+{
+    extension<T>(T app)
+        where T : IEndpointRouteBuilder, IApplicationBuilder
+    {
+        public IEndpointRouteBuilder Endpoints
+        {
+            get
+            {
+                var group = app.MapGroup("/api");
+                group.ProducesProblem(StatusCodes.Status400BadRequest, "application/problem+json");
+                group.ProducesValidationProblem(
+                    StatusCodes.Status400BadRequest,
+                    "application/problem+json"
+                );
+
+                return group;
             }
         }
     }
