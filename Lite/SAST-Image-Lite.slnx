@@ -4,6 +4,7 @@
     <Project Path="DomainLib/Domain.Core/Domain.Core.csproj" />
   </Folder>
   <Folder Name="/Tests/">
+    <File Path="test/test.runsettings" />
     <Project Path="test/Domain.Tests/Domain.Tests.csproj" />
     <Project Path="test/Infrastructure.Tests/Infrastructure.Tests.csproj" Id="886a5879-c321-4518-a0ff-85913e407d2b" />
     <Project Path="test/Query.Tests/Query.Tests.csproj" Id="865f8acb-550b-40a2-a798-0e2fe42e2407" />

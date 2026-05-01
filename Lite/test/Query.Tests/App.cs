@@ -19,9 +19,7 @@ public static class App
             .EnableSensitiveDataLogging()
             .UseSnakeCaseNamingConvention()
             .UseNpgsql(
-                new NpgsqlConnection(
-                    "Server=10.0.0.153;Database=sastimg;User Id=postgres;Password=123456;"
-                ),
+                new NpgsqlConnection(Environment.GetEnvironmentVariable("POSTGRES_CONNECTION")),
                 options => options.MigrationsAssembly(QueryAssembly.Assembly)
             )
             .UseModel(QueryDbContextModel.Instance)
