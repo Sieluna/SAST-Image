@@ -3,11 +3,13 @@
     <Project Path="DomainLib/Domain.Abstractions/Domain.Abstractions.csproj" />
     <Project Path="DomainLib/Domain.Core/Domain.Core.csproj" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="test/Domain.Tests/Domain.Tests.csproj" />
+    <Project Path="test/Infrastructure.Tests/Infrastructure.Tests.csproj" Id="886a5879-c321-4518-a0ff-85913e407d2b" />
+  </Folder>
   <Project Path="src/Domain/Domain.csproj" />
   <Project Path="src/Infrastructure/Infrastructure.csproj" />
   <Project Path="src/Query/Query.csproj" />
   <Project Path="src/Storage/Storage.csproj" />
   <Project Path="src/WebAPI/WebAPI.csproj" />
-  <Project Path="test/Domain.Tests/Domain.Tests.csproj" />
-  <Project Path="test/Infrastructure.Tests/Infrastructure.Tests.csproj" Id="886a5879-c321-4518-a0ff-85913e407d2b" />
 </Solution>

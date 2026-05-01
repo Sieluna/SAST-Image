@@ -222,18 +222,6 @@ public sealed class AlbumController(IMediator mediator) : AdvancedController
         return Ok(result);
     }
 
-    [HttpGet("{id:long}")]
-    [EndpointName("Get Album")]
-    [EndpointDescription("Get detailed album information by ID.")]
-    public async Task<Results<NotFound, Ok<DetailedAlbum>>> GetDetailedAlbum(
-        [FromRoute] AlbumId id,
-        CancellationToken cancellationToken
-    )
-    {
-        var result = await mediator.Send(new DetailedAlbumQuery(id, User), cancellationToken);
-        return result is null ? NotFound() : Ok(result);
-    }
-
     [HttpGet("removed")]
     [ResponseCache(NoStore = true)]
     [EndpointName("Get Removed Albums")]

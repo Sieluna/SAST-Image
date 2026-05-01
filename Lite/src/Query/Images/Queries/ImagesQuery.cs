@@ -1,4 +1,5 @@
-﻿using Domain.AlbumAggregate.ImageEntity;
+﻿using Domain.AlbumAggregate.AlbumEntity;
+using Domain.AlbumAggregate.ImageEntity;
 using Domain.Shared;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
@@ -49,9 +50,14 @@ public sealed record class ImagesQuery(long? AuthorId, long? AlbumId, long? Curs
                 .Where(i => i.Status == ImageStatusValue.Available)
                 .Where(i => authorId == null || i.UploaderId == authorId.Value)
                 .Where(i => albumId == null || i.AlbumId == albumId.Value)
-                .WhereIsAccessible(actorId, isAuthenticated, isAdmin)
+                .Where(i =>
+                    i.AccessLevel >= AccessLevelValue.PublicReadOnly
+                    || i.AccessLevel >= AccessLevelValue.AuthReadOnly && isAuthenticated
+                    || i.AccessLevel == AccessLevelValue.Private
+                        && (i.AuthorId == actorId || i.Collaborators.Contains(actorId) || isAdmin)
+                )
+                .Where(i => cursor == null || i.Id < cursor)
                 .OrderByDescending(i => i.Id)
-                .SkipWhile(i => cursor != null && i.Id != cursor)
                 .Take(PageSize)
                 .Select(i => new ImageDto
                 {

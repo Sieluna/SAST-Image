@@ -1,4 +1,5 @@
-﻿using Domain.Shared;
+﻿using Domain.AlbumAggregate.AlbumEntity;
+using Domain.Shared;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Query.Database;
@@ -9,10 +10,14 @@ public sealed class AlbumDto
 {
     public required long Id { get; init; }
     public required string Title { get; init; }
+    public required string Description { get; init; }
     public required long Author { get; init; }
     public required long Category { get; init; }
-    public required DateTime UpdatedAt { get; init; }
     public required string[] Tags { get; init; }
+    public required DateTime UpdatedAt { get; init; }
+    public required DateTime CreatedAt { get; init; }
+    public required AccessLevelValue AccessLevel { get; init; }
+    public required int SubscribeCount { get; init; }
 }
 
 public sealed record class AlbumsQuery(
@@ -52,18 +57,27 @@ public sealed record class AlbumsQuery(
                 .Where(a => categoryId == null || a.CategoryId == categoryId)
                 .Where(a => authorId == null || a.AuthorId == authorId)
                 .Where(a => title == null || EF.Functions.ILike(a.Title, $"%{title}%"))
-                .WhereIsAccessible(actorId, isAuthenticated, isAdmin)
+                .Where(a =>
+                    a.AccessLevel >= AccessLevelValue.PublicReadOnly
+                    || a.AccessLevel >= AccessLevelValue.AuthReadOnly && isAuthenticated
+                    || a.AccessLevel == AccessLevelValue.Private
+                        && (a.AuthorId == actorId || a.Collaborators.Contains(actorId) || isAdmin)
+                )
+                .Where(i => cursor == null || i.Id < cursor)
                 .OrderByDescending(a => a.Id)
-                .SkipWhile(a => cursor != null && a.Id != cursor)
                 .Take(PageSize)
                 .Select(a => new AlbumDto()
                 {
                     Author = a.AuthorId,
                     Category = a.CategoryId,
                     UpdatedAt = a.UpdatedAt,
+                    CreatedAt = a.CreatedAt,
                     Id = a.Id,
                     Tags = a.Tags,
                     Title = a.Title,
+                    Description = a.Description,
+                    AccessLevel = a.AccessLevel,
+                    SubscribeCount = a.Subscribes.Count,
                 })
     );
 }
