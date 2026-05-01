@@ -10,7 +10,7 @@ public static class WebApplicationConfiguration
 {
     extension(WebApplication app)
     {
-        public void RunBackend()
+        public async Task RunBackend()
         {
             app.UseResponseCaching();
 

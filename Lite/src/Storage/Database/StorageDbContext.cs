@@ -15,11 +15,13 @@ namespace Storage.Database;
 public sealed class StorageDbContext(DbContextOptions<StorageDbContext> options)
     : DbContext(options)
 {
-    public required DbSet<OutboxMessage> Messages { get; init; }
+    public const string Schema = "storage";
+
+    public DbSet<OutboxMessage> Messages { get; init; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.HasDefaultSchema("storage");
+        builder.HasDefaultSchema(Schema);
 
         var messages = builder.Entity<OutboxMessage>();
         messages.HasKey(m => m.Id);

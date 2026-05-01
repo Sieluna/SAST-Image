@@ -11,7 +11,7 @@ public static class ILoggerBuilderConfiguration
         var logger = new LoggerConfiguration()
             .MinimumLevel.Override(
                 "Microsoft.EntityFrameworkCore.Database.Command",
-                Serilog.Events.LogEventLevel.Warning
+                Serilog.Events.LogEventLevel.Debug
             )
             .MinimumLevel.Override(
                 "Microsoft.AspNetCore.Authentication",

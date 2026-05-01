@@ -56,12 +56,12 @@ public sealed record class AlbumsQuery(
                 .Where(a => a.RemovedAt == null)
                 .Where(a => categoryId == null || a.CategoryId == categoryId)
                 .Where(a => authorId == null || a.AuthorId == authorId)
-                .Where(a => title == null || EF.Functions.ILike(a.Title, $"%{title}%"))
+                .Where(a => title == null || EF.Functions.ILike(a.Title, "%" + title + "%"))
                 .Where(a =>
                     a.AccessLevel >= AccessLevelValue.PublicReadOnly
                     || a.AccessLevel >= AccessLevelValue.AuthReadOnly && isAuthenticated
                     || a.AccessLevel == AccessLevelValue.Private
-                        && (a.AuthorId == actorId || a.Collaborators.Contains(actorId) || isAdmin)
+                        && (a.AuthorId == actorId || isAdmin)
                 )
                 .Where(i => cursor == null || i.Id < cursor)
                 .OrderByDescending(a => a.Id)

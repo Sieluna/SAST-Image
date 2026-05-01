@@ -1,17 +1,16 @@
-﻿using Domain;
-using Domain.Database;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 using Npgsql;
+using Storage.Database;
 
-namespace Infrastructure;
+namespace Storage;
 
 [TestClass]
 public static class App
 {
-    public static readonly DbContextOptions<DomainDbContext> Options =
-        new DbContextOptionsBuilder<DomainDbContext>()
+    public static readonly DbContextOptions<StorageDbContext> Options =
+        new DbContextOptionsBuilder<StorageDbContext>()
             .EnableDetailedErrors()
             .EnableSensitiveDataLogging()
             .UseSnakeCaseNamingConvention()
@@ -19,17 +18,17 @@ public static class App
                 new NpgsqlConnection(
                     "Server=10.0.0.153;Database=sastimg;User Id=postgres;Password=123456;"
                 ),
-                options => options.MigrationsAssembly(DomainAssembly.Assembly)
+                options => options.MigrationsAssembly(StorageAssembly.Assembly)
             )
             .Options;
 
     [AssemblyInitialize]
     public static async Task Initialize(TestContext tc)
     {
-        await using DomainDbContext context = new(Options);
+        await using StorageDbContext context = new(Options);
         await context.Database.EnsureCreatedAsync(tc.CancellationToken);
         await context.Database.ExecuteSqlRawAsync(
-            $"DROP SCHEMA IF EXISTS {DomainDbContext.Schema} CASCADE",
+            $"DROP SCHEMA IF EXISTS {StorageDbContext.Schema} CASCADE",
             tc.CancellationToken
         );
         await context
@@ -40,9 +39,9 @@ public static class App
     [AssemblyCleanup]
     public static async Task Cleanup(TestContext tc)
     {
-        await using DomainDbContext context = new(Options);
+        await using StorageDbContext context = new(Options);
         //await context.Database.ExecuteSqlRawAsync(
-        //    $"DROP SCHEMA IF EXISTS {DomainDbContext.Schema} CASCADE",
+        //    $"DROP SCHEMA IF EXISTS {StorageDbContext.Schema} CASCADE",
         //    tc.CancellationToken
         //);
     }

@@ -8,9 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Database;
 
-internal sealed class DomainDbContext(DbContextOptions<DomainDbContext> options)
-    : DbContext(options)
+public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) : DbContext(options)
 {
+    public const string Schema = "domain";
+
     public DbSet<Album> Albums { get; init; }
     public DbSet<Category> Categories { get; init; }
     public DbSet<User> Users { get; init; }
@@ -19,7 +20,7 @@ internal sealed class DomainDbContext(DbContextOptions<DomainDbContext> options)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.HasDefaultSchema("domain");
+        modelBuilder.HasDefaultSchema(Schema);
 
         DomainDbContextEntityTypeConfigurations configuration = new();
         modelBuilder.ApplyConfiguration<Album>(configuration);

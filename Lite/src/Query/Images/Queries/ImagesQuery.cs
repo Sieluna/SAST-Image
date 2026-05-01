@@ -54,7 +54,7 @@ public sealed record class ImagesQuery(long? AuthorId, long? AlbumId, long? Curs
                     i.AccessLevel >= AccessLevelValue.PublicReadOnly
                     || i.AccessLevel >= AccessLevelValue.AuthReadOnly && isAuthenticated
                     || i.AccessLevel == AccessLevelValue.Private
-                        && (i.AuthorId == actorId || i.Collaborators.Contains(actorId) || isAdmin)
+                        && (i.AuthorId == actorId || isAdmin)
                 )
                 .Where(i => cursor == null || i.Id < cursor)
                 .OrderByDescending(i => i.Id)

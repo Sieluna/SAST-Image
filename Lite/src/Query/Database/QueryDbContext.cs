@@ -8,18 +8,20 @@ namespace Query.Database;
 
 public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : DbContext(options)
 {
-    public required DbSet<AlbumModel> Albums { get; init; }
-    public required DbSet<ImageModel> Images { get; init; }
-    public required DbSet<UserModel> Users { get; init; }
-    public required DbSet<CategoryModel> Categories { get; init; }
-    public required DbSet<LikeModel> Likes { get; init; }
-    public required DbSet<SubscribeModel> Subscribes { get; init; }
+    public const string Schema = "query";
+
+    public DbSet<AlbumModel> Albums { get; init; }
+    public DbSet<ImageModel> Images { get; init; }
+    public DbSet<UserModel> Users { get; init; }
+    public DbSet<CategoryModel> Categories { get; init; }
+    public DbSet<LikeModel> Likes { get; init; }
+    public DbSet<SubscribeModel> Subscribes { get; init; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.HasDefaultSchema("query");
+        modelBuilder.HasDefaultSchema(Schema);
 
         QueryDbContextEntityTypeConfigurations configuration = new();
 

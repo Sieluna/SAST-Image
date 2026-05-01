@@ -7,7 +7,7 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <Parallelize>enable</Parallelize>
-    <RootNamespace>Infrastructure</RootNamespace>
+    <RootNamespace>Storage</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Storage\Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>
