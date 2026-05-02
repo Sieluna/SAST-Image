@@ -12,7 +12,7 @@ using WebAPI.Utilities.Attributes;
 
 namespace WebAPI.Controllers;
 
-[Route("api/categories")]
+[Route("api/v1/categories")]
 [ApiController]
 [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Client)]
 public sealed class CategoryController(IMediator mediator) : AdvancedController

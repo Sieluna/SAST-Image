@@ -16,7 +16,7 @@ using WebAPI.Utilities.Attributes;
 
 namespace WebAPI.Controllers;
 
-[Route("api/account")]
+[Route("api/v1/account")]
 [ApiController]
 public sealed class AccountController(IMediator mediator) : AdvancedController
 {

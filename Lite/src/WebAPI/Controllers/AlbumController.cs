@@ -14,7 +14,7 @@ using WebAPI.Utilities.Attributes;
 
 namespace WebAPI.Controllers;
 
-[Route("api/albums")]
+[Route("api/v1/albums")]
 [ApiController]
 [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Client)]
 public sealed class AlbumController(IMediator mediator) : AdvancedController

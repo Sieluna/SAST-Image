@@ -17,7 +17,7 @@ using WebAPI.Utilities.Attributes;
 
 namespace WebAPI.Controllers;
 
-[Route("api")]
+[Route("api/v1")]
 [ApiController]
 public class ImageController(IMediator mediator, IOptions<JsonOptions> jsonOptions)
     : AdvancedController

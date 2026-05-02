@@ -13,7 +13,7 @@ using WebAPI.Utilities.Attributes;
 
 namespace WebAPI.Controllers;
 
-[Route("api/users")]
+[Route("api/v1/users")]
 [ApiController]
 public sealed class UserController(IMediator mediator) : AdvancedController
 {

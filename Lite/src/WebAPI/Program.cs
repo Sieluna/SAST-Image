@@ -27,4 +27,4 @@ app.MapHealthChecks("/api/health");
 if (app.Environment.IsDevelopment())
     app.MapOpenApi("/api/v1.json");
 
-await app.RunBackend();
+app.RunBackend();
