@@ -20,7 +20,6 @@ public sealed class ImageModel
     public ImageStatusValue Status { get; private set; }
     public DateTime? RemovedAt { get; private set; }
     public List<LikeModel> Likes { get; } = null!;
-    public long[] Collaborators { get; } = null!;
 
     internal ImageModel(ImageAddedEvent e)
     {
@@ -30,7 +29,6 @@ public sealed class ImageModel
         Title = e.Title.Value;
         Status = ImageStatusValue.Available;
         Tags = e.Tags.Value;
-        Collaborators = Array.ConvertAll(e.Collaborators.Value, id => id.Value);
         AccessLevel = e.AccessLevel.Value;
         UploadedAt = e.CreatedAt;
         UploaderId = e.Uploader.Value;

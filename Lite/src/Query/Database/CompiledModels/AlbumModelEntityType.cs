@@ -24,7 +24,7 @@ namespace Query
                 "Query.Albums.AlbumModel",
                 typeof(AlbumModel),
                 baseEntityType,
-                propertyCount: 11,
+                propertyCount: 10,
                 navigationCount: 2,
                 skipNavigationCount: 1,
                 foreignKeyCount: 2,
@@ -68,15 +68,6 @@ namespace Query
                 sentinel: 0L);
             categoryId.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
             categoryId.AddAnnotation("Relational:ColumnName", "category_id");
-
-            var collaborators = runtimeEntityType.AddProperty(
-                "Collaborators",
-                typeof(long[]),
-                propertyInfo: typeof(AlbumModel).GetProperty("Collaborators", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(AlbumModel).GetField("<Collaborators>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
-            var collaboratorsElementType = collaborators.SetElementType(typeof(long));
-            collaborators.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            collaborators.AddAnnotation("Relational:ColumnName", "collaborators");
 
             var createdAt = runtimeEntityType.AddProperty(
                 "CreatedAt",

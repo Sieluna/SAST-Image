@@ -23,18 +23,13 @@ internal sealed class ImageAvailabilityChecker(QueryDbContext context) : IImageA
             {
                 i.AuthorId,
                 i.Status,
-                i.Collaborators,
                 i.AccessLevel,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (image is null)
             return false;
-        if (
-            image.AuthorId == actor.Id.Value
-            || actor.IsAdmin
-            || image.Collaborators.Contains(actor.Id.Value)
-        )
+        if (image.AuthorId == actor.Id.Value || actor.IsAdmin)
             return true;
         if (image.Status != ImageStatusValue.Available)
             return false;

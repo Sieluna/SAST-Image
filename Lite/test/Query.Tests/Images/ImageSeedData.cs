@@ -18,8 +18,7 @@ internal sealed class ImageSeedData
                 accessLevel: AccessLevelValue.PublicReadOnly,
                 status: ImageStatusValue.Available,
                 removedAt: null,
-                likes: [new LikeModel(IDs.Images.GeneralImage, IDs.Users.Member)],
-                collaborators: [IDs.Users.Member]
+                likes: [new LikeModel(IDs.Images.GeneralImage, IDs.Users.Member)]
             ),
             ImageModel.Create(
                 id: IDs.Images.MountainImage,
@@ -36,8 +35,7 @@ internal sealed class ImageSeedData
                 [
                     new LikeModel(IDs.Images.MountainImage, IDs.Users.Admin),
                     new LikeModel(IDs.Images.MountainImage, IDs.Users.Photographer),
-                ],
-                collaborators: [IDs.Users.Admin, IDs.Users.Photographer]
+                ]
             ),
             ImageModel.Create(
                 id: IDs.Images.UrbanImage,
@@ -50,8 +48,7 @@ internal sealed class ImageSeedData
                 accessLevel: AccessLevelValue.Private,
                 status: ImageStatusValue.Available,
                 removedAt: null,
-                likes: [new LikeModel(IDs.Images.UrbanImage, IDs.Users.Member)],
-                collaborators: [IDs.Users.Member]
+                likes: [new LikeModel(IDs.Images.UrbanImage, IDs.Users.Member)]
             ),
             ImageModel.Create(
                 id: IDs.Images.PortraitImage,
@@ -64,8 +61,7 @@ internal sealed class ImageSeedData
                 accessLevel: AccessLevelValue.PublicReadOnly,
                 status: ImageStatusValue.Removed,
                 removedAt: DateTime.UtcNow.AddDays(-1),
-                likes: [],
-                collaborators: [IDs.Users.Curator]
+                likes: []
             ),
             ImageModel.Create(
                 id: IDs.Images.MembersOnlyImage,
@@ -78,8 +74,7 @@ internal sealed class ImageSeedData
                 accessLevel: AccessLevelValue.AuthReadOnly,
                 status: ImageStatusValue.Available,
                 removedAt: null,
-                likes: [new LikeModel(IDs.Images.MembersOnlyImage, IDs.Users.Admin)],
-                collaborators: []
+                likes: [new LikeModel(IDs.Images.MembersOnlyImage, IDs.Users.Admin)]
             ),
         ];
 }

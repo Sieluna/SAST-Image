@@ -26,7 +26,7 @@ namespace Query
                 "Query.Images.ImageModel",
                 typeof(ImageModel),
                 baseEntityType,
-                propertyCount: 11,
+                propertyCount: 10,
                 navigationCount: 1,
                 skipNavigationCount: 1,
                 foreignKeyCount: 3,
@@ -70,15 +70,6 @@ namespace Query
                 sentinel: 0L);
             authorId.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
             authorId.AddAnnotation("Relational:ColumnName", "author_id");
-
-            var collaborators = runtimeEntityType.AddProperty(
-                "Collaborators",
-                typeof(long[]),
-                propertyInfo: typeof(ImageModel).GetProperty("Collaborators", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                fieldInfo: typeof(ImageModel).GetField("<Collaborators>k__BackingField", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly));
-            var collaboratorsElementType = collaborators.SetElementType(typeof(long));
-            collaborators.AddAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None);
-            collaborators.AddAnnotation("Relational:ColumnName", "collaborators");
 
             var removedAt = runtimeEntityType.AddProperty(
                 "RemovedAt",

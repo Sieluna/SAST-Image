@@ -21,7 +21,7 @@ public sealed record RemovedImagesQuery(AlbumId Album, Actor Actor) : IQuery<Ima
                 .Images.AsNoTracking()
                 .Where(i => i.Status == ImageStatusValue.Removed)
                 .Where(i => i.AlbumId == albumId)
-                .Where(i => i.AuthorId == actorId || i.Collaborators.Contains(actorId) || isAdmin)
+                .Where(i => i.AuthorId == actorId || isAdmin)
                 .Select(i => new ImageDto
                 {
                     Id = i.Id,

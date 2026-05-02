@@ -40,7 +40,6 @@ public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) :
         builder.MapValueObject<Email, string>();
 
         builder.MapValueObjects<Roles, Role>();
-        builder.MapValueObjects<Collaborators, UserId, long>();
         //builder.MapValueObjects<ImageTags, string>();
         //builder.MapValueObjects<AlbumTags, string>();
 

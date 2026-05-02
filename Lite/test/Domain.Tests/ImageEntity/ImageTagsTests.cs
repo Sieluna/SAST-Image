@@ -22,7 +22,7 @@ public class ImageTagsTests
     [TestMethod]
     public void Return_True_When_Create_From_Valid()
     {
-        const int collaborator_count = ImageTags.MaxCount - 1;
+        const int tags_count = ImageTags.MaxCount - 1;
 
         string[] valid_ImageTags =
         [
@@ -32,7 +32,7 @@ public class ImageTagsTests
         ImageTags.TryCreateNew(valid_ImageTags, out var imageTags);
 
         Assert.IsNotNull(imageTags);
-        imageTags.Value.Length.ShouldBe(collaborator_count);
+        imageTags.Value.Length.ShouldBe(tags_count);
     }
 
     [TestMethod]

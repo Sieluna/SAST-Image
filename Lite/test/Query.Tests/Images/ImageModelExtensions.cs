@@ -22,8 +22,7 @@ internal static class ImageModelExtensions
             AccessLevelValue accessLevel,
             ImageStatusValue status,
             DateTime? removedAt,
-            List<LikeModel> likes,
-            long[] collaborators
+            List<LikeModel> likes
         )
         {
             var Image = _Create();
@@ -39,7 +38,6 @@ internal static class ImageModelExtensions
             Image.Set(a => a.Status, status);
             Image.Set(a => a.RemovedAt, removedAt);
             Image.Set(a => a.Likes, likes);
-            Image.Set(a => a.Collaborators, collaborators);
 
             return Image;
         }

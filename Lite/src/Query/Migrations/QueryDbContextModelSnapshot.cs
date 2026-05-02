@@ -44,11 +44,6 @@ namespace Query.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("category_id");
 
-                    b.PrimitiveCollection<long[]>("Collaborators")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("collaborators");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -160,11 +155,6 @@ namespace Query.Migrations
                     b.Property<long>("AuthorId")
                         .HasColumnType("bigint")
                         .HasColumnName("author_id");
-
-                    b.PrimitiveCollection<long[]>("Collaborators")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("collaborators");
 
                     b.Property<DateTime?>("RemovedAt")
                         .HasColumnType("timestamp with time zone")

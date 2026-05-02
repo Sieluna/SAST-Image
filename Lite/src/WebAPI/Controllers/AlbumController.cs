@@ -123,25 +123,6 @@ public sealed class AlbumController(IMediator mediator) : AdvancedController
         return NoContent();
     }
 
-    public readonly record struct UpdateCollaboratorsRequest(
-        [property: Required] Collaborators Collaborators
-    );
-
-    [Authorize]
-    [HttpPost("{id:long}/collaborators")]
-    [EndpointName("Update Album Collaborators")]
-    [EndpointDescription("Update the collaborators for an album.")]
-    [MaybeNotFound]
-    public async Task<NoContent> UpdateCollaborators(
-        [FromRoute] AlbumId id,
-        [FromBody, Required] UpdateCollaboratorsRequest request
-    )
-    {
-        UpdateCollaboratorsCommand command = new(id, request.Collaborators, User);
-        await mediator.Send(command);
-        return NoContent();
-    }
-
     [Authorize]
     [HttpPut("{id:long}/cover")]
     [RequestFormLimits(MultipartBodyLengthLimit = ImageFile.MaxBytes)]

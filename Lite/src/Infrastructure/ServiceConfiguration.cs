@@ -82,8 +82,7 @@ public static class ServiceConfiguration
             // album services
             services
                 .AddScoped<IAlbumRepository, AlbumDomainRepository>()
-                .AddScoped<ICategoryExistenceChecker, CategoryExistenceChecker>()
-                .AddScoped<ICollaboratorsExistenceChecker, CollaboratorsExistenceChecker>();
+                .AddScoped<ICategoryExistenceChecker, CategoryExistenceChecker>();
 
             // category services
             services

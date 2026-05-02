@@ -20,7 +20,6 @@ internal sealed class QueryDbContextEntityTypeConfigurations
         builder.HasKey(a => a.Id);
 
         builder.Property(album => album.CreatedAt);
-        builder.PrimitiveCollection(album => album.Collaborators);
         builder.PrimitiveCollection(album => album.Tags);
         builder.HasOne<CategoryModel>().WithMany().HasForeignKey(album => album.CategoryId);
         builder.HasOne<UserModel>().WithMany().HasForeignKey(album => album.AuthorId);
@@ -45,7 +44,6 @@ internal sealed class QueryDbContextEntityTypeConfigurations
         builder.Property(image => image.UploadedAt);
         builder.Property(image => image.AuthorId);
         builder.PrimitiveCollection(image => image.Tags);
-        builder.PrimitiveCollection(image => image.Collaborators);
         builder.HasOne<UserModel>().WithMany().HasForeignKey(image => image.AuthorId);
         builder.HasOne<UserModel>().WithMany().HasForeignKey(image => image.UploaderId);
         builder

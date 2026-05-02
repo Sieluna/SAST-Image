@@ -38,11 +38,6 @@ namespace Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("author_id");
 
-                    b.Property<long[]>("_collaborators")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("collaborators");
-
                     b.Property<bool>("_removed")
                         .HasColumnType("boolean")
                         .HasColumnName("removed");

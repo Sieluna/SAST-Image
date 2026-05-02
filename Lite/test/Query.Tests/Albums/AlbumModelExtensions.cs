@@ -19,7 +19,6 @@ internal static class AlbumModelExtensions
             long categoryId,
             AccessLevelValue accessLevel,
             string[] tags,
-            long[] collaborators,
             DateTime createdAt,
             DateTime updatedAt,
             DateTime? removedAt,
@@ -36,7 +35,6 @@ internal static class AlbumModelExtensions
             album.Set(a => a.CategoryId, categoryId);
             album.Set(a => a.AccessLevel, accessLevel);
             album.Set(a => a.Tags, tags);
-            album.Set(a => a.Collaborators, collaborators);
             album.Set(a => a.CreatedAt, createdAt);
             album.Set(a => a.UpdatedAt, updatedAt);
             album.Set(a => a.RemovedAt, removedAt);

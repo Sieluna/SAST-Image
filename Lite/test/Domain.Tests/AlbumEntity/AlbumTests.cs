@@ -14,7 +14,6 @@ using Domain.Tests.ImageEntity;
 using Domain.UserAggregate.UserEntity;
 using Moq;
 using Shouldly;
-using static Domain.Tests.AlbumEntity.CollaboratorsTestHelper;
 using static Domain.Tests.TestActor;
 
 namespace Domain.Tests.AlbumEntity;
@@ -108,7 +107,6 @@ public class AlbumTests(TestContext context)
     }
 
     [DataRow(VisitorId)]
-    [DataRow(Collaborator1Id)]
     [TestMethod]
     public void Throw_When_UpdateInfo_As_Not_Author_Or_Admin(long actorId)
     {
@@ -164,7 +162,6 @@ public class AlbumTests(TestContext context)
     }
 
     [DataRow(VisitorId)]
-    [DataRow(Collaborator1Id)]
     [TestMethod]
     public void Throw_When_UpdateCategory_As_Not_Author_Or_Admin(long actorId)
     {
@@ -217,7 +214,6 @@ public class AlbumTests(TestContext context)
     }
 
     [DataRow(VisitorId)]
-    [DataRow(Collaborator1Id)]
     [TestMethod]
     public void Throw_When_UpdateAccessLevel_As_Not_Author_Or_Admin(long actorId)
     {
@@ -251,71 +247,6 @@ public class AlbumTests(TestContext context)
 
     #endregion
 
-    #region UpdateCollaborators
-
-    [TestMethod]
-    public void Throw_When_UpdateCollaborators_In_Immutable_Album()
-    {
-        var album = Album.Removed;
-        UpdateCollaboratorsCommand command = new(
-            AlbumId.New,
-            Collaborators.DefaultNew,
-            Actor.Author
-        );
-
-        var checker = new Mock<ICollaboratorsExistenceChecker>();
-        checker
-            .Setup(c => c.CheckAsync(command.Collaborators, context.CancellationToken))
-            .Returns(Task.CompletedTask);
-
-        Should.Throw<AlbumRemovedException>(async () =>
-            await album.UpdateCollaborators(command, checker.Object)
-        );
-    }
-
-    [DataRow(VisitorId)]
-    [DataRow(Collaborator1Id)]
-    [TestMethod]
-    public void Throw_When_UpdateCollaborators_As_Not_Author_Or_Admin(long actorId)
-    {
-        var album = Album.New;
-        var collaborators = Collaborators.DefaultNew;
-        UpdateCollaboratorsCommand command = new(AlbumId.New, collaborators, Actor.New(actorId));
-        var checker = new Mock<ICollaboratorsExistenceChecker>();
-        checker
-            .Setup(c => c.CheckAsync(command.Collaborators, context.CancellationToken))
-            .Returns(Task.CompletedTask);
-
-        Should.Throw<NoPermissionException>(async () =>
-            await album.UpdateCollaborators(command, checker.Object)
-        );
-    }
-
-    [DataRow(AdminId, true)]
-    [DataRow(AuthorId, false)]
-    [TestMethod]
-    public async Task Raise_Event_When_Collaborators_Updated(long actorId, bool isAdmin)
-    {
-        var album = Album.New;
-        var collaborators = Collaborators.DefaultNew;
-        UpdateCollaboratorsCommand command = new(
-            AlbumId.New,
-            collaborators,
-            Actor.New(actorId, isAdmin)
-        );
-        var checker = new Mock<ICollaboratorsExistenceChecker>();
-        checker
-            .Setup(c => c.CheckAsync(command.Collaborators, context.CancellationToken))
-            .Returns(Task.CompletedTask);
-
-        await album.UpdateCollaborators(command, checker.Object);
-
-        album.DomainEvents.Count.ShouldBe(1);
-        album.DomainEvents.First().ShouldBeOfType<AlbumCollaboratorsUpdatedEvent>();
-    }
-
-    #endregion
-
     #region UpdateCover
 
     [TestMethod]
@@ -328,7 +259,6 @@ public class AlbumTests(TestContext context)
     }
 
     [DataRow(VisitorId)]
-    [DataRow(Collaborator1Id)]
     [TestMethod]
     public void Throw_When_UpdateCover_As_Not_Author_Or_Admin(long actorId)
     {
@@ -376,7 +306,7 @@ public class AlbumTests(TestContext context)
     }
 
     [TestMethod]
-    public void Throw_When_AddImage_As_Not_Author_Or_Admin_Or_Collaborator()
+    public void Throw_When_AddImage_As_Not_Author_Or_Admin()
     {
         var album = Album.New;
         AddImageCommand command = new(
@@ -392,8 +322,6 @@ public class AlbumTests(TestContext context)
 
     [DataRow(AuthorId, false)]
     [DataRow(AdminId, true)]
-    [DataRow(Collaborator1Id, false)]
-    [DataRow(Collaborator2Id, true)]
     [TestMethod]
     public void Raise_Event_When_Image_Added(long actorId, bool isAdmin)
     {
@@ -468,7 +396,7 @@ public class AlbumTests(TestContext context)
     }
 
     [TestMethod]
-    public void Throw_When_RemoveImage_As_Not_Author_Or_Admin_Or_Collaborator()
+    public void Throw_When_RemoveImage_As_Not_Author_Or_Admin()
     {
         var album = Album.New;
         RemoveImageCommand command = new(AlbumId.New, album.Images.Random.Id, Actor.New(VisitorId));
@@ -524,7 +452,7 @@ public class AlbumTests(TestContext context)
     }
 
     [TestMethod]
-    public void Throw_When_RestoreImage_As_Not_Author_Or_Admin_Or_Collaborator()
+    public void Throw_When_RestoreImage_As_Not_Author_Or_Admin()
     {
         var album = Album.New;
         RestoreImageCommand command = new(
@@ -692,7 +620,6 @@ internal static class TestAlbum
                 ];
                 a.SetValue(Actor.Author.Id);
                 a.SetValue(Subscribe.Default(a.Id));
-                a.SetValue(Collaborators.Default);
 
                 a.SetId(AlbumId.New);
 
@@ -721,30 +648,6 @@ file static class SubscribeTestHelper
 
         public static List<Subscribe> Default(AlbumId album) =>
             new([Subscribe.New(album, new(123)), Subscribe.New(album, new(321))]);
-    }
-}
-
-file static class CollaboratorsTestHelper
-{
-    public const long Collaborator1Id = 1;
-    public const long Collaborator2Id = 2;
-
-    extension(Collaborators)
-    {
-        public static Collaborators New(params long[] userIds) =>
-            new(Array.ConvertAll(userIds, i => new UserId(i)));
-
-        public static Collaborators DefaultNew =>
-            Collaborators.New([
-                Collaborator1Id,
-                Collaborator2Id,
-                Random.Shared.NextInt64(
-                    long.Max(Collaborator1Id, Collaborator2Id) + 1,
-                    long.MaxValue
-                ),
-            ]);
-
-        public static Collaborators Default => new([new(Collaborator1Id), new(Collaborator2Id)]);
     }
 }
 

@@ -12,7 +12,7 @@ namespace Query
     public partial class QueryDbContextModel
     {
         private QueryDbContextModel()
-            : base(skipDetectChanges: false, modelId: new Guid("bfe16460-2fbf-40e8-9402-99312d905823"), entityTypeCount: 6)
+            : base(skipDetectChanges: false, modelId: new Guid("52cf9353-a9b8-40e1-9141-988fe6c1b954"), entityTypeCount: 6)
         {
         }
 

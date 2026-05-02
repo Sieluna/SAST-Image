@@ -13,7 +13,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Migrations
 {
     [DbContext(typeof(DomainDbContext))]
-    [Migration("20260429084905_DM")]
+    [Migration("20260502013753_DM")]
     partial class DM
     {
         /// <inheritdoc />
@@ -40,11 +40,6 @@ namespace Migrations
                     b.Property<long>("_author")
                         .HasColumnType("bigint")
                         .HasColumnName("author_id");
-
-                    b.Property<long[]>("_collaborators")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("collaborators");
 
                     b.Property<bool>("_removed")
                         .HasColumnType("boolean")

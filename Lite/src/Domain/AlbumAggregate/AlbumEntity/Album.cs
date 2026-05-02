@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using Domain.AlbumAggregate.Commands;
+﻿using Domain.AlbumAggregate.Commands;
 using Domain.AlbumAggregate.Events;
 using Domain.AlbumAggregate.Exceptions;
 using Domain.AlbumAggregate.ImageEntity;
@@ -21,8 +20,6 @@ public sealed class Album : EntityBase<AlbumId>
     private bool _customCover = false;
 
     private AccessLevel _accessLevel;
-
-    private Collaborators _collaborators = [];
 
     private readonly UserId _author;
 
@@ -75,26 +72,6 @@ public sealed class Album : EntityBase<AlbumId>
         _accessLevel = command.AccessLevel;
 
         AddDomainEvent(new AlbumAccessLevelUpdatedEvent(Id, command.AccessLevel));
-    }
-
-    public async Task UpdateCollaborators(
-        UpdateCollaboratorsCommand command,
-        ICollaboratorsExistenceChecker checker
-    )
-    {
-        if (CanNotManage(command.Actor))
-            throw new NoPermissionException();
-        if (_removed)
-            throw new AlbumRemovedException();
-
-        if (_collaborators == command.Collaborators)
-            return;
-
-        await checker.CheckAsync(command.Collaborators);
-
-        _collaborators = command.Collaborators;
-
-        AddDomainEvent(new AlbumCollaboratorsUpdatedEvent(Id, command.Collaborators));
     }
 
     public async Task UpdateCategory(
@@ -227,7 +204,6 @@ public sealed class Album : EntityBase<AlbumId>
                 command.Title,
                 command.Tags,
                 _accessLevel,
-                _collaborators,
                 command.File,
                 DateTime.UtcNow,
                 command.Actor.Id
@@ -355,8 +331,7 @@ public sealed class Album : EntityBase<AlbumId>
 
     private bool CanNotManage(Actor actor) => !CanManage(actor);
 
-    private bool CanManageImages(Actor actor) =>
-        CanManage(actor) || _collaborators.Contains(actor.Id);
+    private bool CanManageImages(Actor actor) => CanManage(actor);
 
     private bool CanNotManageImages(Actor actor) => !CanManageImages(actor);
 

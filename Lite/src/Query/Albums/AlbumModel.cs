@@ -26,7 +26,6 @@ public sealed class AlbumModel
     public long CategoryId { get; internal set; }
     public AccessLevelValue AccessLevel { get; private set; }
     public string[] Tags { get; internal set; } = [];
-    public long[] Collaborators { get; internal set; } = [];
     public DateTime CreatedAt { get; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; internal set; } = DateTime.UtcNow;
     public DateTime? RemovedAt { get; private set; }

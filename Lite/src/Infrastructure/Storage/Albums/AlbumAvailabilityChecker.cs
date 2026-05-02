@@ -23,7 +23,6 @@ internal sealed class AlbumAvailabilityChecker(QueryDbContext context) : IAlbumA
                 a.AccessLevel,
                 a.AuthorId,
                 a.RemovedAt,
-                a.Collaborators,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -31,11 +30,7 @@ internal sealed class AlbumAvailabilityChecker(QueryDbContext context) : IAlbumA
 
         if (album is null)
             return false;
-        if (
-            actor.IsAdmin
-            || album.AuthorId == actor.Id.Value
-            || album.Collaborators.Contains(actor.Id.Value)
-        )
+        if (actor.IsAdmin || album.AuthorId == actor.Id.Value)
             return true;
         if (album.RemovedAt is null)
             return false;

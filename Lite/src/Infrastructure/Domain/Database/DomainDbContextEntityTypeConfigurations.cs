@@ -25,7 +25,6 @@ internal sealed class DomainDbContextEntityTypeConfigurations
         builder.Field<bool>("_removed", "removed");
         builder.Field<bool>("_updateCoverAutomatically", "update_cover_automatically");
         builder.Field<UserId>("_author", "author_id");
-        builder.Field<Collaborators>("_collaborators", "collaborators");
         builder.HasOne<User>().WithMany().HasForeignKey("_author");
 
         builder.OwnsMany<Subscribe>(

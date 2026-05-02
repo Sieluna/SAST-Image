@@ -12,7 +12,7 @@ using Query.Database;
 namespace Query.Migrations
 {
     [DbContext(typeof(QueryDbContext))]
-    [Migration("20260429084733_QM")]
+    [Migration("20260502013628_QM")]
     partial class QM
     {
         /// <inheritdoc />
@@ -46,11 +46,6 @@ namespace Query.Migrations
                     b.Property<long>("CategoryId")
                         .HasColumnType("bigint")
                         .HasColumnName("category_id");
-
-                    b.PrimitiveCollection<long[]>("Collaborators")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("collaborators");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -163,11 +158,6 @@ namespace Query.Migrations
                     b.Property<long>("AuthorId")
                         .HasColumnType("bigint")
                         .HasColumnName("author_id");
-
-                    b.PrimitiveCollection<long[]>("Collaborators")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("collaborators");
 
                     b.Property<DateTime?>("RemovedAt")
                         .HasColumnType("timestamp with time zone")

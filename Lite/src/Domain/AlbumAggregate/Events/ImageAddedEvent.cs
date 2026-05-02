@@ -13,7 +13,6 @@ public sealed record class ImageAddedEvent(
     ImageTitle Title,
     ImageTags Tags,
     AccessLevel AccessLevel,
-    Collaborators Collaborators,
     ImageFile File,
     DateTime CreatedAt,
     UserId Uploader
