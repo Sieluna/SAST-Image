@@ -22,7 +22,7 @@ builder
 
 var app = builder.Build();
 
-app.MapHealthChecks("/api/health");
+app.MapHealthChecks("/api/v1/health");
 
 if (app.Environment.IsDevelopment())
     app.MapOpenApi("/api/v1.json");
