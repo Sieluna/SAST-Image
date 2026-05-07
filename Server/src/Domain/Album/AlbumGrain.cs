@@ -1,4 +1,5 @@
 ﻿global using AlbumId = long;
+using System.Diagnostics.CodeAnalysis;
 using Domain.Album.Events;
 using Domain.Album.Image;
 using Domain.Event;
@@ -57,7 +58,7 @@ internal sealed class AlbumGrain(ICategoryExistenceChecker checker)
         if (State.Images.Contains(id))
             return ValueTask.CompletedTask;
 
-        RaiseEvent(new ImageAddedEvent(Id, id, title, tags, file, Actor));
+        RaiseEvent(new AlbumImageAddedEvent(Id, id, title, tags, file, Actor));
         return ValueTask.CompletedTask;
     }
 
@@ -69,7 +70,7 @@ internal sealed class AlbumGrain(ICategoryExistenceChecker checker)
         if (State.Images.Contains(id) is false)
             return ValueTask.CompletedTask;
 
-        RaiseEvent(new ImageUpdatedEvent(Id, id, title, tags));
+        RaiseEvent(new AlbumImageUpdatedEvent(Id, id, title, tags));
         return ValueTask.CompletedTask;
     }
 
@@ -82,43 +83,51 @@ internal sealed class AlbumGrain(ICategoryExistenceChecker checker)
         if (exists is false)
             return ValueTask.CompletedTask;
 
-        RaiseEvent(new ImageRemovedEvent(Id, id));
+        RaiseEvent(new AlbumImageRemovedEvent(Id, id));
         return ValueTask.CompletedTask;
     }
 
     public ValueTask Subscribe()
     {
-        if (State.Subscribers.Contains(Actor.Id))
+        if (State.Subscribes.Contains(Actor.Id))
             return ValueTask.CompletedTask;
+        var subscribes = State.Subscribes.Append(Actor.Id);
 
-        RaiseEvent(new AlbumSubscribedEvent(Id, Actor));
+        RaiseEvent(new AlbumUpdatedEvent(Id, Subscribes: subscribes));
         return ValueTask.CompletedTask;
     }
 
     public ValueTask Unsubscribe()
     {
-        if (State.Subscribers.Contains(Actor.Id) is false)
+        if (State.Subscribes.Contains(Actor.Id) is false)
             return ValueTask.CompletedTask;
+        var subscribes = State.Subscribes.Filter(Actor.Id);
 
-        RaiseEvent(new AlbumUnsubscribedEvent(Id, Actor));
+        RaiseEvent(new AlbumUpdatedEvent(Id, Subscribes: subscribes));
         return ValueTask.CompletedTask;
     }
 
     public ValueTask LikeImage(ImageId id)
     {
-        if (State.Images.Contains(id) is false)
+        if (State.Images.TryFind(id, out var image) is false)
+            return ValueTask.CompletedTask;
+        if (image.Likes.Contains(Actor.Id))
             return ValueTask.CompletedTask;
 
-        RaiseEvent(new ImageLikedEvent(Id, id, Actor));
+        var likes = image.Likes.Append(Actor.Id);
+
+        RaiseEvent(new AlbumImageUpdatedEvent(Id, id, Likes: likes));
         return ValueTask.CompletedTask;
     }
 
     public ValueTask UnLikeImage(ImageId id)
     {
-        if (State.Images.Contains(id) is false)
+        if (State.Images.TryFind(id, out var image) is false)
             return ValueTask.CompletedTask;
 
-        RaiseEvent(new ImageUnLikedEvent(Id, id, Actor));
+        var likes = image.Likes.Filter(Actor.Id);
+
+        RaiseEvent(new AlbumImageUpdatedEvent(Id, id, Likes: likes));
         return ValueTask.CompletedTask;
     }
 }
@@ -126,22 +135,25 @@ internal sealed class AlbumGrain(ICategoryExistenceChecker checker)
 internal sealed class AlbumState : DomainStateBase, IDomainEventApplyable
 {
     public UserId Author { get; private set; }
-    public UserId[] Subscribers { get; private set; } = [];
+    public UserId[] Subscribes { get; private set; } = [];
     public ImageState[] Images { get; private set; } = [];
 
     public void Apply(DomainEventBase e)
     {
-        (Author, Images, Subscribers, RecordExists) = e switch
+        (Author, Images, Subscribes, RecordExists) = e switch
         {
-            AlbumCreatedEvent a => (a.Actor.Id, Images, Subscribers, true),
-            AlbumUpdatedEvent => (Author, Images, Subscribers, RecordExists),
-            AlbumRemovedEvent => (Author, Images, Subscribers, false),
-            AlbumSubscribedEvent a => (Author, Images, Subscribers.Append(a.Actor.Id), true),
-            AlbumUnsubscribedEvent a => (Author, Images, Subscribers.Filter(a.Actor.Id), true),
+            AlbumCreatedEvent a => (a.Actor.Id, Images, Subscribes, true),
+            AlbumUpdatedEvent a => (Author, Images, a.Subscribes ?? Subscribes, RecordExists),
+            AlbumRemovedEvent => (Author, Images, Subscribes, false),
             //
-            ImageUpdatedEvent => (Author, Images, Subscribers, RecordExists),
-            ImageAddedEvent a => (Author, Images.Append(a.ImageId), Subscribers, RecordExists),
-            ImageRemovedEvent a => (Author, Images.Filter(a.ImageId), Subscribers, RecordExists),
+            AlbumImageUpdatedEvent i => (Author, Images.Update(i), Subscribes, RecordExists),
+            AlbumImageAddedEvent i => (Author, Images.Append(i.ImageId), Subscribes, RecordExists),
+            AlbumImageRemovedEvent i => (
+                Author,
+                Images.Filter(i.ImageId),
+                Subscribes,
+                RecordExists
+            ),
             _ => throw new InvalidOperationException($"Unknown event type: {e.GetType().Name}"),
         };
     }
@@ -159,10 +171,31 @@ file static class CollectionExtensions
 
     extension(ImageState[] images)
     {
+        public ImageState[] Update(AlbumImageUpdatedEvent e)
+        {
+            if (e.Likes is null)
+                return images;
+            for (int i = 0; i < images.Length; i++)
+            {
+                if (images[i].Id == e.ImageId)
+                {
+                    images[i].Likes = e.Likes ?? images[i].Likes;
+                    break;
+                }
+            }
+            return images;
+        }
+
         public ImageState[] Filter(ImageId id) => Array.FindAll(images, i => i.Id != id);
 
         public ImageState[] Append(ImageId id) => [.. images, new ImageState { Id = id }];
 
         public bool Contains(ImageId id) => Array.Exists(images, i => i.Id == id);
+
+        public bool TryFind(ImageId id, [NotNullWhen(true)] out ImageState? item)
+        {
+            item = Array.Find(images, i => i.Id == id);
+            return item != null;
+        }
     }
 }

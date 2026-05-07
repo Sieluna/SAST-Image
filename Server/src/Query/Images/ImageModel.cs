@@ -8,16 +8,16 @@ public sealed class ImageModel
     [Obsolete("For ORM", true)]
     private ImageModel() { }
 
-    public long Id { get; }
+    public ImageId Id { get; }
     public string Title { get; internal set; } = null!;
-    public long AlbumId { get; }
-    public long AuthorId { get; }
-    public long UploaderId { get; }
+    public AlbumId AlbumId { get; }
+    public UserId AuthorId { get; }
+    public UserId UploaderId { get; }
     public string[] Tags { get; internal set; } = [];
     public DateTime UploadedAt { get; } = DateTime.UtcNow;
-    public List<LikeModel> Likes { get; } = null!;
+    public UserId[] Likes { get; internal set; } = null!;
 
-    internal ImageModel(ImageAddedEvent e)
+    internal ImageModel(AlbumImageAddedEvent e)
     {
         Id = e.ImageId;
         AlbumId = e.Id;
@@ -27,5 +27,3 @@ public sealed class ImageModel
         UploaderId = e.Uploader.Id;
     }
 }
-
-public sealed record class LikeModel(long Image, long User);

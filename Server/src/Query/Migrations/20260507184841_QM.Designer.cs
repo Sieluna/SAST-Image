@@ -12,7 +12,7 @@ using Query.Database;
 namespace Query.Migrations
 {
     [DbContext(typeof(QueryDbContext))]
-    [Migration("20260506134820_QM")]
+    [Migration("20260507184841_QM")]
     partial class QM
     {
         /// <inheritdoc />
@@ -32,7 +32,7 @@ namespace Query.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("LastProcessedTimestamp")
+                    b.Property<DateTime>("LastProcessedTimestamp")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("last_processed_timestamp");
 
@@ -167,6 +167,11 @@ namespace Query.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("author_id");
 
+                    b.PrimitiveCollection<long[]>("Likes")
+                        .IsRequired()
+                        .HasColumnType("bigint[]")
+                        .HasColumnName("likes");
+
                     b.PrimitiveCollection<string[]>("Tags")
                         .IsRequired()
                         .HasColumnType("text[]")
@@ -198,25 +203,6 @@ namespace Query.Migrations
                         .HasDatabaseName("ix_images_uploader_id");
 
                     b.ToTable("images", "query");
-                });
-
-            modelBuilder.Entity("Query.Images.LikeModel", b =>
-                {
-                    b.Property<long>("Image")
-                        .HasColumnType("bigint")
-                        .HasColumnName("image");
-
-                    b.Property<long>("User")
-                        .HasColumnType("bigint")
-                        .HasColumnName("user");
-
-                    b.HasKey("Image", "User")
-                        .HasName("pk_likes");
-
-                    b.HasIndex("User")
-                        .HasDatabaseName("ix_likes_user");
-
-                    b.ToTable("likes", "query");
                 });
 
             modelBuilder.Entity("Query.Users.UserModel", b =>
@@ -315,33 +301,11 @@ namespace Query.Migrations
                         .HasConstraintName("fk_images_users_uploader_id");
                 });
 
-            modelBuilder.Entity("Query.Images.LikeModel", b =>
-                {
-                    b.HasOne("Query.Images.ImageModel", null)
-                        .WithMany("Likes")
-                        .HasForeignKey("Image")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_likes_images_image");
-
-                    b.HasOne("Query.Users.UserModel", null)
-                        .WithMany()
-                        .HasForeignKey("User")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_likes_users_user");
-                });
-
             modelBuilder.Entity("Query.Albums.AlbumModel", b =>
                 {
                     b.Navigation("Images");
 
                     b.Navigation("Subscribes");
-                });
-
-            modelBuilder.Entity("Query.Images.ImageModel", b =>
-                {
-                    b.Navigation("Likes");
                 });
 #pragma warning restore 612, 618
         }

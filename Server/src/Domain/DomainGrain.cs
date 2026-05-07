@@ -33,11 +33,11 @@ public abstract class DomainGrain<TState, TEventBase>
 
         var grainId = this.GetPrimaryKeyLong();
 
-        await using var eventContext = await ServiceProvider
-            .GetRequiredService<IDbContextFactory<EventDbContext>>()
+        await using var context = await ServiceProvider
+            .GetRequiredService<IDbContextFactory<DomainDbContext>>()
             .CreateDbContextAsync();
 
-        var currentVersion = await eventContext
+        var currentVersion = await context
             .Events.AsNoTracking()
             .Where(e => e.GrainId == grainId)
             .Select(e => e.ETag)
@@ -63,13 +63,10 @@ public abstract class DomainGrain<TState, TEventBase>
             );
         }
 
-        await eventContext.Events.AddRangeAsync(events);
-        await eventContext.SaveChangesAsync();
+        await context.Events.AddRangeAsync(events);
+        await context.SaveChangesAsync();
 
-        await using var domainContext = await ServiceProvider
-            .GetRequiredService<IDbContextFactory<DomainDbContext>>()
-            .CreateDbContextAsync();
-        var snapshot = await domainContext.Snapshots.FirstOrDefaultAsync(s => s.Id == grainId);
+        var snapshot = await context.Snapshots.SingleOrDefaultAsync(s => s.Id == grainId);
 
         var state = snapshot?.Value as TState ?? new();
 
@@ -84,14 +81,14 @@ public abstract class DomainGrain<TState, TEventBase>
                 Id = grainId,
                 Value = state,
             };
-            await domainContext.Snapshots.AddAsync(snapshot);
+            await context.Snapshots.AddAsync(snapshot);
         }
         else
         {
             snapshot.ETag = currentVersion;
         }
 
-        await domainContext.SaveChangesAsync();
+        await context.SaveChangesAsync();
         return true;
     }
 
@@ -99,20 +96,16 @@ public abstract class DomainGrain<TState, TEventBase>
     {
         var grainId = this.GetPrimaryKeyLong();
 
-        await using var domainContext = await ServiceProvider
+        await using var context = await ServiceProvider
             .GetRequiredService<IDbContextFactory<DomainDbContext>>()
             .CreateDbContextAsync();
-        var snapshot = await domainContext
+        var snapshot = await context
             .Snapshots.AsNoTracking()
-            .FirstOrDefaultAsync(s => s.Id == grainId);
+            .SingleOrDefaultAsync(s => s.Id == grainId);
 
         var state = snapshot?.Value as TState ?? new();
         var version = snapshot?.ETag ?? 0;
-
-        await using var eventContext = await ServiceProvider
-            .GetRequiredService<IDbContextFactory<EventDbContext>>()
-            .CreateDbContextAsync();
-        var events = await eventContext
+        var events = await context
             .Events.AsNoTracking()
             .Where(e => e.GrainId == grainId && e.ETag > version)
             .OrderBy(e => e.ETag)

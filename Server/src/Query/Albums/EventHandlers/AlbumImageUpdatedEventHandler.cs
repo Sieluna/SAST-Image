@@ -4,10 +4,10 @@ using Query.Database;
 
 namespace Query.Albums.EventHandlers;
 
-public sealed class ImageUpdatedEventHandler(QueryDbContext context)
-    : IDomainEventHandler<ImageUpdatedEvent>
+public sealed class AlbumImageUpdatedEventHandler(QueryDbContext context)
+    : IDomainEventHandler<AlbumImageUpdatedEvent>
 {
-    public async ValueTask Handle(ImageUpdatedEvent e, CancellationToken cancellationToken)
+    public async ValueTask Handle(AlbumImageUpdatedEvent e, CancellationToken cancellationToken)
     {
         var image = await context.Images.GetAsync(image => image.Id == e.Id, cancellationToken);
 
@@ -15,5 +15,7 @@ public sealed class ImageUpdatedEventHandler(QueryDbContext context)
             image.Title = title;
         if (e.Tags is { Value: var tags })
             image.Tags = tags;
+        if (e.Likes is { } likes)
+            image.Likes = likes;
     }
 }

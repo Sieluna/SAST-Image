@@ -1,5 +1,4 @@
 ﻿using Domain.Album;
-using Domain.Event;
 using Domain.Filters;
 using Domain.User;
 using Microsoft.EntityFrameworkCore;
@@ -43,20 +42,7 @@ public static class ISiloBuilderExtensions
                     )
                     .UseSnakeCaseNamingConvention()
             );
-            builder.Services.AddDbContextFactory<EventDbContext>(option =>
-                option
-                    .UseNpgsql(
-                        builder.Configuration.GetConnectionString("Domain"),
-                        options =>
-                            options.ConfigureDataSource(b =>
-                                b.EnableDynamicJson()
-                                    .ConfigureJsonOptions(
-                                        new() { AllowOutOfOrderMetadataProperties = true }
-                                    )
-                            )
-                    )
-                    .UseSnakeCaseNamingConvention()
-            );
+
             return builder;
         }
     }

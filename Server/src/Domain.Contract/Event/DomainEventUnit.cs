@@ -11,6 +11,3 @@ public sealed class DomainEventUnit
     public required DateTime Timestamp { get; init; }
     public string Type => Value.GetType().Name;
 }
-
-public interface IDomainEventHandler<TDomainEvent> : Mediator.INotificationHandler<TDomainEvent>
-    where TDomainEvent : DomainEventBase;

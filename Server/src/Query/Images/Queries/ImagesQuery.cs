@@ -58,8 +58,8 @@ public sealed record class ImagesQuery(long? AuthorId, long? AlbumId, long? Curs
                     Title = i.Title,
                     Tags = i.Tags,
                     UploadedAt = i.UploadedAt,
-                    Likes = i.Likes.Count,
-                    Requester = new(i.Likes.Select(l => l.User).Contains(actorId)),
+                    Likes = i.Likes.Length,
+                    Requester = new(i.Likes.Contains(actorId)),
                 })
     );
 }

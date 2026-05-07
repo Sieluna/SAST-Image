@@ -5,10 +5,10 @@ using Query.Images;
 
 namespace Query.Albums.EventHandlers;
 
-public sealed class ImageAddedEventHandler(QueryDbContext context)
-    : IDomainEventHandler<ImageAddedEvent>
+public sealed class AlbumImageAddedEventHandler(QueryDbContext context)
+    : IDomainEventHandler<AlbumImageAddedEvent>
 {
-    public async ValueTask Handle(ImageAddedEvent e, CancellationToken cancellationToken)
+    public async ValueTask Handle(AlbumImageAddedEvent e, CancellationToken cancellationToken)
     {
         var album = await context.Albums.GetAsync(album => album.Id == e.Id, cancellationToken);
 

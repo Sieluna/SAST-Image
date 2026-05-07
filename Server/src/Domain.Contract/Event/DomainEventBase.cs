@@ -19,15 +19,16 @@ namespace Domain.Event;
 [DerivedEvent<AlbumCreatedEvent>]
 [DerivedEvent<AlbumRemovedEvent>]
 [DerivedEvent<AlbumUpdatedEvent>]
-[DerivedEvent<AlbumSubscribedEvent>]
-[DerivedEvent<AlbumUnsubscribedEvent>]
-[DerivedEvent<ImageAddedEvent>]
-[DerivedEvent<ImageUpdatedEvent>]
-[DerivedEvent<ImageRemovedEvent>]
-public record class DomainEventBase(long Id) : Mediator.INotification
+[DerivedEvent<AlbumImageAddedEvent>]
+[DerivedEvent<AlbumImageUpdatedEvent>]
+[DerivedEvent<AlbumImageRemovedEvent>]
+public abstract record class DomainEventBase(long Id) : Mediator.INotification
 {
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
 }
 
 public sealed class DerivedEventAttribute<TEvent> : DerivedAttribute<TEvent, DomainEventBase>
     where TEvent : DomainEventBase;
+
+public interface IDomainEventHandler<TDomainEvent> : Mediator.INotificationHandler<TDomainEvent>
+    where TDomainEvent : DomainEventBase;

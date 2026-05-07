@@ -15,8 +15,6 @@ public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : D
     public DbSet<ImageModel> Images { get; init; }
     public DbSet<UserModel> Users { get; init; }
     public DbSet<CategoryModel> Categories { get; init; }
-    public DbSet<LikeModel> Likes { get; init; }
-    public DbSet<SubscribeModel> Subscribes { get; init; }
 
     public DbSet<Checkpoint> Checkpoint { get; init; }
 
@@ -32,8 +30,6 @@ public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : D
         builder.ApplyConfiguration<UserModel>(configuration);
         builder.ApplyConfiguration<CategoryModel>(configuration);
         builder.ApplyConfiguration<ImageModel>(configuration);
-        builder.ApplyConfiguration<LikeModel>(configuration);
-        builder.ApplyConfiguration<SubscribeModel>(configuration);
 
         builder.Entity<Checkpoint>(entity =>
         {

@@ -18,16 +18,14 @@ public sealed class AlbumModel
         CategoryId = e.CategoryId;
     }
 
-    public long Id { get; }
+    public AlbumId Id { get; }
     public string Title { get; internal set; } = null!;
     public string Description { get; internal set; } = null!;
-    public long AuthorId { get; private set; }
-    public long CategoryId { get; internal set; }
+    public UserId AuthorId { get; private set; }
+    public CategoryId CategoryId { get; internal set; }
     public string[] Tags { get; internal set; } = [];
     public DateTime CreatedAt { get; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; internal set; } = DateTime.UtcNow;
-    public List<SubscribeModel> Subscribes { get; } = null!;
-    public List<ImageModel> Images { get; } = null!;
+    public UserId[] Subscribes { get; internal set; } = [];
+    public List<ImageModel> Images { get; } = [];
 }
-
-public sealed record class SubscribeModel(long Album, long User);

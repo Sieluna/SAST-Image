@@ -10,8 +10,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
     <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="10.1.0" />
     <PackageReference Include="Microsoft.Orleans.Serialization.SystemTextJson" Version="10.1.0" />
-
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
     <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
   </ItemGroup>
 </Project>

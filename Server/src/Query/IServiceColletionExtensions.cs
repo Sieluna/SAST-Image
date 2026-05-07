@@ -27,7 +27,7 @@ public static class IServiceColletionExtensions
             services.AddDbContextFactory<QueryDbContext>(options =>
                 options
                     .UseNpgsql(configuration.GetConnectionString("Query"))
-                    .UseModel(QueryDbContextModel.Instance)
+                    //.UseModel(QueryDbContextModel.Instance)
                     .UseSnakeCaseNamingConvention()
             );
             services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);

@@ -1,4 +1,6 @@
-﻿namespace Query.Categories;
+﻿global using CategoryId = long;
+
+namespace Query.Categories;
 
 public sealed class CategoryModel
 {

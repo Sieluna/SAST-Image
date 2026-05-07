@@ -5,7 +5,7 @@ namespace Domain.Album;
 internal sealed class ImageState : IEquatable<ImageState>
 {
     public ImageId Id { get; init; }
-    public UserId[] Likes { get; init; } = [];
+    public UserId[] Likes { get; set; } = [];
 
     public bool Equals(ImageState? other) => Id == other?.Id;
 

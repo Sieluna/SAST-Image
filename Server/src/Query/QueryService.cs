@@ -8,102 +8,47 @@ using Query.Database;
 
 namespace Query;
 
-public sealed partial class QueryService(IGrainFactory factory) : BackgroundService
+public sealed partial class QueryService(
+    IGrainFactory factory,
+    IServiceProvider provider,
+    ILogger<QueryService> logger
+) : BackgroundService
 {
+    const int intervalSeconds = 1;
+
+    private readonly IEventStoreGrain store = factory.GetGrain<IEventStoreGrain>(Guid.Empty);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await factory.GetGrain<IQueryServiceInnerGrain>(0).StartAsync(stoppingToken);
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(intervalSeconds));
+        while (await timer.WaitForNextTickAsync(stoppingToken))
+            await Sync(stoppingToken);
     }
-}
-
-[Alias("query_service")]
-internal interface IQueryServiceInnerGrain : IGrainWithIntegerKey
-{
-    [Alias("query_service_start")]
-    ValueTask StartAsync(CancellationToken cancellationToken);
-}
-
-public sealed partial class QueryServiceInnerGrain(ILogger<QueryService> logger)
-    : Grain,
-        IQueryServiceInnerGrain
-{
-    private bool started = false;
-    private IGrainTimer timer = null!;
 
     private async Task Sync(CancellationToken cancellationToken)
     {
-        //await using var eventContext = await eventFactory.CreateDbContextAsync(cancellationToken);
-        //await using var queryContext = await queryFactory.CreateDbContextAsync(cancellationToken);
+        await using var scope = provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var context = services.GetRequiredService<QueryDbContext>();
+        var mediator = services.GetRequiredService<IMediator>();
 
-        await using var scope = ServiceProvider.CreateAsyncScope();
-        await using var context = scope.ServiceProvider.GetRequiredService<QueryDbContext>();
-        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
         var checkpoint = await GetCheckPointAsync(context, cancellationToken);
-
-        var events = await scope
-            .ServiceProvider.GetRequiredService<EventDbContext>()
-            .Events.AsNoTracking()
-            .OrderBy(e => e.Timestamp)
-            .Where(e => e.Timestamp > checkpoint.LastProcessedTimestamp)
-            .ToArrayAsync(cancellationToken);
-
-        if (events.Length <= 0)
-            return;
-
-        await using var transaction = await context.Database.BeginTransactionAsync(
-            cancellationToken
-        );
-
-        try
+        await foreach (
+            var e in store.GetEventsAsync(checkpoint.LastProcessedTimestamp, cancellationToken)
+        )
         {
-            await GetCheckPointAsync(context, cancellationToken);
-
-            foreach (var e in events)
+            try
             {
                 await mediator.Publish(e.Value, cancellationToken);
+                checkpoint.LastProcessedTimestamp = e.Timestamp;
+                checkpoint.LastUpdatedAt = DateTime.UtcNow;
+                await context.SaveChangesAsync(cancellationToken);
             }
-
-            checkpoint.LastProcessedTimestamp = events[^1].Timestamp;
-            checkpoint.LastUpdatedAt = DateTime.UtcNow;
-
-            await context.SaveChangesAsync(cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            LogFailedMessage(logger, ex, Array.ConvertAll(events, e => e.EventId));
-        }
-    }
-
-    [LoggerMessage(LogLevel.Warning, "Failed to process outbox events {Events}")]
-    static partial void LogFailedMessage(
-        ILogger<QueryService> logger,
-        Exception exception,
-        Guid[] events
-    );
-
-    public async ValueTask StartAsync(CancellationToken cancellationToken)
-    {
-        if (started)
-            return;
-
-        await using var context = await ServiceProvider
-            .GetRequiredService<IDbContextFactory<QueryDbContext>>()
-            .CreateDbContextAsync(cancellationToken);
-
-        await GetCheckPointAsync(context, cancellationToken);
-
-        timer = this.RegisterGrainTimer(
-            Sync,
-            new GrainTimerCreationOptions()
+            catch (Exception ex)
             {
-                DueTime = TimeSpan.Zero,
-                Period = TimeSpan.FromSeconds(1),
-                KeepAlive = true,
+                LogFailedMessage(logger, ex, e.EventId);
             }
-        );
-        started = true;
+        }
     }
 
     private static async ValueTask<Checkpoint> GetCheckPointAsync(
@@ -128,4 +73,11 @@ public sealed partial class QueryServiceInnerGrain(ILogger<QueryService> logger)
 
         return checkpoint;
     }
+
+    [LoggerMessage(LogLevel.Warning, "Failed to process outbox event {Event}")]
+    static partial void LogFailedMessage(
+        ILogger<QueryService> logger,
+        Exception exception,
+        Guid @event
+    );
 }

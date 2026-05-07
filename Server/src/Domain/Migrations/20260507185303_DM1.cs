@@ -2,10 +2,10 @@
 
 #nullable disable
 
-namespace Query.Migrations
+namespace Domain.Migrations
 {
     /// <inheritdoc />
-    public partial class QM1 : Migration
+    public partial class DM1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

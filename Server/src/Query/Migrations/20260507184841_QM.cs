@@ -36,7 +36,7 @@ namespace Query.Migrations
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    last_processed_timestamp = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    last_processed_timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     last_updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
@@ -107,7 +107,8 @@ namespace Query.Migrations
                     author_id = table.Column<long>(type: "bigint", nullable: false),
                     uploader_id = table.Column<long>(type: "bigint", nullable: false),
                     tags = table.Column<string[]>(type: "text[]", nullable: false),
-                    uploaded_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    uploaded_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    likes = table.Column<long[]>(type: "bigint[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -162,33 +163,6 @@ namespace Query.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "likes",
-                schema: "query",
-                columns: table => new
-                {
-                    image = table.Column<long>(type: "bigint", nullable: false),
-                    user = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_likes", x => new { x.image, x.user });
-                    table.ForeignKey(
-                        name: "fk_likes_images_image",
-                        column: x => x.image,
-                        principalSchema: "query",
-                        principalTable: "images",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_likes_users_user",
-                        column: x => x.user,
-                        principalSchema: "query",
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "ix_albums_author_id",
                 schema: "query",
@@ -234,12 +208,6 @@ namespace Query.Migrations
                 column: "uploader_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_likes_user",
-                schema: "query",
-                table: "likes",
-                column: "user");
-
-            migrationBuilder.CreateIndex(
                 name: "ix_subscribes_user",
                 schema: "query",
                 table: "subscribes",
@@ -261,15 +229,11 @@ namespace Query.Migrations
                 schema: "query");
 
             migrationBuilder.DropTable(
-                name: "likes",
+                name: "images",
                 schema: "query");
 
             migrationBuilder.DropTable(
                 name: "subscribes",
-                schema: "query");
-
-            migrationBuilder.DropTable(
-                name: "images",
                 schema: "query");
 
             migrationBuilder.DropTable(

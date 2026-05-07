@@ -67,7 +67,7 @@ public sealed record class AlbumsQuery(
                     Tags = a.Tags,
                     Title = a.Title,
                     Description = a.Description,
-                    SubscribeCount = a.Subscribes.Count,
+                    SubscribeCount = a.Subscribes.Length,
                 })
     );
 }
