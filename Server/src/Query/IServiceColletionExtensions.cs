@@ -9,12 +9,7 @@ public static class IServiceColletionExtensions
 {
     extension(IServiceCollection services)
     {
-        /// <summary>
-        /// Adds query database context services to the dependency injection container using the specified
-        /// configuration.
-        /// </summary>
-        /// <param name="configuration">IConfigurationRoot["Query"]</param>
-        public IServiceCollection AddQueryServices(IConfiguration configuration)
+        public IServiceCollection AddQuery(IConfiguration configuration)
         {
             services.AddDistributedPostgresCache(options =>
             {
@@ -27,7 +22,6 @@ public static class IServiceColletionExtensions
             services.AddDbContextFactory<QueryDbContext>(options =>
                 options
                     .UseNpgsql(configuration.GetConnectionString("Query"))
-                    //.UseModel(QueryDbContextModel.Instance)
                     .UseSnakeCaseNamingConvention()
             );
             services.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);

@@ -1,8 +1,7 @@
-﻿using Domain;
-using Domain.Filters;
+﻿using Domain.Filters;
 using Microsoft.EntityFrameworkCore;
 
-namespace Silo.Services;
+namespace Domain.Services;
 
 public sealed class IdUniquenessChecker(IDbContextFactory<DomainDbContext> factory)
     : IIdUniquenessChecker
@@ -10,6 +9,6 @@ public sealed class IdUniquenessChecker(IDbContextFactory<DomainDbContext> facto
     public async ValueTask<bool> ExistsAsync(long id, CancellationToken cancellationToken = default)
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
-        return await context.Snapshots.AnyAsync(s => s.Id == id, cancellationToken);
+        return await context.Events.AnyAsync(s => s.GrainId == id, cancellationToken);
     }
 }

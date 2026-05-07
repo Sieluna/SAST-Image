@@ -28,6 +28,14 @@ internal sealed class CategoryGrain() : DomainGrain<CategoryState>, ICategoryGra
 
         return ValueTask.CompletedTask;
     }
+
+    public ValueTask<bool> Exists()
+    {
+        var exists = State.RecordExists;
+        if (exists is false)
+            DeactivateOnIdle();
+        return ValueTask.FromResult(exists);
+    }
 }
 
 internal sealed class CategoryState : DomainStateBase, IDomainEventApplyable

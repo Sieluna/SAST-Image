@@ -13,6 +13,10 @@ public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) :
     {
         base.OnModelCreating(builder);
 
+        builder.Model.SetValueGenerationStrategy(
+            Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.NpgsqlValueGenerationStrategy.None
+        );
+
         builder.HasDefaultSchema(Scheme);
 
         var snapshots = builder.Entity<DomainStateUnit>();

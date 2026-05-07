@@ -19,4 +19,7 @@ public interface ICategoryGrain : IGrainWithIntegerKey
     [AccessControl(Role.Admin)]
     [Alias("category_delete")]
     ValueTask Delete();
+
+    [Alias("category_check")]
+    ValueTask<bool> Exists();
 }

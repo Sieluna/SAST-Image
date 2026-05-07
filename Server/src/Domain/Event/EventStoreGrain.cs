@@ -9,16 +9,18 @@ internal sealed class EventStoreGrain(IDbContextFactory<DomainDbContext> factory
     : Grain,
         IEventStoreGrain
 {
+    [ReadOnly]
     public async IAsyncEnumerable<DomainEventUnit> GetEventsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken
     )
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
-        var events = context.Events.OrderBy(e => e.Timestamp).AsAsyncEnumerable();
+        var events = context.Events.AsNoTracking().OrderBy(e => e.Timestamp).AsAsyncEnumerable();
         await foreach (var @event in events.WithCancellation(cancellationToken))
             yield return @event;
     }
 
+    [ReadOnly]
     public async IAsyncEnumerable<DomainEventUnit> GetEventsAsync(
         DateTime from,
         [EnumeratorCancellation] CancellationToken cancellationToken
@@ -26,13 +28,15 @@ internal sealed class EventStoreGrain(IDbContextFactory<DomainDbContext> factory
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
         var events = context
-            .Events.Where(e => e.Timestamp >= from)
+            .Events.AsNoTracking()
+            .Where(e => e.Timestamp > from)
             .OrderBy(e => e.Timestamp)
             .AsAsyncEnumerable();
         await foreach (var @event in events.WithCancellation(cancellationToken))
             yield return @event;
     }
 
+    [ReadOnly]
     public async IAsyncEnumerable<DomainEventUnit> GetEventsAsync(
         DateTime from,
         DateTime to,
@@ -41,7 +45,8 @@ internal sealed class EventStoreGrain(IDbContextFactory<DomainDbContext> factory
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
         var events = context
-            .Events.Where(e => e.Timestamp >= from && e.Timestamp <= to)
+            .Events.AsNoTracking()
+            .Where(e => e.Timestamp > from && e.Timestamp <= to)
             .OrderBy(e => e.Timestamp)
             .AsAsyncEnumerable();
         await foreach (var @event in events.WithCancellation(cancellationToken))

@@ -29,49 +29,56 @@ public sealed partial class QueryService(
     {
         await using var scope = provider.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        var context = services.GetRequiredService<QueryDbContext>();
+        await using var context = services.GetRequiredService<QueryDbContext>();
         var mediator = services.GetRequiredService<IMediator>();
 
-        var checkpoint = await GetCheckPointAsync(context, cancellationToken);
-        await foreach (
-            var e in store.GetEventsAsync(checkpoint.LastProcessedTimestamp, cancellationToken)
-        )
+        var (main, points) = await GetCheckpointsAsync(context, cancellationToken);
+        await foreach (var e in store.GetEventsAsync(main.Timestamp, cancellationToken))
         {
+            if (points.Any(p => p.GrainId == e.GrainId && p.Status == CheckpointStatus.Failed))
+                continue;
+
             try
             {
+                main.Timestamp = e.Timestamp;
                 await mediator.Publish(e.Value, cancellationToken);
-                checkpoint.LastProcessedTimestamp = e.Timestamp;
-                checkpoint.LastUpdatedAt = DateTime.UtcNow;
-                await context.SaveChangesAsync(cancellationToken);
             }
             catch (Exception ex)
             {
+                Checkpoint failed = new()
+                {
+                    Id = e.EventId,
+                    Timestamp = e.Timestamp,
+                    GrainId = e.GrainId,
+                    Status = CheckpointStatus.Failed,
+                };
+                points.Add(failed);
+                await context.Checkpoint.AddAsync(failed, cancellationToken);
                 LogFailedMessage(logger, ex, e.EventId);
+            }
+            finally
+            {
+                await context.SaveChangesAsync(cancellationToken);
             }
         }
     }
 
-    private static async ValueTask<Checkpoint> GetCheckPointAsync(
+    private static async Task<(Checkpoint main, List<Checkpoint> failed)> GetCheckpointsAsync(
         QueryDbContext context,
         CancellationToken cancellationToken
     )
     {
-        var cp = await context.Checkpoint.SingleOrDefaultAsync(cancellationToken);
-        var checkpoint =
-            cp
-            ?? new()
-            {
-                LastProcessedTimestamp = DateTime.MinValue,
-                LastUpdatedAt = DateTime.UtcNow,
-            };
+        var points = await context.Checkpoint.ToListAsync(cancellationToken);
 
-        if (cp is null)
+        if (points.Count <= 0)
         {
-            await context.Checkpoint.AddAsync(checkpoint, cancellationToken);
+            var initialOne = new Checkpoint { Timestamp = DateTime.MinValue };
+            points = [initialOne];
+            await context.Checkpoint.AddAsync(initialOne, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
         }
 
-        return checkpoint;
+        return (points.First(cp => cp.GrainId is null), points);
     }
 
     [LoggerMessage(LogLevel.Warning, "Failed to process outbox event {Event}")]

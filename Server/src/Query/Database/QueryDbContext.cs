@@ -22,6 +22,10 @@ public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : D
     {
         base.OnModelCreating(builder);
 
+        builder.Model.SetValueGenerationStrategy(
+            Npgsql.EntityFrameworkCore.PostgreSQL.Metadata.NpgsqlValueGenerationStrategy.None
+        );
+
         builder.HasDefaultSchema(Schema);
 
         QueryDbContextEntityTypeConfigurations configuration = new();
@@ -31,10 +35,6 @@ public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : D
         builder.ApplyConfiguration<CategoryModel>(configuration);
         builder.ApplyConfiguration<ImageModel>(configuration);
 
-        builder.Entity<Checkpoint>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Id).ValueGeneratedNever();
-        });
+        builder.Entity<Checkpoint>(entity => entity.HasKey(e => e.Id));
     }
 }

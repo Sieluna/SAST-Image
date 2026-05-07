@@ -1,5 +1,5 @@
-﻿using Domain.Album;
-using Domain.Filters;
+﻿using Domain.Filters;
+using Domain.Services;
 using Domain.User;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -12,11 +12,10 @@ public static class ISiloBuilderExtensions
 {
     extension(ISiloBuilder builder)
     {
-        public ISiloBuilder UseDomain<TService1, TService2, TService3>()
-            where TService1 : class, IIdUniquenessChecker
-            where TService2 : class, IUsernameUniquenessChecker
-            where TService3 : class, ICategoryExistenceChecker
+        public ISiloBuilder UseDomain()
         {
+            builder.AddCustomStorageBasedLogConsistencyProviderAsDefault();
+
             builder.AddOutgoingGrainCallFilter<AccessControlFilter>();
             builder.AddOutgoingGrainCallFilter<EnsureExistsFilter>();
             builder.AddOutgoingGrainCallFilter<EnsureUniqueIdFilter>();
@@ -24,9 +23,8 @@ public static class ISiloBuilderExtensions
                 b.AddJsonSerializer(type => type.Namespace!.StartsWith("Domain"))
             );
 
-            builder.Services.AddSingleton<IIdUniquenessChecker, TService1>();
-            builder.Services.AddSingleton<IUsernameUniquenessChecker, TService2>();
-            builder.Services.AddSingleton<ICategoryExistenceChecker, TService3>();
+            builder.Services.AddSingleton<IUsernameUniquenessChecker, UsernameUniquenessChecker>();
+            builder.Services.AddSingleton<IIdUniquenessChecker, IdUniquenessChecker>();
 
             builder.Services.AddDbContextFactory<DomainDbContext>(options =>
                 options

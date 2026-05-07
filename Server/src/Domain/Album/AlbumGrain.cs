@@ -2,14 +2,13 @@
 using System.Diagnostics.CodeAnalysis;
 using Domain.Album.Events;
 using Domain.Album.Image;
+using Domain.Category;
 using Domain.Event;
 using Domain.Filters;
 
 namespace Domain.Album;
 
-internal sealed class AlbumGrain(ICategoryExistenceChecker checker)
-    : DomainGrain<AlbumState>,
-        IAlbumGrain
+internal sealed class AlbumGrain : DomainGrain<AlbumState>, IAlbumGrain
 {
     public async ValueTask<AlbumId> Create(
         AlbumTitle title,
@@ -18,7 +17,7 @@ internal sealed class AlbumGrain(ICategoryExistenceChecker checker)
         CategoryId categoryId
     )
     {
-        if (await checker.ExistsAsync(categoryId) is false)
+        if (await GrainFactory.GetGrain<ICategoryGrain>(categoryId).Exists() is false)
             throw new CategoryNotFoundException(categoryId);
 
         RaiseEvent(new AlbumCreatedEvent(Id, title, description, tags, categoryId, Actor));
@@ -45,7 +44,10 @@ internal sealed class AlbumGrain(ICategoryExistenceChecker checker)
     {
         if (Actor.Id != State.Author && Actor.IsAdmin is false)
             throw new ForbiddenException();
-        if (categoryId is not null && await checker.ExistsAsync(categoryId.Value) is false)
+        if (
+            categoryId is { } id
+            && await GrainFactory.GetGrain<ICategoryGrain>(id).Exists() is false
+        )
             throw new CategoryNotFoundException(categoryId.Value);
 
         RaiseEvent(new AlbumUpdatedEvent(Id, title, description, tags, categoryId));
