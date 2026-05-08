@@ -1,4 +1,4 @@
-﻿global using ImageId = long;
+﻿using Domain.Album.Image;
 
 namespace Domain.Album;
 
