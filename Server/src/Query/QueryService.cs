@@ -10,7 +10,7 @@ namespace Query;
 
 public sealed partial class QueryService(
     IGrainFactory factory,
-    IServiceProvider provider,
+    IServiceScopeFactory scoper,
     ILogger<QueryService> logger
 ) : BackgroundService
 {
@@ -27,7 +27,7 @@ public sealed partial class QueryService(
 
     private async Task Sync(CancellationToken cancellationToken)
     {
-        await using var scope = provider.CreateAsyncScope();
+        await using var scope = scoper.CreateAsyncScope();
         var services = scope.ServiceProvider;
         await using var context = services.GetRequiredService<QueryDbContext>();
         var mediator = services.GetRequiredService<IMediator>();
