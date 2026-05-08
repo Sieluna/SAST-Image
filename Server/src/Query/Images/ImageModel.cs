@@ -24,6 +24,6 @@ public sealed class ImageModel
         Title = e.Title.Value;
         Tags = e.Tags.Value;
         UploadedAt = e.Timestamp;
-        UploaderId = e.Uploader.Id;
+        UploaderId = e.Uploader.Id.Value;
     }
 }

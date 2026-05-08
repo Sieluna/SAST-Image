@@ -14,7 +14,7 @@ public sealed class AlbumModel
         Id = e.Id.Value;
         Title = e.Title.Value;
         Description = e.Description.Value;
-        AuthorId = e.Actor.Id;
+        AuthorId = e.Actor.Id.Value;
         CategoryId = e.CategoryId.Value;
     }
 

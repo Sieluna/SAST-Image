@@ -4,6 +4,7 @@ using Domain.Album.Image;
 using Domain.Category;
 using Domain.Event;
 using Domain.Filters;
+using Domain.User;
 
 namespace Domain.Album;
 
