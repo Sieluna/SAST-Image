@@ -1,5 +1,4 @@
-﻿global using AlbumId = long;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Domain.Album.Events;
 using Domain.Album.Image;
 using Domain.Category;
@@ -20,7 +19,7 @@ internal sealed class AlbumGrain : DomainGrain<AlbumState>, IAlbumGrain
         if (await GrainFactory.GetGrain<ICategoryGrain>(categoryId).Exists() is false)
             throw new CategoryNotFoundException(categoryId);
 
-        RaiseEvent(new AlbumCreatedEvent(Id, title, description, tags, categoryId, Actor));
+        RaiseEvent(new AlbumCreatedEvent(new(Id), title, description, tags, categoryId, Actor));
 
         return Id;
     }

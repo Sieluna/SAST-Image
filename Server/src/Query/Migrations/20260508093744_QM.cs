@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -20,8 +19,7 @@ namespace Query.Migrations
                 schema: "query",
                 columns: table => new
                 {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<long>(type: "bigint", nullable: false),
                     name = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false)
                 },
@@ -31,17 +29,19 @@ namespace Query.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "checkpoint",
+                name: "checkpoints",
                 schema: "query",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
-                    last_processed_timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    last_updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    timestamp = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    grain_id = table.Column<long>(type: "bigint", nullable: true),
+                    status = table.Column<byte>(type: "smallint", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_checkpoint", x => x.id);
+                    table.PrimaryKey("pk_checkpoints", x => x.id);
                 });
 
             migrationBuilder.CreateTable(
@@ -49,8 +49,7 @@ namespace Query.Migrations
                 schema: "query",
                 columns: table => new
                 {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<long>(type: "bigint", nullable: false),
                     username = table.Column<string>(type: "text", nullable: false),
                     nickname = table.Column<string>(type: "text", nullable: false),
                     biography = table.Column<string>(type: "text", nullable: false),
@@ -66,15 +65,15 @@ namespace Query.Migrations
                 schema: "query",
                 columns: table => new
                 {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<long>(type: "bigint", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
                     description = table.Column<string>(type: "text", nullable: false),
                     author_id = table.Column<long>(type: "bigint", nullable: false),
                     category_id = table.Column<long>(type: "bigint", nullable: false),
                     tags = table.Column<string[]>(type: "text[]", nullable: false),
                     created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    subscribes = table.Column<long[]>(type: "bigint[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -100,8 +99,7 @@ namespace Query.Migrations
                 schema: "query",
                 columns: table => new
                 {
-                    id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    id = table.Column<long>(type: "bigint", nullable: false),
                     title = table.Column<string>(type: "text", nullable: false),
                     album_id = table.Column<long>(type: "bigint", nullable: false),
                     author_id = table.Column<long>(type: "bigint", nullable: false),
@@ -136,33 +134,6 @@ namespace Query.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "subscribes",
-                schema: "query",
-                columns: table => new
-                {
-                    album = table.Column<long>(type: "bigint", nullable: false),
-                    user = table.Column<long>(type: "bigint", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_subscribes", x => new { x.album, x.user });
-                    table.ForeignKey(
-                        name: "fk_subscribes_albums_album",
-                        column: x => x.album,
-                        principalSchema: "query",
-                        principalTable: "albums",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_subscribes_users_user",
-                        column: x => x.user,
-                        principalSchema: "query",
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
             migrationBuilder.CreateIndex(
                 name: "ix_albums_author_id",
                 schema: "query",
@@ -190,6 +161,20 @@ namespace Query.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "ix_checkpoints_grain_id",
+                schema: "query",
+                table: "checkpoints",
+                column: "grain_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_checkpoints_timestamp",
+                schema: "query",
+                table: "checkpoints",
+                column: "timestamp",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "ix_images_album_id",
                 schema: "query",
                 table: "images",
@@ -208,12 +193,6 @@ namespace Query.Migrations
                 column: "uploader_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_subscribes_user",
-                schema: "query",
-                table: "subscribes",
-                column: "user");
-
-            migrationBuilder.CreateIndex(
                 name: "ix_users_username",
                 schema: "query",
                 table: "users",
@@ -225,15 +204,11 @@ namespace Query.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "checkpoint",
+                name: "checkpoints",
                 schema: "query");
 
             migrationBuilder.DropTable(
                 name: "images",
-                schema: "query");
-
-            migrationBuilder.DropTable(
-                name: "subscribes",
                 schema: "query");
 
             migrationBuilder.DropTable(

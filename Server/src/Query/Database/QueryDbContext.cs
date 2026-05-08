@@ -16,7 +16,7 @@ public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : D
     public DbSet<UserModel> Users { get; init; }
     public DbSet<CategoryModel> Categories { get; init; }
 
-    public DbSet<Checkpoint> Checkpoint { get; init; }
+    public DbSet<Checkpoint> Checkpoints { get; init; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -35,6 +35,12 @@ public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : D
         builder.ApplyConfiguration<CategoryModel>(configuration);
         builder.ApplyConfiguration<ImageModel>(configuration);
 
-        builder.Entity<Checkpoint>(entity => entity.HasKey(e => e.Id));
+        builder.Entity<Checkpoint>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Timestamp).IsUnique();
+            entity.HasIndex(e => e.GrainId).IsUnique();
+            entity.Property(e => e.Version).IsRowVersion();
+        });
     }
 }

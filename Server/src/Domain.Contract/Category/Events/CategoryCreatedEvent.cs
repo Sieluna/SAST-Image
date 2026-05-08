@@ -6,4 +6,4 @@ public sealed record class CategoryCreatedEvent(
     CategoryId Id,
     CategoryName Name,
     CategoryDescription Description
-) : DomainEventBase(Id);
+) : DomainEventBase;

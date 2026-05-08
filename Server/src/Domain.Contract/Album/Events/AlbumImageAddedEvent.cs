@@ -10,4 +10,4 @@ public sealed record AlbumImageAddedEvent(
     ImageTags Tags,
     ImageFile File,
     Actor Uploader
-) : DomainEventBase(Id);
+) : DomainEventBase;

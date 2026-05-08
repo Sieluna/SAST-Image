@@ -12,7 +12,7 @@ using Query.Database;
 namespace Query.Migrations
 {
     [DbContext(typeof(QueryDbContext))]
-    [Migration("20260507184841_QM")]
+    [Migration("20260508093744_QM")]
     partial class QM
     {
         /// <inheritdoc />
@@ -21,29 +21,47 @@ namespace Query.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("query")
+                .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.None)
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
-
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("Domain.Event.Checkpoint", b =>
                 {
                     b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<DateTime>("LastProcessedTimestamp")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_processed_timestamp");
+                    b.Property<long?>("GrainId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("grain_id");
 
-                    b.Property<DateTime>("LastUpdatedAt")
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("Timestamp")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("last_updated_at");
+                        .HasColumnName("timestamp");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id")
-                        .HasName("pk_checkpoint");
+                        .HasName("pk_checkpoints");
 
-                    b.ToTable("checkpoint", "query");
+                    b.HasIndex("GrainId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_checkpoints_grain_id");
+
+                    b.HasIndex("Timestamp")
+                        .IsUnique()
+                        .HasDatabaseName("ix_checkpoints_timestamp");
+
+                    b.ToTable("checkpoints", "query");
                 });
 
             modelBuilder.Entity("Query.Albums.AlbumModel", b =>
@@ -52,8 +70,6 @@ namespace Query.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<long>("AuthorId")
                         .HasColumnType("bigint")
@@ -71,6 +87,11 @@ namespace Query.Migrations
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("description");
+
+                    b.PrimitiveCollection<long[]>("Subscribes")
+                        .IsRequired()
+                        .HasColumnType("bigint[]")
+                        .HasColumnName("subscribes");
 
                     b.PrimitiveCollection<string[]>("Tags")
                         .IsRequired()
@@ -102,33 +123,12 @@ namespace Query.Migrations
                     b.ToTable("albums", "query");
                 });
 
-            modelBuilder.Entity("Query.Albums.SubscribeModel", b =>
-                {
-                    b.Property<long>("Album")
-                        .HasColumnType("bigint")
-                        .HasColumnName("album");
-
-                    b.Property<long>("User")
-                        .HasColumnType("bigint")
-                        .HasColumnName("user");
-
-                    b.HasKey("Album", "User")
-                        .HasName("pk_subscribes");
-
-                    b.HasIndex("User")
-                        .HasDatabaseName("ix_subscribes_user");
-
-                    b.ToTable("subscribes", "query");
-                });
-
             modelBuilder.Entity("Query.Categories.CategoryModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -156,8 +156,6 @@ namespace Query.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<long>("AlbumId")
                         .HasColumnType("bigint")
@@ -212,8 +210,6 @@ namespace Query.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
                     b.Property<string>("Biography")
                         .IsRequired()
                         .HasColumnType("text")
@@ -260,23 +256,6 @@ namespace Query.Migrations
                         .HasConstraintName("fk_albums_categories_category_id");
                 });
 
-            modelBuilder.Entity("Query.Albums.SubscribeModel", b =>
-                {
-                    b.HasOne("Query.Albums.AlbumModel", null)
-                        .WithMany("Subscribes")
-                        .HasForeignKey("Album")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_subscribes_albums_album");
-
-                    b.HasOne("Query.Users.UserModel", null)
-                        .WithMany()
-                        .HasForeignKey("User")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_subscribes_users_user");
-                });
-
             modelBuilder.Entity("Query.Images.ImageModel", b =>
                 {
                     b.HasOne("Query.Albums.AlbumModel", null)
@@ -304,8 +283,6 @@ namespace Query.Migrations
             modelBuilder.Entity("Query.Albums.AlbumModel", b =>
                 {
                     b.Navigation("Images");
-
-                    b.Navigation("Subscribes");
                 });
 #pragma warning restore 612, 618
         }

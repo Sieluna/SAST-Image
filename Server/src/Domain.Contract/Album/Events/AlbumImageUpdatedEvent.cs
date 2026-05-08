@@ -9,4 +9,4 @@ public sealed record AlbumImageUpdatedEvent(
     ImageTitle? Title = null,
     ImageTags? Tags = null,
     UserId[]? Likes = null
-) : DomainEventBase(Id);
+) : DomainEventBase;

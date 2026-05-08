@@ -7,4 +7,4 @@ public sealed record class ProfileUpdatedEvent(
     Username? Username,
     Nickname? Nickname,
     Biography? Biography
-) : DomainEventBase(Id) { }
+) : DomainEventBase { }

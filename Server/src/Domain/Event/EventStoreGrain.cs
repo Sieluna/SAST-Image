@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using Orleans.Concurrency;
 
@@ -9,6 +10,9 @@ internal sealed class EventStoreGrain(IDbContextFactory<DomainDbContext> factory
     : Grain,
         IEventStoreGrain
 {
+    private static readonly ConcurrentBag<string> connectionTargets = [];
+    private static readonly Lock registerLock = new();
+
     [ReadOnly]
     public async IAsyncEnumerable<DomainEventUnit> GetEventsAsync(
         [EnumeratorCancellation] CancellationToken cancellationToken

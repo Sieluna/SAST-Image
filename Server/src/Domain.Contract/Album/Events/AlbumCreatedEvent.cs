@@ -9,4 +9,4 @@ public sealed record class AlbumCreatedEvent(
     AlbumTags Tags,
     CategoryId CategoryId,
     Actor Actor
-) : DomainEventBase(Id);
+) : DomainEventBase;

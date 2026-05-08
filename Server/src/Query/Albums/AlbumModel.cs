@@ -11,7 +11,7 @@ public sealed class AlbumModel
 
     internal AlbumModel(AlbumCreatedEvent e)
     {
-        Id = e.Id;
+        Id = e.Id.Value;
         Title = e.Title.Value;
         Description = e.Description.Value;
         AuthorId = e.Actor.Id;

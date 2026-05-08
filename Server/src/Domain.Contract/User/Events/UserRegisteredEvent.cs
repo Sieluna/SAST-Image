@@ -7,4 +7,4 @@ public sealed record class UserRegisteredEvent(
     Username Username,
     Nickname Nickname,
     Biography Biography
-) : DomainEventBase(Id);
+) : DomainEventBase;

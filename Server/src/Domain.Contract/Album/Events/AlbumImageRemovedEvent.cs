@@ -2,4 +2,4 @@
 
 namespace Domain.Album.Events;
 
-public sealed record AlbumImageRemovedEvent(AlbumId Id, ImageId ImageId) : DomainEventBase(Id);
+public sealed record AlbumImageRemovedEvent(AlbumId Id, ImageId ImageId) : DomainEventBase;

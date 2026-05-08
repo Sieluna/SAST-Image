@@ -8,6 +8,10 @@ public sealed class OpenJsonConverterAttribute<TObject, TValue>()
     : JsonConverterAttribute(typeof(OpenJsonConverter<TObject, TValue>))
     where TObject : IValueObject<TObject, TValue> { }
 
+public sealed class OpenJsonConverterAttribute<TId>()
+    : JsonConverterAttribute(typeof(OpenJsonConverter<TId>))
+    where TId : ITypedId<TId, long>, new() { }
+
 file sealed class OpenJsonConverter<TObject, TValue> : JsonConverter<TObject>
     where TObject : IValueObject<TObject, TValue>
 {
@@ -31,6 +35,28 @@ file sealed class OpenJsonConverter<TObject, TValue> : JsonConverter<TObject>
     }
 
     public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TObject);
+}
+
+file sealed class OpenJsonConverter<TId> : JsonConverter<TId>
+    where TId : ITypedId<TId, long>, new()
+{
+    public override TId? Read(
+        ref Utf8JsonReader reader,
+        Type typeToConvert,
+        JsonSerializerOptions options
+    )
+    {
+        long value = JsonSerializer.Deserialize<long>(ref reader, options);
+        TId id = new() { Value = value };
+        return id;
+    }
+
+    public override void Write(Utf8JsonWriter writer, TId value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value.Value, options);
+    }
+
+    public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(TId);
 }
 
 [GenerateSerializer]

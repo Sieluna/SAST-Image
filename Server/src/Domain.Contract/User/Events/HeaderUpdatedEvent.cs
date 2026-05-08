@@ -2,4 +2,4 @@
 
 namespace Domain.User.Events;
 
-public sealed record class HeaderUpdatedEvent(UserId Id, ImageFile File) : DomainEventBase(Id);
+public sealed record class HeaderUpdatedEvent(UserId Id, ImageFile File) : DomainEventBase;

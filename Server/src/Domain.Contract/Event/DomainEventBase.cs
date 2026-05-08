@@ -22,7 +22,7 @@ namespace Domain.Event;
 [DerivedEvent<AlbumImageAddedEvent>]
 [DerivedEvent<AlbumImageUpdatedEvent>]
 [DerivedEvent<AlbumImageRemovedEvent>]
-public abstract record class DomainEventBase(long Id) : Mediator.INotification
+public abstract record class DomainEventBase : Mediator.INotification
 {
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
 }
