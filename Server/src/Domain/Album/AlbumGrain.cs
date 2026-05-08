@@ -180,7 +180,7 @@ file static class CollectionExtensions
             {
                 if (images[i].Id == e.ImageId)
                 {
-                    images[i].Likes = e.Likes ?? images[i].Likes;
+                    images[i].Likes = e.Likes;
                     break;
                 }
             }
