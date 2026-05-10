@@ -1,4 +1,5 @@
 ﻿using Domain.Event;
+using Domain.File;
 using Domain.Filters;
 using Domain.User.Events;
 
@@ -31,13 +32,13 @@ internal sealed class UserGrain(IUsernameUniquenessChecker usernameChecker)
         return Id;
     }
 
-    public ValueTask UpdateAvatar(ImageFile file)
+    public ValueTask UpdateAvatar(ImageFileKey file)
     {
         RaiseEvent(new AvatarUpdatedEvent(Id, file));
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask UpdateHeader(ImageFile file)
+    public ValueTask UpdateHeader(ImageFileKey file)
     {
         RaiseEvent(new HeaderUpdatedEvent(Id, file));
         return ValueTask.CompletedTask;

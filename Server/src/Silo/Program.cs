@@ -2,6 +2,7 @@ using Domain;
 using Microsoft.EntityFrameworkCore;
 using Orleans.Dashboard;
 using Query;
+using Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,7 @@ builder.UseOrleans(builder =>
 {
     builder.UseDomain();
     builder.Services.AddQuery(builder.Configuration);
+    builder.Services.AddStorage(builder.Configuration);
 
     builder.AddDashboard();
     builder.UseRedisClustering(builder.Configuration.GetConnectionString("Redis")!);

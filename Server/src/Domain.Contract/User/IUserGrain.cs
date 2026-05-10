@@ -1,4 +1,5 @@
-﻿using Domain.Filters;
+﻿using Domain.File;
+using Domain.Filters;
 
 namespace Domain.User;
 
@@ -16,9 +17,9 @@ public interface IUserGrain : IGrainWithIntegerKey
 
     [AccessControl]
     [Alias("user_update_avatar")]
-    ValueTask UpdateAvatar(ImageFile file);
+    ValueTask UpdateAvatar(ImageFileKey file);
 
     [AccessControl]
     [Alias("user_update_header")]
-    ValueTask UpdateHeader(ImageFile file);
+    ValueTask UpdateHeader(ImageFileKey file);
 }

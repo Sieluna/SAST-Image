@@ -4,14 +4,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Query.Database;
+using Storage.Database;
 
-namespace Query;
+namespace Storage;
 
-public sealed partial class QueryService(
+internal sealed partial class StorageService(
     IGrainFactory factory,
     IServiceScopeFactory scoper,
-    ILogger<QueryService> logger
+    ILogger<StorageService> logger
 ) : BackgroundService
 {
     const int intervalSeconds = 1;
@@ -29,7 +29,7 @@ public sealed partial class QueryService(
     {
         await using var scope = scoper.CreateAsyncScope();
         var services = scope.ServiceProvider;
-        await using var context = services.GetRequiredService<QueryDbContext>();
+        await using var context = services.GetRequiredService<StorageDbContext>();
         var mediator = services.GetRequiredService<IMediator>();
 
         var (main, points) = await GetCheckpointsAsync(context, cancellationToken);
@@ -48,6 +48,11 @@ public sealed partial class QueryService(
                 await mediator.Publish(e.Value, cancellationToken);
                 await context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync(cancellationToken);
+            }
+            catch (MissingMessageHandlerException)
+            {
+                // Silence and skip.
+                continue;
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -74,7 +79,7 @@ public sealed partial class QueryService(
     }
 
     private static async Task<(Checkpoint main, List<Checkpoint> failed)> GetCheckpointsAsync(
-        QueryDbContext context,
+        StorageDbContext context,
         CancellationToken cancellationToken
     )
     {
@@ -91,10 +96,10 @@ public sealed partial class QueryService(
         return (points.First(cp => cp.GrainId is null), points);
     }
 
-    [LoggerMessage(LogLevel.Warning, "Failed to process outbox event {Event}")]
+    [LoggerMessage(LogLevel.Warning, "Failed to process outbox event {EventId}")]
     static partial void LogFailedMessage(
-        ILogger<QueryService> logger,
+        ILogger<StorageService> logger,
         Exception exception,
-        Guid @event
+        Guid eventId
     );
 }
