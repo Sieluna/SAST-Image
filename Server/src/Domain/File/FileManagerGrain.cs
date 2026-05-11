@@ -1,6 +1,4 @@
-﻿using System.Buffers;
-using System.Runtime.CompilerServices;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Orleans.Concurrency;
 
@@ -13,52 +11,45 @@ internal sealed class FileManagerGrain(IDbContextFactory<DomainDbContext> factor
 {
     const int BufferSize = 1024 * 64;
 
-    public async IAsyncEnumerable<byte[]> GetFileAsync(
-        ImageFileKey fileKey,
-        [EnumeratorCancellation] CancellationToken cancellationToken
-    )
-    {
-        await using var context = await factory.CreateDbContextAsync(cancellationToken);
-        await using var connection = (NpgsqlConnection)context.Database.GetDbConnection();
-
-        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        NpgsqlLargeObjectManager manager = new(connection);
-        await using var stream = await manager.OpenReadAsync(fileKey.Value, cancellationToken);
-
-        byte[] buffer = ArrayPool<byte>.Shared.Rent(BufferSize);
-        int bytesRead;
-        try
-        {
-            while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken)) > 0)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                yield return buffer[..bytesRead];
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
-    }
-
-    public async Task<ImageFileKey> UploadFileAsync(
-        IAsyncEnumerable<byte[]> fileStream,
+    public async ValueTask<Immutable<byte[]>> GetAsync(
+        ImageFileKey key,
         CancellationToken cancellationToken
     )
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
-        await using var connection = context.Database.GetDbConnection() as NpgsqlConnection;
-
-        await using var transaction = await connection!.BeginTransactionAsync(cancellationToken);
+        var connection = (NpgsqlConnection)context.Database.GetDbConnection();
+        await connection.OpenAsync(cancellationToken);
+        var transaction = await connection.BeginTransactionAsync(cancellationToken);
         NpgsqlLargeObjectManager manager = new(connection);
+
+        var file = await manager.OpenReadAsync(key.Value, cancellationToken);
+
+        await using MemoryStream stream = new();
+        await file.CopyToAsync(stream, BufferSize, cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+
+        return stream.ToArray().AsImmutable();
+    }
+
+    public async ValueTask<ImageFileKey> UploadAsync(
+        Immutable<byte[]> file,
+        CancellationToken cancellationToken
+    )
+    {
+        await using var context = await factory.CreateDbContextAsync(cancellationToken);
+        var connection = (NpgsqlConnection)context.Database.GetDbConnection();
+        await connection.OpenAsync(cancellationToken);
+        var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        NpgsqlLargeObjectManager manager = new(connection);
+
         var key = await manager.CreateAsync(0, cancellationToken);
+        var stream = await manager.OpenReadWriteAsync(key, cancellationToken);
 
-        await using var stream = await manager.OpenReadWriteAsync(key, cancellationToken);
+        await using MemoryStream ms = new(file.Value);
+        await ms.CopyToAsync(stream, BufferSize, cancellationToken);
 
-        await foreach (var chunk in fileStream.WithCancellation(cancellationToken))
-        {
-            await stream.WriteAsync(chunk, cancellationToken);
-        }
+        await transaction.CommitAsync(cancellationToken);
 
         return new(key);
     }

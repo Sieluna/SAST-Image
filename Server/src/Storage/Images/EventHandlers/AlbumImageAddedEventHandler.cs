@@ -14,12 +14,11 @@ public sealed class AlbumImageAddedEventHandler(
     public async ValueTask Handle(AlbumImageAddedEvent e, CancellationToken cancellationToken)
     {
         var domainManager = factory.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var file = await domainManager.GetAsync(e.File, cancellationToken);
 
-        await manager.SaveAsync(
-            domainManager.GetFileAsync(e.File, cancellationToken),
-            e.Id,
-            cancellationToken
-        );
+        await using MemoryStream ms = new(file.Value);
+
+        await manager.SaveAsync(ms, e.Id, cancellationToken);
 
         await compressor.CompressAsync(e.Id, null, "compressed", cancellationToken);
     }

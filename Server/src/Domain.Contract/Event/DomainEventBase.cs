@@ -5,6 +5,7 @@ using Domain.User.Events;
 
 namespace Domain.Event;
 
+[Immutable]
 [JsonPolymorphic]
 // Category
 [DerivedEvent<CategoryCreatedEvent>]

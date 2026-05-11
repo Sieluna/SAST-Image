@@ -14,14 +14,11 @@ public sealed class HeaderUpdatedEventHandler(
     public async ValueTask Handle(HeaderUpdatedEvent e, CancellationToken cancellationToken)
     {
         var domainManager = factory.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var file = await domainManager.GetAsync(e.File, cancellationToken);
 
-        await manager.SaveAsync(
-            domainManager.GetFileAsync(e.File, cancellationToken),
-            e.Id,
-            "header",
-            cancellationToken
-        );
+        await using MemoryStream ms = new(file.Value);
 
+        await manager.SaveAsync(ms, e.Id, "header", cancellationToken);
         await compressor.CompressAsync(e.Id, "header", cancellationToken);
     }
 }

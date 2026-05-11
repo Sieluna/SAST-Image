@@ -52,12 +52,20 @@ internal sealed class LocalCompressProcessor(IOptions<StorageOptions> options) :
         where TId : ITypedId<TId>
     {
         string original = id.AbsolutePath(options.Value.BaseUri.LocalPath, sourceExtension);
-        string temp =
-            Path.GetDirectoryName(original)
-            + Path.DirectorySeparatorChar
-            + Path.GetRandomFileName();
+        string copy = Path.GetTempFileName();
+        File.Copy(original, copy, true);
 
-        using var image = Image.NewFromFile(original);
+        await using FileStream stream = new(
+            copy,
+            FileMode.OpenOrCreate,
+            FileAccess.Read,
+            FileShare.Read,
+            4 * 1024,
+            FileOptions.DeleteOnClose
+        );
+
+        using var image = Image.NewFromStream(stream);
+        string temp = Path.GetTempFileName();
 
         image.Heifsave(
             temp,

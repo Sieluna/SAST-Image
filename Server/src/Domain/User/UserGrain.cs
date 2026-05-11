@@ -2,6 +2,7 @@
 using Domain.File;
 using Domain.Filters;
 using Domain.User.Events;
+using Orleans.Concurrency;
 
 namespace Domain.User;
 
@@ -32,16 +33,24 @@ internal sealed class UserGrain(IUsernameUniquenessChecker usernameChecker)
         return Id;
     }
 
-    public ValueTask UpdateAvatar(ImageFileKey file)
+    public async ValueTask UpdateAvatar(
+        Immutable<byte[]> file,
+        CancellationToken cancellationToken = default
+    )
     {
-        RaiseEvent(new AvatarUpdatedEvent(Id, file));
-        return ValueTask.CompletedTask;
+        var manager = GrainFactory.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var key = await manager.UploadAsync(file, cancellationToken);
+        RaiseEvent(new AvatarUpdatedEvent(Id, key));
     }
 
-    public ValueTask UpdateHeader(ImageFileKey file)
+    public async ValueTask UpdateHeader(
+        Immutable<byte[]> file,
+        CancellationToken cancellationToken = default
+    )
     {
-        RaiseEvent(new HeaderUpdatedEvent(Id, file));
-        return ValueTask.CompletedTask;
+        var manager = GrainFactory.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var key = await manager.UploadAsync(file, cancellationToken);
+        RaiseEvent(new HeaderUpdatedEvent(Id, key));
     }
 
     public async ValueTask UpdateProfile(
@@ -62,7 +71,7 @@ internal sealed class UserState : DomainStateBase, IDomainEventApplyable
 {
     public Username Username { get; private set; }
 
-    public void Apply(DomainEventBase e)
+    public override void Apply(DomainEventBase e)
     {
         (Username, RecordExists) = e switch
         {

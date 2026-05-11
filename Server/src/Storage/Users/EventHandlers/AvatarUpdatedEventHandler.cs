@@ -14,14 +14,10 @@ public sealed class AvatarUpdatedEventHandler(
     public async ValueTask Handle(AvatarUpdatedEvent e, CancellationToken cancellationToken)
     {
         var domainManager = factory.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var file = await domainManager.GetAsync(e.File, cancellationToken);
+        await using MemoryStream stream = new(file.Value);
 
-        await manager.SaveAsync(
-            domainManager.GetFileAsync(e.File, cancellationToken),
-            e.Id,
-            "avatar",
-            cancellationToken
-        );
-
+        await manager.SaveAsync(stream, e.Id, "avatar", cancellationToken);
         await compressor.CompressAsync(e.Id, "avatar", cancellationToken);
     }
 }

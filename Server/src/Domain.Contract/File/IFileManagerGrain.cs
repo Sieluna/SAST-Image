@@ -1,17 +1,19 @@
-﻿namespace Domain.File;
+﻿using Orleans.Concurrency;
 
-[Alias("file_manager")]
+namespace Domain.File;
+
+[Alias("FileManagerGrain")]
 public interface IFileManagerGrain : IGrainWithGuidKey
 {
-    [Alias("get_file")]
-    public IAsyncEnumerable<byte[]> GetFileAsync(
-        ImageFileKey fileKey,
+    [Alias(nameof(GetAsync))]
+    public ValueTask<Immutable<byte[]>> GetAsync(
+        ImageFileKey key,
         CancellationToken cancellationToken
     );
 
-    [Alias("upload_file")]
-    public Task<ImageFileKey> UploadFileAsync(
-        IAsyncEnumerable<byte[]> fileStream,
+    [Alias(nameof(UploadAsync))]
+    public ValueTask<ImageFileKey> UploadAsync(
+        Immutable<byte[]> file,
         CancellationToken cancellationToken
     );
 }

@@ -26,6 +26,8 @@ public static class ServiceCollectionExtensions
                     .UseSnakeCaseNamingConvention()
             );
 
+            services.AddMediator();
+
             return services;
         }
     }

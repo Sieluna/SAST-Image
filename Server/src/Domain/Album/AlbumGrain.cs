@@ -141,7 +141,7 @@ internal sealed class AlbumState : DomainStateBase, IDomainEventApplyable
     public UserId[] Subscribes { get; private set; } = [];
     public ImageState[] Images { get; private set; } = [];
 
-    public void Apply(DomainEventBase e)
+    public override void Apply(DomainEventBase e)
     {
         (Author, Images, Subscribes, RecordExists) = e switch
         {

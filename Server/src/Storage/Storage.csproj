@@ -18,6 +18,11 @@
       Include="Microsoft.Extensions.Options.ConfigurationExtensions"
       Version="10.0.7"
     />
+
+    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

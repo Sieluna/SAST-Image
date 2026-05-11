@@ -8,14 +8,14 @@ namespace Storage.Services;
 public interface IImageFileManager
 {
     public ValueTask SaveAsync<TId>(
-        IAsyncEnumerable<byte[]> stream,
+        Stream stream,
         TId id,
         CancellationToken cancellationToken = default
     )
         where TId : ITypedId<TId, long>;
 
     public ValueTask SaveAsync<TId>(
-        IAsyncEnumerable<byte[]> stream,
+        Stream stream,
         TId id,
         string? extension,
         CancellationToken cancellationToken
@@ -33,6 +33,7 @@ public interface IImageFileManager
 
 internal sealed class LocalImageFileManager : IImageFileManager
 {
+    const int BufferSize = 1024 * 64;
     private readonly string basePath;
 
     public LocalImageFileManager(IOptions<StorageOptions> options)
@@ -47,7 +48,7 @@ internal sealed class LocalImageFileManager : IImageFileManager
     }
 
     public async ValueTask SaveAsync<TId>(
-        IAsyncEnumerable<byte[]> stream,
+        Stream stream,
         TId id,
         CancellationToken cancellationToken = default
     )
@@ -57,7 +58,7 @@ internal sealed class LocalImageFileManager : IImageFileManager
     }
 
     public async ValueTask SaveAsync<TId>(
-        IAsyncEnumerable<byte[]> stream,
+        Stream stream,
         TId id,
         string? extension,
         CancellationToken cancellationToken = default
@@ -67,13 +68,13 @@ internal sealed class LocalImageFileManager : IImageFileManager
         string destination = id.AbsolutePath(basePath, extension);
 
         EnsureDirectory(destination);
+        var filename = Path.GetTempFileName();
 
-        await using var file = File.Create(destination);
-
-        await foreach (var chunk in stream.WithCancellation(cancellationToken))
+        await using (var file = File.OpenWrite(filename))
         {
-            await file.WriteAsync(chunk, cancellationToken);
+            await stream.CopyToAsync(file, BufferSize, cancellationToken);
         }
+        File.Move(filename, destination, true);
     }
 
     public Stream? GetStream<TId>(TId id)

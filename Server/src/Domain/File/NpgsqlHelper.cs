@@ -157,14 +157,9 @@ public sealed class NpgsqlLargeObjectStream : Stream
         while (totalWritten < count)
         {
             var chunkSize = Math.Min(count - totalWritten, _manager.MaxTransferBlockSize);
+            var buf = new ArraySegment<byte>(buffer, offset + totalWritten, chunkSize);
             var bytesWritten = await _manager
-                .ExecuteFunction<int>(
-                    async,
-                    "lowrite",
-                    cancellationToken,
-                    _fd,
-                    new ArraySegment<byte>(buffer, offset + totalWritten, chunkSize)
-                )
+                .ExecuteFunction<int>(async, "lowrite", cancellationToken, _fd, buf)
                 .ConfigureAwait(false);
             totalWritten += bytesWritten;
 
@@ -633,8 +628,8 @@ public class NpgsqlLargeObjectManager(NpgsqlConnection connection)
     /// </summary>
     /// <param name="path">Path to read the file on the backend</param>
     /// <param name="oid">A preferred oid, or specify 0 if one should be automatically assigned</param>
-    public void ImportRemote(string path, uint oid = 0) =>
-        ExecuteFunction<object>(async: false, "lo_import", CancellationToken.None, path, (int)oid)
+    public uint ImportRemote(string path, uint oid = 0) =>
+        ExecuteFunction<uint>(async: false, "lo_import", CancellationToken.None, path, (int)oid)
             .GetAwaiter()
             .GetResult();
 
@@ -646,11 +641,11 @@ public class NpgsqlLargeObjectManager(NpgsqlConnection connection)
     /// <param name="cancellationToken">
     /// An optional token to cancel the asynchronous operation. The default value is <see cref="CancellationToken.None"/>.
     /// </param>
-    public Task ImportRemoteAsync(
+    public Task<uint> ImportRemoteAsync(
         string path,
         uint oid,
         CancellationToken cancellationToken = default
-    ) => ExecuteFunction<object>(async: true, "lo_import", cancellationToken, path, (int)oid);
+    ) => ExecuteFunction<uint>(async: true, "lo_import", cancellationToken, path, (int)oid);
 
     /// <summary>
     /// Since PostgreSQL 9.3, large objects larger than 2GB can be handled, up to 4TB.

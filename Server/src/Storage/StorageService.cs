@@ -33,7 +33,8 @@ internal sealed partial class StorageService(
         var mediator = services.GetRequiredService<IMediator>();
 
         var (main, points) = await GetCheckpointsAsync(context, cancellationToken);
-        await foreach (var e in store.GetEventsAsync(main.Timestamp, cancellationToken))
+
+        foreach (var e in await store.GetEventsAsync(main.Timestamp, cancellationToken))
         {
             await using var transaction = await context.Database.BeginTransactionAsync(
                 cancellationToken
@@ -84,16 +85,17 @@ internal sealed partial class StorageService(
     )
     {
         var points = await context.Checkpoints.ToListAsync(cancellationToken);
-
-        if (points.Count <= 0)
+        var main = points.FirstOrDefault(cp => cp.GrainId is null);
+        if (points.Count <= 0 || main is null)
         {
-            var initialOne = new Checkpoint { Timestamp = DateTime.MinValue };
-            points = [initialOne];
-            await context.Checkpoints.AddAsync(initialOne, cancellationToken);
+            main = new Checkpoint { Timestamp = DateTime.MinValue };
+            points = [main];
+            await context.Checkpoints.AddAsync(main, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
+            return (main, points);
         }
 
-        return (points.First(cp => cp.GrainId is null), points);
+        return (main, points);
     }
 
     [LoggerMessage(LogLevel.Warning, "Failed to process outbox event {EventId}")]
