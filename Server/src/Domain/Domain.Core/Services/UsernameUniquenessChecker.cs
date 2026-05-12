@@ -1,4 +1,5 @@
-﻿using Domain.User;
+﻿using Domain.Database;
+using Domain.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Services;

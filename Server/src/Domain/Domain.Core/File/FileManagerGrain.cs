@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Domain.Database;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Orleans.Concurrency;
 

@@ -1,4 +1,5 @@
-﻿using Domain.Filters;
+﻿using Domain.Database;
+using Domain.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Services;

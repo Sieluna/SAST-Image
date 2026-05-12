@@ -1,4 +1,5 @@
-﻿using Domain.Event;
+﻿using Domain.Database;
+using Domain.Event;
 using Domain.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

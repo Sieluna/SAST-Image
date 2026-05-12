@@ -1,7 +1,7 @@
 ﻿using Domain.Event;
 using Microsoft.EntityFrameworkCore;
 
-namespace Domain;
+namespace Domain.Database;
 
 public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) : DbContext(options)
 {
