@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Query.Api\Query.Api.csproj" />
-    <ProjectReference Include="..\Silo\Silo.csproj" />
-    <ProjectReference Include="..\Storage.Api\Storage.Api.csproj" />
+    <ProjectReference Include="..\Query.Api\Quey.Silo.csproj" />
+    <ProjectReference Include="..\Silo\Domain.Silo.csproj" />
+    <ProjectReference Include="..\Storage.Api\Storage.Silo.csproj" />
   </ItemGroup>
 </Project>
