@@ -1,21 +1,25 @@
+using Orleans.Dashboard;
 using Orleans.Serialization;
 using Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-
 builder.Services.AddOpenApi();
 
-builder.UseOrleansClient(client =>
+builder.UseOrleans(builder =>
 {
-    client.UseAdoNetClustering(options =>
+    builder.UseAdoNetClustering(options =>
     {
         options.Invariant = "Npgsql";
-        options.ConnectionString = client.Configuration.GetConnectionString("Domain");
+        options.ConnectionString = builder.Configuration.GetConnectionString("Domain");
     });
-    client.Services.AddStorage(client.Configuration);
-    client.Services.AddSerializer(b => b.AddJsonSerializer(t => t.Namespace!.StartsWith("Domain")));
+    builder.AddDashboard(options => options.HideTrace = true);
+    builder.Services.AddStorage(builder.Configuration);
+    builder.Services.AddSerializer(b =>
+        b.AddJsonSerializer(t => t.Namespace!.StartsWith("Domain"))
+    );
+    builder.Services.AddHostedService<StorageSyncService>();
 });
 
 var app = builder.Build();
@@ -29,5 +33,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.MapOrleansDashboard();
 
 app.Run();

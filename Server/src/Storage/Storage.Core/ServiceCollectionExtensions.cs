@@ -12,8 +12,6 @@ public static class ServiceCollectionExtensions
     {
         public IServiceCollection AddStorage(IConfiguration configuration)
         {
-            services.AddHostedService<StorageService>();
-
             services.Configure<StorageOptions>(configuration.GetRequiredSection("Storage"));
 
             services.AddScoped<IAccessChecker, AccessChecker>();

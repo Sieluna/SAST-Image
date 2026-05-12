@@ -29,7 +29,6 @@ public static class IServiceColletionExtensions
                 options.GenerateTypesAsInternal = true;
                 options.ServiceLifetime = ServiceLifetime.Scoped;
             });
-            services.AddHostedService<QueryService>();
 
             return services;
         }
