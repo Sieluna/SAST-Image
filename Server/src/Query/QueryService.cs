@@ -22,7 +22,16 @@ public sealed partial class QueryService(
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(intervalSeconds));
         while (await timer.WaitForNextTickAsync(stoppingToken))
-            await Sync(stoppingToken);
+        {
+            try
+            {
+                await Sync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                LogFailedSync(logger, ex);
+            }
+        }
     }
 
     private async Task Sync(CancellationToken cancellationToken)
@@ -33,21 +42,16 @@ public sealed partial class QueryService(
         var mediator = services.GetRequiredService<IMediator>();
 
         var (main, points) = await GetCheckpointsAsync(context, cancellationToken);
-        foreach (var e in await store.GetEventsAsync(main.Timestamp, cancellationToken))
+        var events = await store.GetEventsAsync(main.Timestamp, cancellationToken);
+        foreach (var e in events)
         {
-            await using var transaction = await context.Database.BeginTransactionAsync(
-                cancellationToken
-            );
-
             if (points.Any(p => p.GrainId == e.GrainId && p.Status == CheckpointStatus.Failed))
                 continue;
 
             try
             {
-                main.Timestamp = e.Timestamp;
-                await mediator.Publish(e.Value, cancellationToken);
+                await mediator.Send(e.Value, cancellationToken);
                 await context.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -56,7 +60,6 @@ public sealed partial class QueryService(
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 context.ChangeTracker.Clear();
                 Checkpoint failed = new()
                 {
@@ -70,6 +73,13 @@ public sealed partial class QueryService(
                 await context.SaveChangesAsync(cancellationToken);
                 LogFailedMessage(logger, ex, e.EventId);
             }
+            finally
+            {
+                context.ChangeTracker.Clear();
+                context.Checkpoints.Attach(main);
+                main.Timestamp = e.Timestamp;
+                await context.SaveChangesAsync(cancellationToken);
+            }
         }
     }
 
@@ -82,7 +92,7 @@ public sealed partial class QueryService(
         var main = points.FirstOrDefault(cp => cp.GrainId is null);
         if (points.Count <= 0 || main is null)
         {
-            main = new Checkpoint { Timestamp = DateTime.MinValue };
+            main = new Checkpoint { Id = Guid.Empty, Timestamp = DateTime.MinValue };
             points = [main];
             await context.Checkpoints.AddAsync(main, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
@@ -92,10 +102,13 @@ public sealed partial class QueryService(
         return (main, points);
     }
 
-    [LoggerMessage(LogLevel.Warning, "Failed to process outbox event {Event}")]
+    [LoggerMessage(LogLevel.Error, "Failed to process outbox event {Event}")]
     static partial void LogFailedMessage(
         ILogger<QueryService> logger,
         Exception exception,
         Guid @event
     );
+
+    [LoggerMessage(LogLevel.Critical, "Failed to sync outbox events")]
+    static partial void LogFailedSync(ILogger<QueryService> logger, Exception exception);
 }

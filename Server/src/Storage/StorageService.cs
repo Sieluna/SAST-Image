@@ -22,7 +22,16 @@ internal sealed partial class StorageService(
     {
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(intervalSeconds));
         while (await timer.WaitForNextTickAsync(stoppingToken))
-            await Sync(stoppingToken);
+        {
+            try
+            {
+                await Sync(stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                LogFailedSync(logger, ex);
+            }
+        }
     }
 
     private async Task Sync(CancellationToken cancellationToken)
@@ -34,21 +43,16 @@ internal sealed partial class StorageService(
 
         var (main, points) = await GetCheckpointsAsync(context, cancellationToken);
 
-        foreach (var e in await store.GetEventsAsync(main.Timestamp, cancellationToken))
+        var events = await store.GetEventsAsync(main.Timestamp, cancellationToken);
+        foreach (var e in events)
         {
-            await using var transaction = await context.Database.BeginTransactionAsync(
-                cancellationToken
-            );
-
             if (points.Any(p => p.GrainId == e.GrainId && p.Status == CheckpointStatus.Failed))
                 continue;
 
             try
             {
-                main.Timestamp = e.Timestamp;
-                await mediator.Publish(e.Value, cancellationToken);
+                await mediator.Send(e.Value, cancellationToken);
                 await context.SaveChangesAsync(cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
             }
             catch (MissingMessageHandlerException)
             {
@@ -62,7 +66,6 @@ internal sealed partial class StorageService(
             }
             catch (Exception ex)
             {
-                await transaction.RollbackAsync(cancellationToken);
                 context.ChangeTracker.Clear();
                 Checkpoint failed = new()
                 {
@@ -75,6 +78,13 @@ internal sealed partial class StorageService(
                 await context.Checkpoints.AddAsync(failed, cancellationToken);
                 await context.SaveChangesAsync(cancellationToken);
                 LogFailedMessage(logger, ex, e.EventId);
+            }
+            finally
+            {
+                context.ChangeTracker.Clear();
+                context.Checkpoints.Attach(main);
+                main.Timestamp = e.Timestamp;
+                await context.SaveChangesAsync(cancellationToken);
             }
         }
     }
@@ -98,10 +108,13 @@ internal sealed partial class StorageService(
         return (main, points);
     }
 
-    [LoggerMessage(LogLevel.Warning, "Failed to process outbox event {EventId}")]
+    [LoggerMessage(LogLevel.Error, "Failed to process outbox event {EventId}")]
     static partial void LogFailedMessage(
         ILogger<StorageService> logger,
         Exception exception,
         Guid eventId
     );
+
+    [LoggerMessage(LogLevel.Critical, "Failed to sync outbox events")]
+    static partial void LogFailedSync(ILogger<StorageService> logger, Exception exception);
 }

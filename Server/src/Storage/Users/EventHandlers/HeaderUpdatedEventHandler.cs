@@ -1,6 +1,7 @@
 ﻿using Domain.Event;
 using Domain.File;
 using Domain.User.Events;
+using Mediator;
 using Storage.Services;
 
 namespace Storage.Users.EventHandlers;
@@ -11,7 +12,7 @@ public sealed class HeaderUpdatedEventHandler(
     IGrainFactory factory
 ) : IDomainEventHandler<HeaderUpdatedEvent>
 {
-    public async ValueTask Handle(HeaderUpdatedEvent e, CancellationToken cancellationToken)
+    public async ValueTask<Unit> Handle(HeaderUpdatedEvent e, CancellationToken cancellationToken)
     {
         var domainManager = factory.GetGrain<IFileManagerGrain>(Guid.Empty);
         var file = await domainManager.GetAsync(e.File, cancellationToken);
@@ -20,5 +21,7 @@ public sealed class HeaderUpdatedEventHandler(
 
         await manager.SaveAsync(ms, e.Id, "header", cancellationToken);
         await compressor.CompressAsync(e.Id, "header", cancellationToken);
+
+        return Unit.Value;
     }
 }

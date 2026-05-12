@@ -26,7 +26,10 @@ public static class ServiceCollectionExtensions
                     .UseSnakeCaseNamingConvention()
             );
 
-            services.AddMediator();
+            services.AddMediator(options =>
+            {
+                options.GenerateTypesAsInternal = true;
+            });
 
             return services;
         }

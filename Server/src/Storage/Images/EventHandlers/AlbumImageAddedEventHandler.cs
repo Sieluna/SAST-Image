@@ -1,6 +1,7 @@
 ﻿using Domain.Album.Events;
 using Domain.Event;
 using Domain.File;
+using Mediator;
 using Storage.Services;
 
 namespace Storage.Images.EventHandlers;
@@ -11,7 +12,7 @@ public sealed class AlbumImageAddedEventHandler(
     IGrainFactory factory
 ) : IDomainEventHandler<AlbumImageAddedEvent>
 {
-    public async ValueTask Handle(AlbumImageAddedEvent e, CancellationToken cancellationToken)
+    public async ValueTask<Unit> Handle(AlbumImageAddedEvent e, CancellationToken cancellationToken)
     {
         var domainManager = factory.GetGrain<IFileManagerGrain>(Guid.Empty);
         var file = await domainManager.GetAsync(e.File, cancellationToken);
@@ -21,5 +22,7 @@ public sealed class AlbumImageAddedEventHandler(
         await manager.SaveAsync(ms, e.Id, cancellationToken);
 
         await compressor.CompressAsync(e.Id, null, "compressed", cancellationToken);
+
+        return Unit.Value;
     }
 }
