@@ -25,8 +25,12 @@ public abstract class DbContextWithCheckpoint<DatabaseContext>(
             entity.Property(e => e.Id).ValueGeneratedNever();
             entity.HasIndex(e => e.Timestamp).IsUnique(false);
             entity.HasIndex(e => e.GrainId).IsUnique();
-            entity.Property(e => e.Version).IsRowVersion();
         });
+
+        foreach (var type in builder.Model.GetEntityTypes())
+        {
+            builder.Entity(type.ClrType).Property<uint>("Version").IsRowVersion();
+        }
     }
 
     protected abstract void OnModelCreatingCore(ModelBuilder builder);

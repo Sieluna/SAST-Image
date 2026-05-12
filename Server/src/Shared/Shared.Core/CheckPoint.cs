@@ -10,7 +10,7 @@ public sealed record class Checkpoint
     public CheckpointStatus Status { get; init; } = CheckpointStatus.Success;
 
     // Optimistic concurrency control, used to detect if the checkpoint has been updated by another query service instance
-    public uint Version { get; init; }
+    //public uint Version { get; init; }
 }
 
 public enum CheckpointStatus : byte
