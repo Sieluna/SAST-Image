@@ -8,9 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Postgres" Version="1.2.2" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.7" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
-    <PackageReference Include="EFCore.NamingConventions" Version="10.0.1" />
 
     <PackageReference Include="Mediator.SourceGenerator" Version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
@@ -20,5 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Domain\Domain.Contract\Domain.Contract.csproj" />
+    <ProjectReference Include="..\..\Shared\Shared.Core\Shared.Core.csproj" />
   </ItemGroup>
 </Project>
