@@ -1,9 +1,18 @@
-using Domain.Album;
-using Domain.Album.Image;
-using Domain.Category;
-using Domain.User;
+using UserId = long;
+using AlbumId = long;
+using ImageId = long;
+using CategoryId = long;
 
 namespace Domain.Api;
+
+public enum AccessLevel : byte
+{
+    Private = 0,
+    AuthReadOnly = 1,
+    AuthReadWrite = 2,
+    PublicReadOnly = 3,
+    PublicReadWrite = 4,
+}
 
 public sealed record JwtTokenResponse(
     string AccessToken,
@@ -20,6 +29,7 @@ public sealed record AlbumResponse(
     string CategoryName,
     string[] Tags,
     int SubscribeCount,
+    AccessLevel AccessLevel,
     long CreatedAt,
     long UpdatedAt);
 
@@ -36,7 +46,8 @@ public sealed record ImageResponse(
     string[] Tags,
     int Likes,
     bool Liked,
-    long UploadedAt);
+    long UploadedAt,
+    string? ThumbnailUrl = null);
 
 public sealed record CategoryResponse(
     CategoryId Id,

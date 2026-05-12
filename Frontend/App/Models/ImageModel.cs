@@ -13,17 +13,19 @@ public sealed class ImageModel
     public int Likes { get; init; }
     public bool Liked { get; init; }
     public long UploadedAt { get; init; }
+    public string? ThumbnailUrl { get; init; }
 
     public static implicit operator ImageModel(ImageResponse r) => new()
     {
-        Id = r.Id.Value,
-        AlbumId = r.AlbumId.Value,
+        Id = r.Id,
+        AlbumId = r.AlbumId,
         Title = r.Title,
-        UploaderId = r.UploaderId.Value,
+        UploaderId = r.UploaderId,
         UploaderName = r.UploaderName,
         Tags = r.Tags,
         Likes = r.Likes,
         Liked = r.Liked,
         UploadedAt = r.UploadedAt,
+        ThumbnailUrl = r.ThumbnailUrl,
     };
 }

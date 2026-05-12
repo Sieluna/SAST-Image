@@ -141,7 +141,8 @@ public class MainHub : Hub
         return new AlbumResponse(
             albumId.Value, request.Title, request.Description,
             actor.Id.Value, "unknown", request.CategoryId, "unknown",
-            request.Tags, 0, DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            request.Tags, 0, AccessLevel.PublicReadWrite,
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             DateTimeOffset.UtcNow.ToUnixTimeSeconds());
     }
 
@@ -193,7 +194,15 @@ public class MainHub : Hub
         var actor = GetActor();
         SetActor(actor);
 
-        // Save file bytes to temp path
+        var imageId = ImageId.GenerateNew();
+
+        // Save to persistent image storage
+        var imagesDir = Path.Combine(AppContext.BaseDirectory, "images");
+        Directory.CreateDirectory(imagesDir);
+        var persistPath = Path.Combine(imagesDir, $"{imageId.Value}.img");
+        await File.WriteAllBytesAsync(persistPath, request.FileBytes);
+
+        // Also save to temp for grain processing
         var tmpDir = Path.Combine(Path.GetTempPath(), "sastimg", "images");
         Directory.CreateDirectory(tmpDir);
         var filePath = Path.Combine(tmpDir, $"{Guid.NewGuid()}.img");
@@ -201,7 +210,6 @@ public class MainHub : Hub
 
         try
         {
-            var imageId = ImageId.GenerateNew();
             var grain = _grains.GetGrain<IAlbumGrain>(albumId);
             await grain.AddImage(
                 imageId,
@@ -210,9 +218,10 @@ public class MainHub : Hub
                 new ImageFile(filePath));
 
             return new ImageResponse(
-                imageId, albumId, request.Title, actor.Id, "unknown",
+                imageId.Value, albumId, request.Title, actor.Id.Value, "unknown",
                 request.Tags, 0, false,
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                $"/images/{imageId.Value}");
         }
         finally
         {
@@ -254,9 +263,10 @@ public class MainHub : Hub
         var actor = GetActor();
         var images = await _mediator.Send(new ImagesQuery(null, albumId, cursor, actor));
         return images.Select(i => new ImageResponse(
-            new ImageId(i.Id), new AlbumId(i.AlbumId), i.Title, new UserId(i.UploaderId), "unknown",
+            i.Id, i.AlbumId, i.Title, i.UploaderId, "unknown",
             i.Tags, i.Likes, i.Requester.Liked,
-            new DateTimeOffset(i.UploadedAt).ToUnixTimeSeconds())).ToArray();
+            new DateTimeOffset(i.UploadedAt).ToUnixTimeSeconds(),
+            $"/images/{i.Id}")).ToArray();
     }
 
     // ─── Categories ─────────────────────────────────────────────
@@ -420,7 +430,7 @@ public class MainHub : Hub
             a.Id, a.Title, a.Description,
             a.Author, users.GetValueOrDefault(a.Author, "unknown"),
             a.Category, categories.GetValueOrDefault(a.Category, "unknown"),
-            a.Tags, a.SubscribeCount,
+            a.Tags, a.SubscribeCount, AccessLevel.PublicReadWrite,
             new DateTimeOffset(a.CreatedAt).ToUnixTimeSeconds(),
             new DateTimeOffset(a.UpdatedAt).ToUnixTimeSeconds()
         )).ToArray();

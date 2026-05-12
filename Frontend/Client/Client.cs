@@ -6,6 +6,9 @@ namespace Client;
 
 public sealed class SastClient
 {
+    private SignalRClient? _signalR;
+    private HttpRestClient? _http;
+
     public ClientOptions Options { get; }
 
     public SastClient(string baseUrl, IStorage storage)
@@ -14,6 +17,6 @@ public sealed class SastClient
     public SastClient(ClientOptions options)
         => Options = options;
 
-    public SignalRClient SignalR() => new(Options.BaseUrl, Options.Storage);
-    public HttpRestClient Http() => new(Options);
+    public SignalRClient SignalR() => _signalR ??= new(Options.BaseUrl, Options.Storage);
+    public HttpRestClient Http() => _http ??= new(Options);
 }

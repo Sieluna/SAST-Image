@@ -1,6 +1,8 @@
+using CategoryId = long;
+
 namespace Domain.Api;
 
-public sealed record LoginRequest(string Username);
+public sealed record LoginRequest(string Username, string Password);
 
 public sealed record RegisterRequest(
     string Username,
@@ -11,13 +13,13 @@ public sealed record CreateAlbumRequest(
     string Title,
     string Description,
     string[] Tags,
-    long CategoryId);
+    CategoryId CategoryId);
 
 public sealed record UpdateAlbumRequest(
     string? Title,
     string? Description,
     string[]? Tags,
-    long? CategoryId);
+    CategoryId? CategoryId);
 
 public sealed record AddImageRequest(
     string Title,

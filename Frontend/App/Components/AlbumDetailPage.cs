@@ -1,6 +1,6 @@
 using App.Framework;
-using App.Framework.Interop;
-using Client.Models;
+using App.Models;
+using Client.SignalR;
 using static App.Framework.WebApp;
 using static App.Framework.Hooks;
 
@@ -10,10 +10,11 @@ public class AlbumDetailPage(long albumId, Action<string> setPage, Action<long> 
 {
     public VNode Render()
     {
-        var client = UseContext(RootApp.ClientCtx);
-        var (images, setImages) = UseState<ImageDto[]>([]);
+        var sastClient = UseContext(RootApp.ClientCtx);
+        var signalR = sastClient.SignalR();
+        var baseUrl = sastClient.Options.BaseUrl.TrimEnd('/');
+        var (images, setImages) = UseState<ImageModel[]>([]);
         var (loading, setLoading) = UseState(true);
-        var (thumbUrls, setThumbUrls) = UseState<Dictionary<long, string>>(new());
 
         UseEffect(() => { _ = Load(); return; }, [albumId]);
 
@@ -22,22 +23,8 @@ public class AlbumDetailPage(long albumId, Action<string> setPage, Action<long> 
             setLoading(true);
             try
             {
-                var list = await client.Image.GetImagesAsync(albumId: albumId);
-                setImages(list);
-                var urls = new Dictionary<long, string>();
-                foreach (var img in list)
-                {
-                    try
-                    {
-                        using var s = await client.Image.GetImageFileAsync(img.Id, ImageKind.Thumbnail);
-                        if (s is null) continue;
-                        using var ms = new MemoryStream();
-                        await s.CopyToAsync(ms);
-                        urls[img.Id] = DomInterop.CreateObjectURL(ms.ToArray(), "image/webp");
-                    }
-                    catch { }
-                }
-                setThumbUrls(urls);
+                var list = await signalR.GetImagesAsync(albumId: albumId);
+                setImages(list.Select(i => (ImageModel)i).ToArray());
             }
             catch { }
             finally { setLoading(false); }
@@ -54,16 +41,16 @@ public class AlbumDetailPage(long albumId, Action<string> setPage, Action<long> 
                 ? H("div", new Dictionary<string, object?> { ["class"] = "loading" },
                     H("span", null, new VText("Loading...")))
                 : H("div", new Dictionary<string, object?> { ["class"] = "image-grid" },
-                    images.Select(img => ImageCard(img, thumbUrls, setUserId, setPage, client)).ToArray()));
+                    images.Select(img => ImageCard(img, baseUrl, setUserId, setPage, signalR)).ToArray()));
     }
 
     private static VNode ImageCard(
-        ImageDto img, Dictionary<long, string> urls, Action<long> setUserId,
-        Action<string> setPage, Client.Client client)
+        ImageModel img, string baseUrl, Action<long> setUserId,
+        Action<string> setPage, SignalRClient signalR)
     {
-        var src = urls.GetValueOrDefault(img.Id, "");
+        var src = img.ThumbnailUrl is not null ? $"{baseUrl}{img.ThumbnailUrl}" : null;
         return H("div", new Dictionary<string, object?> { ["class"] = "md-card image-card" },
-            src.Length > 0
+            src is not null
                 ? H("img", new Dictionary<string, object?> { ["src"] = src, ["alt"] = img.Title })
                 : H("div", new Dictionary<string, object?> { ["class"] = "img-fallback" },
                     new VText("🖼")),
@@ -77,14 +64,14 @@ public class AlbumDetailPage(long albumId, Action<string> setPage, Action<long> 
                         {
                             try
                             {
-                                if (img.Requester.Liked)
-                                    await client.Image.UnlikeAsync(img.AlbumId, img.Id);
+                                if (img.Liked)
+                                    await signalR.UnlikeImageAsync(img.AlbumId, img.Id);
                                 else
-                                    await client.Image.LikeAsync(img.AlbumId, img.Id);
+                                    await signalR.LikeImageAsync(img.AlbumId, img.Id);
                             }
                             catch { }
                         })
-                    }, new VText(img.Requester.Liked ? "Unlike" : "Like")),
+                    }, new VText(img.Liked ? "Unlike" : "Like")),
                     H("button", new Dictionary<string, object?> {
                         ["class"] = "md-btn text sm",
                         ["onclick"] = (Action)(() =>

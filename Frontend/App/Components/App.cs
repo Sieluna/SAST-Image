@@ -1,5 +1,6 @@
 using App.Framework;
 using App.Framework.Reactive;
+using Client;
 using static App.Framework.WebApp;
 using static App.Framework.Hooks;
 
@@ -7,12 +8,12 @@ namespace App.Components;
 
 public class RootApp : IComponent
 {
-    public static readonly Context<Client.Client> ClientCtx = Context.Create<Client.Client>();
+    public static readonly Context<SastClient> ClientCtx = Context.Create<SastClient>();
 
     public VNode Render()
     {
         var (page, setPage) = UseState("albums");
-        var (client, setClient) = UseState<Client.Client>(null!);
+        var (client, setClient) = UseState<SastClient>(null!);
         var (albumId, setAlbumId) = UseState(0L);
         var (userId, setUserId) = UseState(0L);
 

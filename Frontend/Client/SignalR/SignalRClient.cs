@@ -44,10 +44,10 @@ public class SignalRClient : IAsyncDisposable
 
     // ─── Account ────────────────────────────────────────────────
 
-    public async Task<JwtTokenResponse> LoginAsync(string username)
+    public async Task<JwtTokenResponse> LoginAsync(string username, string password)
     {
         await EnsureConnected();
-        var result = await _connection.InvokeAsync<JwtTokenResponse>("Login", new LoginRequest(username));
+        var result = await _connection.InvokeAsync<JwtTokenResponse>("Login", new LoginRequest(username, password));
         await _tokenStore.SaveAsync(new SignalRToken(result.AccessToken, result.RefreshToken, result.ExpireIn));
         return result;
     }

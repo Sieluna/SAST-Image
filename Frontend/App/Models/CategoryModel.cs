@@ -10,7 +10,7 @@ public sealed class CategoryModel
 
     public static implicit operator CategoryModel(CategoryResponse r) => new()
     {
-        Id = r.Id.Value,
+        Id = r.Id,
         Name = r.Name,
         Description = r.Description,
     };

@@ -12,7 +12,7 @@ public sealed class UserProfileModel
 
     public static implicit operator UserProfileModel(UserProfileResponse r) => new()
     {
-        Id = r.Id.Value,
+        Id = r.Id,
         Username = r.Username,
         Nickname = r.Nickname,
         Biography = r.Biography,

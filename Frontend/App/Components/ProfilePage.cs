@@ -1,5 +1,5 @@
 using App.Framework;
-using Client.Models;
+using App.Models;
 using static App.Framework.WebApp;
 using static App.Framework.Hooks;
 
@@ -9,8 +9,8 @@ public class ProfilePage(long userId, Action<string> setPage) : IComponent
 {
     public VNode Render()
     {
-        var client = UseContext(RootApp.ClientCtx);
-        var (profile, setProfile) = UseState<UserProfileDto>(null!);
+        var signalR = UseContext(RootApp.ClientCtx).SignalR();
+        var (profile, setProfile) = UseState<UserProfileModel>(null!);
         var (loading, setLoading) = UseState(true);
         var (error, setError) = UseState("");
 
@@ -19,18 +19,14 @@ public class ProfilePage(long userId, Action<string> setPage) : IComponent
         async Task Load()
         {
             setLoading(true);
+            setError("");
             try
             {
-                if (userId > 0)
-                {
-                    var p = await client.User.GetProfileAsync(userId);
-                    setProfile(p);
-                }
+                var p = await signalR.GetProfileAsync(userId > 0 ? userId : null);
+                if (p is not null)
+                    setProfile((UserProfileModel)p);
                 else
-                {
-                    var token = await client.GetTokenAsync();
-                    // Show self info if available
-                }
+                    setError("Profile not found.");
             }
             catch (Exception ex) { setError(ex.Message); }
             finally { setLoading(false); }
@@ -51,7 +47,7 @@ public class ProfilePage(long userId, Action<string> setPage) : IComponent
                 : profile is not null
                     ? H("div", new Dictionary<string, object?> { ["class"] = "md-card profile-card" },
                         H("div", new Dictionary<string, object?> { ["class"] = "avatar" },
-                            new VText(profile.Nickname[..1].ToUpper())),
+                            new VText(profile.Nickname.Length > 0 ? profile.Nickname[..1].ToUpper() : "?")),
                         H("div", new Dictionary<string, object?> { ["class"] = "md-card-body" },
                             H("h3", null, new VText(profile.Nickname)),
                             H("p", null, new VText($"@{profile.Username}")),

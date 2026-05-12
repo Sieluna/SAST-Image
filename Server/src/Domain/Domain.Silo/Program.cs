@@ -78,6 +78,16 @@ app.MapDefaultEndpoints();
 app.MapHub<MainHub>("/hub");
 app.UseHttpsRedirection();
 
+// Image file serving
+app.MapGet("/images/{id}", async (long id) =>
+{
+    var path = Path.Combine(AppContext.BaseDirectory, "images", $"{id}.img");
+    if (!File.Exists(path))
+        return Results.NotFound();
+    var bytes = await File.ReadAllBytesAsync(path);
+    return Results.File(bytes, "image/webp");
+});
+
 await app.StartAsync();
 
 await app.WaitForShutdownAsync();

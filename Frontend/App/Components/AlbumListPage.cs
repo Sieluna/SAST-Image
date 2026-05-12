@@ -1,5 +1,6 @@
 using App.Framework;
-using Client.Models;
+using App.Models;
+using Domain.Api;
 using static App.Framework.WebApp;
 using static App.Framework.Hooks;
 
@@ -9,9 +10,9 @@ public class AlbumListPage(Action<string> setPage, Action<long> setAlbumId) : IC
 {
     public VNode Render()
     {
-        var client = UseContext(RootApp.ClientCtx);
-        var (albums, setAlbums) = UseState<AlbumDto[]>([]);
-        var (categories, setCategories) = UseState<CategoryDto[]>([]);
+        var client = UseContext(RootApp.ClientCtx).SignalR();
+        var (albums, setAlbums) = UseState<AlbumModel[]>([]);
+        var (categories, setCategories) = UseState<CategoryModel[]>([]);
         var (loading, setLoading) = UseState(true);
         var (activeCat, setActiveCat) = UseState(0L);
 
@@ -22,11 +23,11 @@ public class AlbumListPage(Action<string> setPage, Action<long> setAlbumId) : IC
             setLoading(true);
             try
             {
-                var cats = await client.Category.GetAllAsync();
-                setCategories(cats);
-                var list = await client.Album.GetAlbumsAsync(
+                var cats = await client.GetCategoriesAsync();
+                setCategories(cats.Select(c => (CategoryModel)c).ToArray());
+                var list = await client.GetAlbumsAsync(
                     categoryId: activeCat > 0 ? activeCat : null);
-                setAlbums(list);
+                setAlbums(list.Select(a => (AlbumModel)a).ToArray());
             }
             catch { }
             finally { setLoading(false); }
@@ -59,7 +60,7 @@ public class AlbumListPage(Action<string> setPage, Action<long> setAlbumId) : IC
                         : albums.Select(a => Card(a)).ToArray()));
     }
 
-    private VNode Card(AlbumDto a)
+    private VNode Card(AlbumModel a)
         => H("div", new Dictionary<string, object?> {
             ["class"] = "md-card",
             ["onclick"] = (Action)(() => { setAlbumId(a.Id); setPage("album"); })
@@ -69,17 +70,17 @@ public class AlbumListPage(Action<string> setPage, Action<long> setAlbumId) : IC
                 H("p", null, new VText(a.Description.Length > 120
                     ? a.Description[..120] + "..." : a.Description)),
                 H("div", new Dictionary<string, object?> { ["class"] = "md-card-meta" },
+                    H("span", null, new VText($"By {a.AuthorName}")),
                     H("span", null, new VText($"♡ {a.SubscribeCount}")),
                     H("span", null, new VText(AccessIcon(a.AccessLevel))))));
-    // Subscribe not easily doable without re-render — skip action button for now.
 
-    private static string AccessIcon(AccessLevel l) => l switch  /* static OK — no instance access */
+    private static string AccessIcon(AccessLevel l) => l switch
     {
         AccessLevel.Private => "🔒",
         AccessLevel.AuthReadOnly => "👁",
         AccessLevel.AuthReadWrite => "✏️",
         AccessLevel.PublicReadOnly => "🌐",
         AccessLevel.PublicReadWrite => "🌐",
-        _ => ""
+        _ => "",
     };
 }

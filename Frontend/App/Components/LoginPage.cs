@@ -1,11 +1,12 @@
 using System.Runtime.InteropServices.JavaScript;
 using App.Framework;
+using Client;
 using static App.Framework.WebApp;
 using static App.Framework.Hooks;
 
 namespace App.Components;
 
-public class LoginPage(Action<Client.Client> onLogin, Action<string> setPage) : IComponent
+public class LoginPage(Action<SastClient> onLogin, Action<string> setPage) : IComponent
 {
     public VNode Render()
     {
@@ -46,9 +47,10 @@ public class LoginPage(Action<Client.Client> onLogin, Action<string> setPage) : 
                         setError("");
                         try
                         {
-                            var client = new Client.Client(
-                                new Client.ClientOptions { Storage = new BrowserStorage() });
-                            await client.Account.LoginAsync(username, password);
+                            var client = new SastClient(
+                                "http://localhost:5138",
+                                new BrowserStorage());
+                            await client.SignalR().LoginAsync(username, password);
                             onLogin(client);
                         }
                         catch (Exception ex) { setError(ex.Message); }

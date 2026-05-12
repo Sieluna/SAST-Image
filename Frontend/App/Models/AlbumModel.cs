@@ -13,20 +13,22 @@ public sealed class AlbumModel
     public string CategoryName { get; init; } = "";
     public string[] Tags { get; init; } = [];
     public int SubscribeCount { get; init; }
+    public AccessLevel AccessLevel { get; init; }
     public long CreatedAt { get; init; }
     public long UpdatedAt { get; init; }
 
     public static implicit operator AlbumModel(AlbumResponse r) => new()
     {
-        Id = r.Id.Value,
+        Id = r.Id,
         Title = r.Title,
         Description = r.Description,
-        AuthorId = r.AuthorId.Value,
+        AuthorId = r.AuthorId,
         AuthorName = r.AuthorName,
-        CategoryId = r.CategoryId.Value,
+        CategoryId = r.CategoryId,
         CategoryName = r.CategoryName,
         Tags = r.Tags,
         SubscribeCount = r.SubscribeCount,
+        AccessLevel = r.AccessLevel,
         CreatedAt = r.CreatedAt,
         UpdatedAt = r.UpdatedAt,
     };
