@@ -5,18 +5,19 @@ using Domain.Album.Image;
 using Domain.Api;
 using Domain.Category;
 using Domain.User;
+using Domain.File;
+using Interface.Services;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Orleans.Concurrency;
 using Orleans.Runtime;
 using Query.Albums.Queries;
 using Query.Categories.Queries;
 using Query.Database;
 using Query.Images.Queries;
 using Query.Users.Queries;
-using S3Storage;
-using Silo.Services;
 
 using AlbumGrain = Domain.Album.IAlbumGrain;
 using CategoryGrain = Domain.Category.ICategoryGrain;
@@ -35,9 +36,9 @@ using DomainUserId = Domain.User.UserId;
 using Username = Domain.User.Username;
 using Nickname = Domain.User.Nickname;
 using Biography = Domain.User.Biography;
-using DomainImageFile = Domain.ImageFile;
+using ImageFileKey = Domain.File.ImageFileKey;
 
-namespace Silo.Hubs;
+namespace Interface.Hubs;
 
 public class MainHub : Hub
 {
@@ -67,8 +68,6 @@ public class MainHub : Hub
         if (!existence.IsExist)
             throw new HubException("User not found");
 
-        // Dev mode: no password check, just issue token
-        // Find the user ID from the query database
         await using var db = await _queryDb.CreateDbContextAsync();
         var user = await db.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
         if (user is null)
@@ -197,38 +196,21 @@ public class MainHub : Hub
 
         var imageId = ImageId.GenerateNew();
 
-        // Save to persistent image storage
-        var imagesDir = Path.Combine(AppContext.BaseDirectory, "images");
-        Directory.CreateDirectory(imagesDir);
-        var persistPath = Path.Combine(imagesDir, $"{imageId.Value}.img");
-        await File.WriteAllBytesAsync(persistPath, request.FileBytes);
+        var fileManager = _grains.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var fileKey = await fileManager.UploadAsync(request.FileBytes.AsImmutable(), CancellationToken.None);
 
-        // Also save to temp for grain processing
-        var tmpDir = Path.Combine(Path.GetTempPath(), "sastimg", "images");
-        Directory.CreateDirectory(tmpDir);
-        var filePath = Path.Combine(tmpDir, $"{Guid.NewGuid()}.img");
-        await File.WriteAllBytesAsync(filePath, request.FileBytes);
+        var grain = _grains.GetGrain<IAlbumGrain>(albumId);
+        await grain.AddImage(
+            imageId,
+            new ImageTitle(request.Title),
+            new ImageTags(request.Tags),
+            fileKey);
 
-        try
-        {
-            var grain = _grains.GetGrain<IAlbumGrain>(albumId);
-            await grain.AddImage(
-                imageId,
-                new ImageTitle(request.Title),
-                new ImageTags(request.Tags),
-                new ImageFile(filePath));
-
-            return new ImageResponse(
-                imageId.Value, albumId, request.Title, actor.Id.Value, "unknown",
-                request.Tags, 0, false,
-                DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                $"/images/{imageId.Value}");
-        }
-        finally
-        {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-        }
+        return new ImageResponse(
+            imageId.Value, albumId, request.Title, actor.Id.Value, "unknown",
+            request.Tags, 0, false,
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            $"/images/{imageId.Value}");
     }
 
     [Authorize]
@@ -347,44 +329,18 @@ public class MainHub : Hub
     public async Task UpdateAvatar(byte[] fileBytes)
     {
         var actor = GetActor();
-        var tmpDir = Path.Combine(Path.GetTempPath(), "sastimg", "avatars");
-        Directory.CreateDirectory(tmpDir);
-        var filePath = Path.Combine(tmpDir, $"{Guid.NewGuid()}.img");
-        await File.WriteAllBytesAsync(filePath, fileBytes);
-
-        try
-        {
-            SetActor(actor);
-            var grain = _grains.GetGrain<IUserGrain>(actor.Id.Value);
-            await grain.UpdateAvatar(new ImageFile(filePath));
-        }
-        finally
-        {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-        }
+        SetActor(actor);
+        var grain = _grains.GetGrain<IUserGrain>(actor.Id.Value);
+        await grain.UpdateAvatar(fileBytes.AsImmutable());
     }
 
     [Authorize]
     public async Task UpdateHeader(byte[] fileBytes)
     {
         var actor = GetActor();
-        var tmpDir = Path.Combine(Path.GetTempPath(), "sastimg", "headers");
-        Directory.CreateDirectory(tmpDir);
-        var filePath = Path.Combine(tmpDir, $"{Guid.NewGuid()}.img");
-        await File.WriteAllBytesAsync(filePath, fileBytes);
-
-        try
-        {
-            SetActor(actor);
-            var grain = _grains.GetGrain<IUserGrain>(actor.Id.Value);
-            await grain.UpdateHeader(new ImageFile(filePath));
-        }
-        finally
-        {
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-        }
+        SetActor(actor);
+        var grain = _grains.GetGrain<IUserGrain>(actor.Id.Value);
+        await grain.UpdateHeader(fileBytes.AsImmutable());
     }
 
     // ─── Helpers ─────────────────────────────────────────────────

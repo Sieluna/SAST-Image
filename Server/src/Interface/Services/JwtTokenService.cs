@@ -10,7 +10,7 @@ using Domain.User;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Silo.Services;
+namespace Interface.Services;
 
 public sealed class JwtTokenService(IOptions<AuthOptions> options)
 {

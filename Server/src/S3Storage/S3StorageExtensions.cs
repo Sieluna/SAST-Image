@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Storage.Services;
 
 namespace S3Storage;
 
@@ -14,8 +16,11 @@ public static class S3StorageExtensions
         var options = configuration.GetSection("S3Storage").Get<S3StorageOptions>()
             ?? new S3StorageOptions();
 
-        services.AddSingleton(options);
-        services.AddSingleton<S3StorageService>();
+        services.TryAddSingleton(options);
+        services.TryAddSingleton<S3StorageService>();
+
+        // Replace IImageFileManager with S3 implementation
+        services.AddSingleton<IImageFileManager, S3ImageFileManager>();
 
         if (startRustFs)
         {
