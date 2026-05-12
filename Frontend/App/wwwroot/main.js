@@ -82,6 +82,16 @@ setModuleImports('main.js', {
 
   setEvent,
 
+  localStorageGet: key => localStorage.getItem(key),
+
+  localStorageSet: (key, value) => localStorage.setItem(key, value),
+
+  localStorageRemove: key => localStorage.removeItem(key),
+
+  createObjectURL: (bytes, mimeType) => URL.createObjectURL(new Blob([bytes], { type: mimeType })),
+
+  revokeObjectURL: url => URL.revokeObjectURL(url),
+
   querySelector: selector => document.querySelector(selector),
 
   querySelectorAll: selector => Array.from(document.querySelectorAll(selector)),

@@ -41,6 +41,21 @@ internal static partial class DomInterop
     [JSImport("scheduleFlush", "main.js")]
     public static partial void ScheduleFlush();
 
+    [JSImport("localStorageGet", "main.js")]
+    public static partial string? LocalStorageGet(string key);
+
+    [JSImport("localStorageSet", "main.js")]
+    public static partial void LocalStorageSet(string key, string value);
+
+    [JSImport("localStorageRemove", "main.js")]
+    public static partial void LocalStorageRemove(string key);
+
+    [JSImport("createObjectURL", "main.js")]
+    public static partial string CreateObjectURL(byte[] bytes, string mimeType);
+
+    [JSImport("revokeObjectURL", "main.js")]
+    public static partial void RevokeObjectURL(string url);
+
     [JSImport("querySelector", "main.js")]
     public static partial JSObject? QuerySelector(string selector);
 }

@@ -14,7 +14,7 @@ public sealed record ClientOptions
     /// Storage backend for persisting JWT tokens.
     /// Defaults to <see cref="FileStorage"/> rooted at the assembly directory.
     /// </summary>
-    public IStorage Storage { get; init; } = new FileStorage();
+    public IStorage Storage { get; init; } = new MemoryStorage();
 
     /// <summary>
     /// Optional pre-configured HttpClient. When set, <see cref="BaseUrl"/> is ignored.

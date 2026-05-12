@@ -18,6 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Client\Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Remove="obj_desktop\**" />
     <EmbeddedResource Remove="obj_desktop\**" />
     <None Remove="obj_desktop\**" />

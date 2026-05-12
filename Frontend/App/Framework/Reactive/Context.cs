@@ -7,13 +7,12 @@ namespace App.Framework.Reactive;
 public sealed class Context<T>
     where T : class
 {
-    public T DefaultValue { get; }
+    public T? DefaultValue { get; }
 
-    public Context(T defaultValue) => DefaultValue = defaultValue;
+    internal Context(T? defaultValue) => DefaultValue = defaultValue;
 }
 
 public static class Context
 {
-    /// <summary>Create a new context with the given default value.</summary>
-    public static Context<T> Create<T>(T defaultValue) where T : class => new(defaultValue);
+    public static Context<T> Create<T>(T? defaultValue = null) where T : class => new(defaultValue);
 }

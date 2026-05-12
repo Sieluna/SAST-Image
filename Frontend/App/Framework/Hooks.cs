@@ -5,7 +5,7 @@ namespace App.Framework;
 /// <summary>React-like hooks backed by the reactive core.</summary>
 public static class Hooks
 {
-    /// <summary>Create or reuse reactive state. Reading Value auto-tracks.</summary>
+    /// <summary>Create or reuse reactive state. Setter marks component dirty.</summary>
     public static (T value, Action<T> setter) UseState<T>(T initial) where T : notnull
     {
         var comp = ComponentInstance.Current
@@ -16,11 +16,11 @@ public static class Hooks
         {
             var state = new State<T>(initial);
             comp.HookStates.Add(state);
-            return (state.Value, v => state.Set(v));
+            return (state.Value, v => { state.Set(v); comp.MarkDirty(); });
         }
 
         var existing = (State<T>)comp.HookStates[idx]!;
-        return (existing.Value, v => existing.Set(v));
+        return (existing.Value, v => { existing.Set(v); comp.MarkDirty(); });
     }
 
     /// <summary>Run side effect after render. Auto-tracked when deps is null.</summary>
@@ -86,7 +86,9 @@ public static class Hooks
             current = current.Parent;
         }
 
-        return ctx.DefaultValue;
+        throw new InvalidOperationException(
+            $"No provider found for context '{typeof(Context<T>).GenericTypeArguments[0].Name}'. " +
+            "Wrap the consuming component tree in a Provide(...) call.");
     }
 
     private static bool DepsEqual(object?[]? a, object?[]? b)

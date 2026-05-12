@@ -55,6 +55,7 @@ internal static class Renderer
     private static VNode CreateNode(
         VNode node, JSObject parentDom, JSObject? before, ComponentInstance parentComp)
     {
+        if (node is null) return null!;
         switch (node)
         {
             case VElement el:
@@ -104,6 +105,7 @@ internal static class Renderer
 
     private static void RemoveNode(VNode node, JSObject parentDom)
     {
+        if (node is null) return;
         switch (node)
         {
             case VElement el:
@@ -288,7 +290,7 @@ internal static class Renderer
     private static ComponentInstance GetOrCreateInstance(
         VComponent old, VComponent comp, ComponentInstance parentComp)
     {
-        var typeHash = comp.RenderFn.GetHashCode();
+        var typeHash = comp.RenderFn.Method.GetHashCode();
         var key = comp.Key;
 
         if (parentComp.ChildInstances.TryGetValue((typeHash, key), out var existing))
