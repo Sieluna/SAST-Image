@@ -1,3 +1,8 @@
+using Domain.Album;
+using Domain.Album.Image;
+using Domain.Category;
+using Domain.User;
+
 namespace Domain.Api;
 
 public sealed record JwtTokenResponse(
@@ -6,12 +11,12 @@ public sealed record JwtTokenResponse(
     long ExpireIn);
 
 public sealed record AlbumResponse(
-    long Id,
+    AlbumId Id,
     string Title,
     string Description,
-    long AuthorId,
+    UserId AuthorId,
     string AuthorName,
-    long CategoryId,
+    CategoryId CategoryId,
     string CategoryName,
     string[] Tags,
     int SubscribeCount,
@@ -23,10 +28,10 @@ public sealed record AlbumListResponse(
     string? NextCursor);
 
 public sealed record ImageResponse(
-    long Id,
-    long AlbumId,
+    ImageId Id,
+    AlbumId AlbumId,
     string Title,
-    long UploaderId,
+    UserId UploaderId,
     string UploaderName,
     string[] Tags,
     int Likes,
@@ -34,12 +39,12 @@ public sealed record ImageResponse(
     long UploadedAt);
 
 public sealed record CategoryResponse(
-    long Id,
+    CategoryId Id,
     string Name,
     string Description);
 
 public sealed record UserProfileResponse(
-    long Id,
+    UserId Id,
     string Username,
     string Nickname,
     string Biography,

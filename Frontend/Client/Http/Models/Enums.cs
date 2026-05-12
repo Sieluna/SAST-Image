@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Client.Models;
+namespace Client.Http.Models;
 
 [JsonConverter(typeof(JsonStringEnumConverter<AccessLevel>))]
 public enum AccessLevel : byte

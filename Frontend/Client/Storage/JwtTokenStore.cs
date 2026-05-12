@@ -1,5 +1,6 @@
 using System.Text.Json;
-using Client.Models;
+using Client.Http;
+using Client.Http.Models;
 
 namespace Client.Storage;
 

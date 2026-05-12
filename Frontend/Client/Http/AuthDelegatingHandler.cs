@@ -1,9 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
-using Client.Models;
+using Client.Http.Models;
 using Client.Storage;
 
-namespace Client;
+namespace Client.Http;
 
 /// <summary>
 /// DelegatingHandler that injects the stored JWT access token into every request

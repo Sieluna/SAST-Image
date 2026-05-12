@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace Client;
+namespace Client.Http;
 
 public class ClientException : Exception
 {

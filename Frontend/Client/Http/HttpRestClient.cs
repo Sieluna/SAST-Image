@@ -1,13 +1,15 @@
-using Client.Apis;
+using Client.Http.Apis;
+using Client.Http.Models;
 using Client.Storage;
 
-namespace Client;
+namespace Client.Http;
 
 /// <summary>
-/// Typed client for the SAST-Image API. Provides access to all API groups
-/// and manages authentication state transparently via an <see cref="IStorage"/> backend.
+/// HTTP REST client for the SAST-Image Lite API (deprecated).
+/// Provides access to all API groups and manages authentication state
+/// transparently via an <see cref="IStorage"/> backend.
 /// </summary>
-public sealed class Client : IDisposable
+public sealed class HttpRestClient : IDisposable
 {
     private readonly HttpClient _http;
     private readonly JwtTokenStore _store;
@@ -19,7 +21,7 @@ public sealed class Client : IDisposable
     public ImageApi Image { get; }
     public UserApi User { get; }
 
-    public Client(ClientOptions options)
+    public HttpRestClient(ClientOptions options)
     {
         _store = new JwtTokenStore(options.Storage);
 
@@ -52,13 +54,13 @@ public sealed class Client : IDisposable
     /// <summary>
     /// Shortcut: base URL (default <c>http://localhost:5265</c>) + default <see cref="FileStorage"/>.
     /// </summary>
-    public Client(string baseUrl = "http://localhost:5265")
+    public HttpRestClient(string baseUrl = "http://localhost:5265")
         : this(new ClientOptions { BaseUrl = baseUrl }) { }
 
     /// <summary>
     /// Shortcut: default base URL + custom storage.
     /// </summary>
-    public Client(IStorage storage)
+    public HttpRestClient(IStorage storage)
         : this(new ClientOptions { Storage = storage }) { }
 
     /// <summary>

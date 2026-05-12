@@ -1,4 +1,4 @@
-namespace Client.Models;
+namespace Client.Http.Models;
 
 public sealed record JwtToken(
     string AccessToken,

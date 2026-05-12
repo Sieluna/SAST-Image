@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
-using Client.Models;
+using Client.Http.Models;
 
-namespace Client.Apis;
+namespace Client.Http.Apis;
 
 public sealed class CategoryApi
 {

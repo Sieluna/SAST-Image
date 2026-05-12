@@ -1,6 +1,6 @@
 using Client.Storage;
 
-namespace Client;
+namespace Client.Http;
 
 public sealed record ClientOptions
 {

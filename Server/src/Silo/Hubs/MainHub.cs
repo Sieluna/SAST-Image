@@ -210,7 +210,7 @@ public class MainHub : Hub
                 new ImageFile(filePath));
 
             return new ImageResponse(
-                imageId.Value, albumId, request.Title, actor.Id.Value, "unknown",
+                imageId, albumId, request.Title, actor.Id, "unknown",
                 request.Tags, 0, false,
                 DateTimeOffset.UtcNow.ToUnixTimeSeconds());
         }
@@ -249,10 +249,14 @@ public class MainHub : Hub
     }
 
     [Authorize]
-    public async Task<ImageDto[]> GetImages(long albumId, long? cursor)
+    public async Task<ImageResponse[]> GetImages(long albumId, long? cursor)
     {
         var actor = GetActor();
-        return await _mediator.Send(new ImagesQuery(null, albumId, cursor, actor));
+        var images = await _mediator.Send(new ImagesQuery(null, albumId, cursor, actor));
+        return images.Select(i => new ImageResponse(
+            new ImageId(i.Id), new AlbumId(i.AlbumId), i.Title, new UserId(i.UploaderId), "unknown",
+            i.Tags, i.Likes, i.Requester.Liked,
+            new DateTimeOffset(i.UploadedAt).ToUnixTimeSeconds())).ToArray();
     }
 
     // ─── Categories ─────────────────────────────────────────────

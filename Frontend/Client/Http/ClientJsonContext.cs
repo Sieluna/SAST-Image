@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
-using Client.Models;
+using Client.Http.Models;
 
-namespace Client;
+namespace Client.Http;
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 [JsonSerializable(typeof(RegisterRequest))]
