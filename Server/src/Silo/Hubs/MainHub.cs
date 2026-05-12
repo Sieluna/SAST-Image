@@ -15,6 +15,7 @@ using Query.Categories.Queries;
 using Query.Database;
 using Query.Images.Queries;
 using Query.Users.Queries;
+using S3Storage;
 using Silo.Services;
 
 using AlbumGrain = Domain.Album.IAlbumGrain;

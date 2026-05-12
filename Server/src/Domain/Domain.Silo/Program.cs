@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Orleans.Configuration;
 using Orleans.Dashboard;
 using Query;
+using S3Storage;
 using Silo.Hubs;
 using Silo.Services;
 using Storage;
@@ -47,6 +48,7 @@ builder.Services.AddSignalR().AddJsonProtocol();
 
 builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection("Auth"));
 builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddS3Storage(builder.Configuration, startRustFs: false);
 
 builder.UseOrleans(builder =>
 {
@@ -78,13 +80,12 @@ app.MapDefaultEndpoints();
 app.MapHub<MainHub>("/hub");
 app.UseHttpsRedirection();
 
-// Image file serving
-app.MapGet("/images/{id}", async (long id) =>
+// Image file serving via S3
+app.MapGet("/images/{id}", async (long id, S3StorageService storage) =>
 {
-    var path = Path.Combine(AppContext.BaseDirectory, "images", $"{id}.img");
-    if (!File.Exists(path))
+    var bytes = await storage.GetBytesAsync($"images/{id}");
+    if (bytes is null)
         return Results.NotFound();
-    var bytes = await File.ReadAllBytesAsync(path);
     return Results.File(bytes, "image/webp");
 });
 
