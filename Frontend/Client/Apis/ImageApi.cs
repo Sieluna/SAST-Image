@@ -8,11 +8,6 @@ public sealed class ImageApi
 {
     private readonly HttpClient _http;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
-
     internal ImageApi(HttpClient http) => _http = http;
 
     /// <summary>
@@ -35,7 +30,7 @@ public sealed class ImageApi
 
         var metadata = JsonSerializer.Serialize(
             new AddImageMetadata(title, tags),
-            JsonOptions);
+            ClientJsonContext.Default.AddImageMetadata);
         content.Add(new StringContent(metadata), "metadata");
 
         var response = await _http.PostAsync(
@@ -44,7 +39,8 @@ public sealed class ImageApi
             cancellationToken);
 
         response.EnsureSuccess();
-        return await response.Content.ReadFromJsonAsync<long>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync(
+            ClientJsonContext.Default.Int64, cancellationToken);
     }
 
     /// <summary>PATCH /api/v1/albums/{albumId}/images/{imageId} (auth required)</summary>
@@ -61,7 +57,7 @@ public sealed class ImageApi
         {
             Content = JsonContent.Create(
                 new UpdateImageRequest(title, tags),
-                options: JsonOptions),
+                ClientJsonContext.Default.UpdateImageRequest),
         };
 
         var response = await _http.SendAsync(request, cancellationToken);
@@ -159,7 +155,7 @@ public sealed class ImageApi
 
         response.EnsureSuccess();
         return await response.Content
-            .ReadFromJsonAsync<ImageDto[]>(JsonOptions, cancellationToken)
+            .ReadFromJsonAsync(ClientJsonContext.Default.ImageDtoArray, cancellationToken)
             .ConfigureAwait(false) ?? [];
     }
 
@@ -200,7 +196,7 @@ public sealed class ImageApi
 
         response.EnsureSuccess();
         return await response.Content
-            .ReadFromJsonAsync<ImageDto[]>(JsonOptions, cancellationToken)
+            .ReadFromJsonAsync(ClientJsonContext.Default.ImageDtoArray, cancellationToken)
             .ConfigureAwait(false) ?? [];
     }
 }

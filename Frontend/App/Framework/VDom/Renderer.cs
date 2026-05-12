@@ -164,6 +164,7 @@ internal static class Renderer
         UpdateProps(old.Props, el.Props, el.DomNode!);
 
         // Reconcile children by index (no keys for element children)
+        var ownDom = el.DomNode!;
         int maxLen = Math.Max(old.Children.Count, el.Children.Count);
         for (int i = 0; i < maxLen; i++)
         {
@@ -191,7 +192,7 @@ internal static class Renderer
                 }
             }
 
-            ReconcileWithInsert(oldChild, newChild, parentDom, parentComp, before);
+            ReconcileWithInsert(oldChild, newChild, ownDom, parentComp, before);
         }
 
         return el;

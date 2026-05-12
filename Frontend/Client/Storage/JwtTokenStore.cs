@@ -12,11 +12,6 @@ public sealed class JwtTokenStore
     private const string TokenKey = "sastimg.jwt";
     private readonly IStorage _storage;
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
-
     public JwtTokenStore(IStorage storage)
     {
         _storage = storage;
@@ -30,7 +25,7 @@ public sealed class JwtTokenStore
 
         try
         {
-            return JsonSerializer.Deserialize<JwtToken>(json, JsonOptions);
+            return JsonSerializer.Deserialize(json, ClientJsonContext.Default.JwtToken);
         }
         catch
         {
@@ -40,7 +35,7 @@ public sealed class JwtTokenStore
 
     public Task SaveAsync(JwtToken token, CancellationToken cancellationToken = default)
     {
-        var json = JsonSerializer.Serialize(token, JsonOptions);
+        var json = JsonSerializer.Serialize(token, ClientJsonContext.Default.JwtToken);
         return _storage.SetAsync(TokenKey, json, cancellationToken);
     }
 

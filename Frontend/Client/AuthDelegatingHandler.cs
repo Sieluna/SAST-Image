@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using Client.Models;
 using Client.Storage;
 
@@ -14,11 +13,6 @@ internal sealed class AuthDelegatingHandler : DelegatingHandler
 {
     private readonly JwtTokenStore _store;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
 
     public AuthDelegatingHandler(JwtTokenStore store)
     {
@@ -58,7 +52,7 @@ internal sealed class AuthDelegatingHandler : DelegatingHandler
             {
                 Content = JsonContent.Create(
                     new RefreshTokenRequest(token.RefreshToken),
-                    options: JsonOptions
+                    ClientJsonContext.Default.RefreshTokenRequest
                 ),
             };
 
@@ -70,7 +64,7 @@ internal sealed class AuthDelegatingHandler : DelegatingHandler
             }
 
             var newToken = await refreshResponse.Content
-                .ReadFromJsonAsync<JwtToken>(JsonOptions, cancellationToken)
+                .ReadFromJsonAsync(ClientJsonContext.Default.JwtToken, cancellationToken)
                 .ConfigureAwait(false);
 
             if (newToken is null)

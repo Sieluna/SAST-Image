@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using Client.Models;
 
 namespace Client.Apis;
@@ -7,11 +6,6 @@ namespace Client.Apis;
 public sealed class CategoryApi
 {
     private readonly HttpClient _http;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
 
     internal CategoryApi(HttpClient http) => _http = http;
 
@@ -24,11 +18,12 @@ public sealed class CategoryApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/categories",
             new CreateCategoryRequest(name, description),
-            JsonOptions,
+            ClientJsonContext.Default.CreateCategoryRequest,
             cancellationToken);
 
         response.EnsureSuccess();
-        return await response.Content.ReadFromJsonAsync<long>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync(
+            ClientJsonContext.Default.Int64, cancellationToken);
     }
 
     /// <summary>PATCH /api/v1/categories/{id} (admin required)</summary>
@@ -44,7 +39,7 @@ public sealed class CategoryApi
         {
             Content = JsonContent.Create(
                 new UpdateCategoryRequest(name, description),
-                options: JsonOptions),
+                ClientJsonContext.Default.UpdateCategoryRequest),
         };
 
         var response = await _http.SendAsync(request, cancellationToken);
@@ -60,7 +55,7 @@ public sealed class CategoryApi
 
         response.EnsureSuccess();
         return await response.Content
-            .ReadFromJsonAsync<CategoryDto[]>(JsonOptions, cancellationToken)
+            .ReadFromJsonAsync(ClientJsonContext.Default.CategoryDtoArray, cancellationToken)
             .ConfigureAwait(false) ?? [];
     }
 }

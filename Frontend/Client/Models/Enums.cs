@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace Client.Models;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<AccessLevel>))]
 public enum AccessLevel : byte
 {
     Private = 0,

@@ -1,6 +1,4 @@
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
 using Client.Models;
 using Client.Storage;
 
@@ -10,11 +8,6 @@ public sealed class AccountApi
 {
     private readonly HttpClient _http;
     private readonly JwtTokenStore _store;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
 
     internal AccountApi(HttpClient http, JwtTokenStore store)
     {
@@ -30,13 +23,13 @@ public sealed class AccountApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/account/register",
             request,
-            JsonOptions,
+            ClientJsonContext.Default.RegisterRequest,
             cancellationToken);
 
         response.EnsureSuccess();
 
         var token = (await response.Content
-            .ReadFromJsonAsync<JwtToken>(JsonOptions, cancellationToken))!;
+            .ReadFromJsonAsync(ClientJsonContext.Default.JwtToken, cancellationToken))!;
 
         await _store.SaveAsync(token, cancellationToken);
         return token;
@@ -50,7 +43,7 @@ public sealed class AccountApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/account/register/code",
             new SendRegistryCodeRequest(email),
-            JsonOptions,
+            ClientJsonContext.Default.SendRegistryCodeRequest,
             cancellationToken);
 
         response.EnsureSuccess();
@@ -65,13 +58,13 @@ public sealed class AccountApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/account/login",
             new LoginRequest(username, password),
-            JsonOptions,
+            ClientJsonContext.Default.LoginRequest,
             cancellationToken);
 
         response.EnsureSuccess();
 
         var token = (await response.Content
-            .ReadFromJsonAsync<JwtToken>(JsonOptions, cancellationToken))!;
+            .ReadFromJsonAsync(ClientJsonContext.Default.JwtToken, cancellationToken))!;
 
         await _store.SaveAsync(token, cancellationToken);
         return token;
@@ -85,7 +78,7 @@ public sealed class AccountApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/account/refresh",
             new RefreshTokenRequest(refreshToken),
-            JsonOptions,
+            ClientJsonContext.Default.RefreshTokenRequest,
             cancellationToken);
 
         if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -94,7 +87,7 @@ public sealed class AccountApi
         response.EnsureSuccess();
 
         var token = (await response.Content
-            .ReadFromJsonAsync<JwtToken>(JsonOptions, cancellationToken))!;
+            .ReadFromJsonAsync(ClientJsonContext.Default.JwtToken, cancellationToken))!;
 
         await _store.SaveAsync(token, cancellationToken);
         return token;
@@ -109,7 +102,7 @@ public sealed class AccountApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/account/reset/password",
             new ResetPasswordRequest(oldPassword, newPassword),
-            JsonOptions,
+            ClientJsonContext.Default.ResetPasswordRequest,
             cancellationToken);
 
         response.EnsureSuccess();
@@ -123,7 +116,7 @@ public sealed class AccountApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/account/reset/username",
             new ResetUsernameRequest(username),
-            JsonOptions,
+            ClientJsonContext.Default.ResetUsernameRequest,
             cancellationToken);
 
         response.EnsureSuccess();
@@ -139,7 +132,8 @@ public sealed class AccountApi
             cancellationToken);
 
         response.EnsureSuccess();
-        return await response.Content.ReadFromJsonAsync<bool>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync(
+            ClientJsonContext.Default.Boolean, cancellationToken);
     }
 
     /// <summary>GET /api/v1/account/oauth/github — returns the redirect URL for the GitHub OAuth flow.</summary>

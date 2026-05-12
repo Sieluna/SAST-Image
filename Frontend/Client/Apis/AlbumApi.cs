@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using Client.Models;
 
 namespace Client.Apis;
@@ -7,11 +6,6 @@ namespace Client.Apis;
 public sealed class AlbumApi
 {
     private readonly HttpClient _http;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
 
     internal AlbumApi(HttpClient http) => _http = http;
 
@@ -23,11 +17,12 @@ public sealed class AlbumApi
         var response = await _http.PostAsJsonAsync(
             "api/v1/albums",
             request,
-            JsonOptions,
+            ClientJsonContext.Default.CreateAlbumRequest,
             cancellationToken);
 
         response.EnsureSuccess();
-        return await response.Content.ReadFromJsonAsync<long>(cancellationToken: cancellationToken);
+        return await response.Content.ReadFromJsonAsync(
+            ClientJsonContext.Default.Int64, cancellationToken);
     }
 
     /// <summary>POST /api/v1/albums/{id}/remove (auth required)</summary>
@@ -61,7 +56,7 @@ public sealed class AlbumApi
         var response = await _http.PostAsJsonAsync(
             $"api/v1/albums/{albumId}/accessLevel",
             new UpdateAccessLevelRequest(accessLevel),
-            JsonOptions,
+            ClientJsonContext.Default.UpdateAccessLevelRequest,
             cancellationToken);
 
         response.EnsureSuccess();
@@ -81,7 +76,7 @@ public sealed class AlbumApi
         {
             Content = JsonContent.Create(
                 new UpdateAlbumInfoRequest(title, description, tags),
-                options: JsonOptions),
+                ClientJsonContext.Default.UpdateAlbumInfoRequest),
         };
 
         var response = await _http.SendAsync(request, cancellationToken);
@@ -167,7 +162,7 @@ public sealed class AlbumApi
 
         response.EnsureSuccess();
         return await response.Content
-            .ReadFromJsonAsync<AlbumDto[]>(JsonOptions, cancellationToken)
+            .ReadFromJsonAsync(ClientJsonContext.Default.AlbumDtoArray, cancellationToken)
             .ConfigureAwait(false) ?? [];
     }
 
@@ -181,7 +176,7 @@ public sealed class AlbumApi
 
         response.EnsureSuccess();
         return await response.Content
-            .ReadFromJsonAsync<RemovedAlbumDto[]>(JsonOptions, cancellationToken)
+            .ReadFromJsonAsync(ClientJsonContext.Default.RemovedAlbumDtoArray, cancellationToken)
             .ConfigureAwait(false) ?? [];
     }
 

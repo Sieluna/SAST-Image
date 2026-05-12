@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json;
 using Client.Models;
 
 namespace Client.Apis;
@@ -7,11 +6,6 @@ namespace Client.Apis;
 public sealed class UserApi
 {
     private readonly HttpClient _http;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-    };
 
     internal UserApi(HttpClient http) => _http = http;
 
@@ -27,7 +21,7 @@ public sealed class UserApi
         {
             Content = JsonContent.Create(
                 new UpdateProfileRequest(nickname, biography),
-                options: JsonOptions),
+                ClientJsonContext.Default.UpdateProfileRequest),
         };
 
         var response = await _http.SendAsync(request, cancellationToken);
@@ -120,6 +114,6 @@ public sealed class UserApi
 
         response.EnsureSuccess();
         return await response.Content
-            .ReadFromJsonAsync<UserProfileDto>(JsonOptions, cancellationToken);
+            .ReadFromJsonAsync(ClientJsonContext.Default.UserProfileDto, cancellationToken);
     }
 }
