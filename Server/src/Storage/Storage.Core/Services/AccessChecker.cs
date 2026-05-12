@@ -15,7 +15,7 @@ public interface IAccessChecker
         where TId : ITypedId<TId>;
 }
 
-internal sealed class AccessChecker(IDbContextFactory<StorageDbContext> factory) : IAccessChecker
+internal sealed class AccessChecker(StorageDbContext context) : IAccessChecker
 {
     public async ValueTask<bool> HasAccessAsync<TId>(
         Actor user,
@@ -24,8 +24,6 @@ internal sealed class AccessChecker(IDbContextFactory<StorageDbContext> factory)
     )
         where TId : ITypedId<TId>
     {
-        await using var context = await factory.CreateDbContextAsync(cancellationToken);
-
         var hasAccess = await context
             .AccessControlList.AsNoTracking()
             .Where(a => a.ResourceId == id.Value)

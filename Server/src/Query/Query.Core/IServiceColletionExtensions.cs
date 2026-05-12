@@ -19,7 +19,7 @@ public static class IServiceColletionExtensions
                 options.SchemaName = "query";
             });
 
-            services.AddDbContextFactory<QueryDbContext>(options =>
+            services.AddDbContextPool<QueryDbContext>(options =>
                 options
                     .UseNpgsql(configuration.GetConnectionString("Query"))
                     .UseSnakeCaseNamingConvention()

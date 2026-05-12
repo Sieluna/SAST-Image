@@ -16,11 +16,11 @@ public static class ServiceCollectionExtensions
 
             services.Configure<StorageOptions>(configuration.GetRequiredSection("Storage"));
 
-            services.AddSingleton<IAccessChecker, AccessChecker>();
+            services.AddScoped<IAccessChecker, AccessChecker>();
             services.AddSingleton<ICompressProcessor, LocalCompressProcessor>();
             services.AddSingleton<IImageFileManager, LocalImageFileManager>();
 
-            services.AddDbContextFactory<StorageDbContext>(options =>
+            services.AddDbContextPool<StorageDbContext>(options =>
                 options
                     .UseNpgsql(configuration.GetConnectionString("Storage"))
                     .UseSnakeCaseNamingConvention()
@@ -29,6 +29,7 @@ public static class ServiceCollectionExtensions
             services.AddMediator(options =>
             {
                 options.GenerateTypesAsInternal = true;
+                options.ServiceLifetime = ServiceLifetime.Scoped;
             });
 
             return services;
