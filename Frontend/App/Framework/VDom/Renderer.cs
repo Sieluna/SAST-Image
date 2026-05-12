@@ -1,12 +1,14 @@
 using System.Runtime.InteropServices.JavaScript;
 using App.Framework.Interop;
-using App.Framework.Interop;
 
 namespace App.Framework;
 
 /// <summary>Recursive VNode-to-DOM reconciler via DomInterop.</summary>
 internal static class Renderer
 {
+    // Keep delegates alive, JSImport marshalling may not prevent GC.
+    private static readonly Dictionary<(JSObject Element, string Type), Delegate> s_events = [];
+
     /// <summary>Reconcile oldNode with newNode, mutating DOM under parentDom.</summary>
     public static VNode? Reconcile(
         VNode? oldNode,
@@ -107,9 +109,11 @@ internal static class Renderer
             case VElement el:
                 if (el.DomNode != null)
                 {
-                    // Remove children from DOM (they'll be cleaned up by GC)
                     foreach (var child in el.Children)
                         RemoveNode(child, el.DomNode);
+                    // Release event delegates
+                    var keys = s_events.Keys.Where(k => k.Element == el.DomNode).ToList();
+                    foreach (var k in keys) s_events.Remove(k);
                     DomInterop.RemoveChild(parentDom, el.DomNode);
                 }
                 break;
@@ -389,9 +393,16 @@ internal static class Renderer
         {
             var eventType = name[2..].ToLowerInvariant();
             if (value is Action handler)
-                DomInterop.SetEvent(dom, eventType, _ => handler());
+            {
+                Action<JSObject> wrapped = _ => handler();
+                s_events[(dom, eventType)] = wrapped;
+                DomInterop.SetEvent(dom, eventType, wrapped);
+            }
             else if (value is Action<JSObject> typedHandler)
+            {
+                s_events[(dom, eventType)] = typedHandler;
                 DomInterop.SetEvent(dom, eventType, typedHandler);
+            }
             return;
         }
 
@@ -421,6 +432,7 @@ internal static class Renderer
         if (name.StartsWith("on"))
         {
             var eventType = name[2..].ToLowerInvariant();
+            s_events.Remove((dom, eventType));
             DomInterop.SetEvent(dom, eventType, null!);
         }
         else

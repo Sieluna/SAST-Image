@@ -106,7 +106,7 @@ public static class Rx
 {
     private static readonly Scope s_globalScope = new();
 
-/// <summary>Create an auto-tracking effect, owned by the current scope.</summary>
+    /// <summary>Create an auto-tracking effect, owned by the current scope.</summary>
     public static void CreateEffect(Action fn)
     {
         var effect = new Effect(fn);
@@ -114,7 +114,7 @@ public static class Rx
         effect.Execute();
     }
 
-/// <summary>Create a reactive root scope that owns nested effects.</summary>
+    /// <summary>Create a reactive root scope that owns nested effects.</summary>
     public static Scope CreateRoot(Action fn)
     {
         var prevOwner = Effect.OwnerScope;
@@ -133,7 +133,23 @@ public static class Rx
         return scope;
     }
 
-/// <summary>Run fn outside tracking context — state reads won't create deps.</summary>
+    /// <summary>Run action outside tracking context — state reads won't create deps.</summary>
+    public static void Untrack(Action action)
+    {
+        var savedStack = Effect.ContextStack;
+        Effect.ContextStack = null;
+
+        try
+        {
+            action();
+        }
+        finally
+        {
+            Effect.ContextStack = savedStack;
+        }
+    }
+
+    /// <summary>Run fn outside tracking context — state reads won't create deps.</summary>
     public static T Untrack<T>(Func<T> fn)
     {
         var savedStack = Effect.ContextStack;
@@ -148,7 +164,7 @@ public static class Rx
         }
     }
 
-/// <summary>Register cleanup that runs on effect re-run or scope disposal.</summary>
+    /// <summary>Register cleanup that runs on effect re-run or scope disposal.</summary>
     public static void OnCleanup(Action fn)
     {
         Effect.OwnerScope?.AddCleanup(fn);

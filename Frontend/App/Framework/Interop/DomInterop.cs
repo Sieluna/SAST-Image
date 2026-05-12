@@ -43,9 +43,4 @@ internal static partial class DomInterop
 
     [JSImport("querySelector", "main.js")]
     public static partial JSObject? QuerySelector(string selector);
-
-    [JSImport("setTimeout", "main.js")]
-    public static partial int SetTimeout(
-        [JSMarshalAs<JSType.Function<JSType.Void>>] Action callback,
-        int delayMs);
 }

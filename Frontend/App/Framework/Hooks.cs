@@ -44,12 +44,7 @@ public static class Hooks
             {
                 if (deps == null)
                 {
-                    // Auto-tracking: create a nested Effect.
-                    var eff = new Effect(() =>
-                    {
-                        Rx.OnCleanup(setup);
-                        setup();
-                    });
+                    var eff = new Effect(setup);
                     eff.Execute();
                 }
                 else

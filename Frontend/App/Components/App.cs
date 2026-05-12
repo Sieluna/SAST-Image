@@ -8,10 +8,10 @@ public class RootApp : IComponent
 {
     public VNode Render()
     {
-        return H("div", new { @class = "app" },
-            H("h1", "Sast Image — Reactive Framework"),
+        return H("div", new Dictionary<string, object?> { ["class"] = "app" },
+            H("h1", null, new VText("Sast Image — Reactive Framework")),
             H<Counter>("counter-1"),
-            H("footer", "Built with a minimal hook + context reactive core.")
+            H("footer", null, new VText("Built with a minimal hook + context reactive core."))
         );
     }
 }
@@ -23,10 +23,12 @@ file class Counter : IComponent
     {
         var (count, setCount) = UseState(0);
 
-        return H("div", new { @class = "counter" },
-            H("p", $"Count: {count}"),
-            H("button", new { onclick = (Action)(() => setCount(count + 1)) }, H("text", "+1")),
-            H("button", new { onclick = (Action)(() => setCount(0)) }, H("text", "Reset"))
+        return H("div", new Dictionary<string, object?> { ["class"] = "counter" },
+            H("p", null, new VText($"Count: {count}")),
+            H("button", new Dictionary<string, object?> { ["onclick"] = (Action)(() => setCount(count + 1)) },
+                new VText("+1")),
+            H("button", new Dictionary<string, object?> { ["onclick"] = (Action)(() => setCount(0)) },
+                new VText("Reset"))
         );
     }
 }

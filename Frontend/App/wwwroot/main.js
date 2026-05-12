@@ -113,7 +113,4 @@ function scheduleFlush() {
   }
 }
 
-// Expose scheduleFlush so C# can trigger flush on demand.
-globalThis.__sastScheduleFlush = scheduleFlush;
-
 await runMain();

@@ -25,21 +25,18 @@ public static class WebApp
 
     // ── h() helpers ──────────────────────────────────────────────────
 
-    /// <summary>Create an element with text content.</summary>
-    public static VNode H(string tag, string text)
-        => new VElement(tag, new(), new VNode[] { new VText(text) });
-
-    /// <summary>Create an element with children.</summary>
-    public static VNode H(string tag, params VNode[] children)
-        => new VElement(tag, new(), children);
-
-    /// <summary>Create an element with props and children.</summary>
-    public static VNode H(string tag, object props, params VNode[] children)
+    /// <summary>Create an element with optional props and children.</summary>
+    public static VNode H(
+        string tag,
+        IReadOnlyDictionary<string, object?>? props = null,
+        params VNode[] children)
     {
-        var dict = new Dictionary<string, object?>();
-        foreach (var pi in props.GetType().GetProperties())
-            dict[pi.Name] = pi.GetValue(props);
-        return new VElement(tag, dict, children);
+        return new VElement(
+            tag,
+            props is null
+                ? new Dictionary<string, object?>()
+                : new Dictionary<string, object?>(props),
+            children);
     }
 
     /// <summary>Create a component from a render function.</summary>

@@ -10,7 +10,7 @@
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <WasmEnableSIMD>true</WasmEnableSIMD>
-    <WasmEnableThreads>true</WasmEnableThreads>
+    <WasmEnableThreads>false</WasmEnableThreads>
   </PropertyGroup>
 
   <ItemGroup>
