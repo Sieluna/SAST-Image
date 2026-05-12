@@ -20,6 +20,7 @@ builder.UseOrleans(builder =>
 var app = builder.Build();
 
 app.MapOrleansDashboard();
+
 app.MapDefaultEndpoints();
 app.UseHttpsRedirection();
 

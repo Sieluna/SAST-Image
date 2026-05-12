@@ -8,6 +8,7 @@
   <Project Path="src/Query.Api/Query.Api.csproj" />
   <Project Path="src/Query/Query.csproj" />
   <Project Path="src/Silo/Silo.csproj" />
+  <Project Path="src/Storage.Api/Storage.Api.csproj" />
   <Project Path="src/Storage/Storage.csproj" />
 
 </Solution>

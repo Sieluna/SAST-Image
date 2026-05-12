@@ -52,35 +52,38 @@ public sealed partial class QueryService(
 
             try
             {
-                await mediator.Send(e.Value, cancellationToken);
-                await context.SaveChangesAsync(cancellationToken);
+                try
+                {
+                    await mediator.Send(e.Value, cancellationToken);
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+                catch (DbUpdateException ex) when (ex is not DbUpdateConcurrencyException)
+                {
+                    context.ChangeTracker.Clear();
+                    Checkpoint failed = new()
+                    {
+                        Id = e.EventId,
+                        Timestamp = e.Timestamp,
+                        GrainId = e.GrainId,
+                        Status = CheckpointStatus.Failed,
+                    };
+                    points.Add(failed);
+                    await context.Checkpoints.AddAsync(failed, cancellationToken);
+                    await context.SaveChangesAsync(cancellationToken);
+                    LogFailedMessage(logger, ex, e.EventId);
+                }
+                finally
+                {
+                    context.ChangeTracker.Clear();
+                    context.Checkpoints.Attach(main);
+                    main.Timestamp = e.Timestamp;
+                    await context.SaveChangesAsync(cancellationToken);
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
-                // Silence and skip.
-                return;
-            }
-            catch (Exception ex)
-            {
-                context.ChangeTracker.Clear();
-                Checkpoint failed = new()
-                {
-                    Id = e.EventId,
-                    Timestamp = e.Timestamp,
-                    GrainId = e.GrainId,
-                    Status = CheckpointStatus.Failed,
-                };
-                points.Add(failed);
-                await context.Checkpoints.AddAsync(failed, cancellationToken);
-                await context.SaveChangesAsync(cancellationToken);
-                LogFailedMessage(logger, ex, e.EventId);
-            }
-            finally
-            {
-                context.ChangeTracker.Clear();
-                context.Checkpoints.Attach(main);
-                main.Timestamp = e.Timestamp;
-                await context.SaveChangesAsync(cancellationToken);
+                // Silence
+                continue;
             }
         }
     }

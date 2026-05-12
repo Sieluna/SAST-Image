@@ -11,6 +11,12 @@ builder
     .WithReference(queryConnection)
     .WithReference(domainConnection)
     .WaitFor(silo)
-    .WithReplicas(5);
+    .WithReplicas(3);
+
+builder
+    .AddProject<Projects.Storage_Api>("Storage-Api")
+    .WithReference(domainConnection)
+    .WithReference(storageConnection)
+    .WaitFor(silo);
 
 builder.Build().Run();

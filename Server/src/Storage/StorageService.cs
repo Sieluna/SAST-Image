@@ -53,40 +53,43 @@ internal sealed partial class StorageService(
 
             try
             {
-                await mediator.Send(e.Value, cancellationToken);
-                await context.SaveChangesAsync(cancellationToken);
-            }
-            catch (MissingMessageHandlerException)
-            {
-                // Silence and skip.
-                continue;
+                try
+                {
+                    await mediator.Send(e.Value, cancellationToken);
+                    await context.SaveChangesAsync(cancellationToken);
+                }
+                catch (MissingMessageHandlerException)
+                {
+                    // Silence and skip.
+                    continue;
+                }
+                catch (DbUpdateException ex) when (ex is not DbUpdateConcurrencyException)
+                {
+                    context.ChangeTracker.Clear();
+                    Checkpoint failed = new()
+                    {
+                        Id = e.EventId,
+                        Timestamp = e.Timestamp,
+                        GrainId = e.GrainId,
+                        Status = CheckpointStatus.Failed,
+                    };
+                    points.Add(failed);
+                    await context.Checkpoints.AddAsync(failed, cancellationToken);
+                    await context.SaveChangesAsync(cancellationToken);
+                    LogFailedMessage(logger, ex, e.EventId);
+                }
+                finally
+                {
+                    context.ChangeTracker.Clear();
+                    context.Checkpoints.Attach(main);
+                    main.Timestamp = e.Timestamp;
+                    await context.SaveChangesAsync(cancellationToken);
+                }
             }
             catch (DbUpdateConcurrencyException)
             {
-                // Silence and skip.
-                return;
-            }
-            catch (Exception ex)
-            {
-                context.ChangeTracker.Clear();
-                Checkpoint failed = new()
-                {
-                    Id = e.EventId,
-                    Timestamp = e.Timestamp,
-                    GrainId = e.GrainId,
-                    Status = CheckpointStatus.Failed,
-                };
-                points.Add(failed);
-                await context.Checkpoints.AddAsync(failed, cancellationToken);
-                await context.SaveChangesAsync(cancellationToken);
-                LogFailedMessage(logger, ex, e.EventId);
-            }
-            finally
-            {
-                context.ChangeTracker.Clear();
-                context.Checkpoints.Attach(main);
-                main.Timestamp = e.Timestamp;
-                await context.SaveChangesAsync(cancellationToken);
+                // Silence
+                continue;
             }
         }
     }
@@ -100,7 +103,7 @@ internal sealed partial class StorageService(
         var main = points.FirstOrDefault(cp => cp.GrainId is null);
         if (points.Count <= 0 || main is null)
         {
-            main = new Checkpoint { Timestamp = DateTime.MinValue };
+            main = new Checkpoint { Id = Guid.Empty, Timestamp = DateTime.MinValue };
             points = [main];
             await context.Checkpoints.AddAsync(main, cancellationToken);
             await context.SaveChangesAsync(cancellationToken);
