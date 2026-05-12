@@ -48,13 +48,17 @@ internal sealed partial class StorageService(
         var events = await store.GetEventsAsync(main.Timestamp, cancellationToken);
         foreach (var e in events)
         {
-            if (points.Any(p => p.GrainId == e.GrainId && p.Status == CheckpointStatus.Failed))
-                continue;
-
             try
             {
                 try
                 {
+                    if (
+                        points.Any(p =>
+                            p.GrainId == e.GrainId && p.Status == CheckpointStatus.Failed
+                        )
+                    )
+                        continue;
+
                     await mediator.Send(e.Value, cancellationToken);
                     await context.SaveChangesAsync(cancellationToken);
                 }

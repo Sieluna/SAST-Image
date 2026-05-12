@@ -28,7 +28,7 @@ public sealed class StorageDbContext(DbContextOptions<StorageDbContext> options)
         {
             cp.HasKey(c => c.Id);
             cp.Property(c => c.Id).ValueGeneratedNever();
-            cp.HasIndex(c => c.Timestamp).IsUnique();
+            cp.HasIndex(c => c.Timestamp).IsUnique(false);
             cp.HasIndex(c => c.GrainId).IsUnique();
             cp.Property(c => c.Version).IsRowVersion();
         });

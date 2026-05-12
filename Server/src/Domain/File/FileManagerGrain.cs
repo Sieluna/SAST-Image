@@ -17,12 +17,12 @@ internal sealed class FileManagerGrain(IDbContextFactory<DomainDbContext> factor
     )
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
-        var connection = (NpgsqlConnection)context.Database.GetDbConnection();
+        await using var connection = (NpgsqlConnection)context.Database.GetDbConnection();
         await connection.OpenAsync(cancellationToken);
-        var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         NpgsqlLargeObjectManager manager = new(connection);
 
-        var file = await manager.OpenReadAsync(key.Value, cancellationToken);
+        var file = await manager.OpenReadAsync(key.Value, cancellationToken); // auto closed when transaction ends
 
         await using MemoryStream stream = new();
         await file.CopyToAsync(stream, BufferSize, cancellationToken);
@@ -38,13 +38,13 @@ internal sealed class FileManagerGrain(IDbContextFactory<DomainDbContext> factor
     )
     {
         await using var context = await factory.CreateDbContextAsync(cancellationToken);
-        var connection = (NpgsqlConnection)context.Database.GetDbConnection();
+        await using var connection = (NpgsqlConnection)context.Database.GetDbConnection();
         await connection.OpenAsync(cancellationToken);
-        var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
         NpgsqlLargeObjectManager manager = new(connection);
 
         var key = await manager.CreateAsync(0, cancellationToken);
-        var stream = await manager.OpenReadWriteAsync(key, cancellationToken);
+        var stream = await manager.OpenReadWriteAsync(key, cancellationToken); // auto closed when transaction ends
 
         await using MemoryStream ms = new(file.Value);
         await ms.CopyToAsync(stream, BufferSize, cancellationToken);
