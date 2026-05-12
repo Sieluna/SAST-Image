@@ -16,10 +16,12 @@ internal sealed partial class StorageService(
 {
     const int intervalSeconds = 1;
 
-    private readonly IEventStoreGrain store = factory.GetGrain<IEventStoreGrain>(Guid.Empty);
+    private IEventStoreGrain store = null!;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        store = factory.GetGrain<IEventStoreGrain>(Guid.Empty);
+
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(intervalSeconds));
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {

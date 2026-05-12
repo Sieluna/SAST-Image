@@ -38,6 +38,7 @@ public sealed class QueryDbContext(DbContextOptions<QueryDbContext> options) : D
         builder.Entity<Checkpoint>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
             entity.HasIndex(e => e.Timestamp).IsUnique(false);
             entity.HasIndex(e => e.GrainId).IsUnique();
             entity.Property(e => e.Version).IsRowVersion();

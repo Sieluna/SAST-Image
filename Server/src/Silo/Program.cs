@@ -1,6 +1,5 @@
 using Domain;
 using Microsoft.EntityFrameworkCore;
-using Orleans.Configuration;
 using Orleans.Dashboard;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,19 +9,11 @@ builder.AddServiceDefaults();
 builder.UseOrleans(builder =>
 {
     builder.UseDomain();
-
-    builder.Configure<SiloMessagingOptions>(options =>
-    {
-        options.ResponseTimeout = TimeSpan.FromSeconds(30);
-        options.MaxRequestProcessingTime = TimeSpan.FromSeconds(30);
-        options.SystemResponseTimeout = TimeSpan.FromSeconds(30);
-    });
-
-    builder.AddDashboard();
+    builder.AddDashboard(options => options.HideTrace = true);
     builder.UseAdoNetClustering(options =>
     {
-        options.Invariant = "Npgsql";
-        options.ConnectionString = builder.Configuration.GetConnectionString("Domain");
+        options.Invariant = nameof(Npgsql);
+        options.ConnectionString = builder.Configuration.GetConnectionString(nameof(Domain));
     });
 });
 
