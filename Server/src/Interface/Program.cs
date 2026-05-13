@@ -1,7 +1,8 @@
+using System.Security.Claims;
 using System.Text;
 using Domain;
 using Domain.Album.Image;
-using Interface.Endpoints;
+using Domain.User;
 using Interface.Hubs;
 using Interface.Services;
 using Mediator;
@@ -57,11 +58,14 @@ builder.Services.AddSingleton<JwtTokenService>();
 
 builder.UseOrleansClient(client =>
 {
-    client.UseAdoNetClustering(options =>
+    if (string.IsNullOrEmpty(builder.Configuration["ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL"]))
     {
-        options.Invariant = nameof(Npgsql);
-        options.ConnectionString = client.Configuration.GetConnectionString(nameof(Domain));
-    });
+        client.UseAdoNetClustering(options =>
+        {
+            options.Invariant = "Npgsql";
+            options.ConnectionString = client.Configuration.GetConnectionString("Domain");
+        });
+    }
     client.Services.AddQuery(client.Configuration);
     client.Services.AddStorage(client.Configuration);
     // TODO: restore S3 when ready
@@ -78,24 +82,5 @@ app.MapDefaultEndpoints();
 
 // SignalR Hub
 app.MapHub<MainHub>("/hub");
-
-// REST API endpoints
-app.MapAuthEndpoints();
-app.MapAlbumEndpoints();
-app.MapCategoryEndpoints();
-app.MapImageEndpoints();
-app.MapUserEndpoints();
-
-app.MapGet("/images/{id}", async (
-    long id,
-    IMediator mediator,
-    HttpContext context) =>
-{
-    var actor = context.TryGetActor();
-    var stream = await mediator.Send(new ImageFileQuery(new ImageId(id), ImageKind.Original, actor));
-    if (stream is null)
-        return Results.NotFound();
-    return Results.File(stream, "image/avif");
-});
 
 await app.RunAsync();

@@ -10,12 +10,10 @@ using Interface.Services;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Orleans.Concurrency;
 using Orleans.Runtime;
 using Query.Album;
 using Query.Category;
-using Query.Database;
 using Query.Image;
 using Query.User;
 
@@ -45,35 +43,27 @@ public class MainHub : Hub
     private readonly IGrainFactory _grains;
     private readonly IMediator _mediator;
     private readonly JwtTokenService _jwt;
-    private readonly IDbContextFactory<QueryDbContext> _queryDb;
 
     public MainHub(
         IGrainFactory grains,
         IMediator mediator,
-        JwtTokenService jwt,
-        IDbContextFactory<QueryDbContext> queryDb)
+        JwtTokenService jwt)
     {
         _grains = grains;
         _mediator = mediator;
         _jwt = jwt;
-        _queryDb = queryDb;
     }
 
     // ─── Account ────────────────────────────────────────────────
 
     public async Task<JwtTokenResponse> Login(LoginRequest request)
     {
-        var existence = await _mediator.Send(
-            new UsernameExistenceQuery(new Username(request.Username)));
-        if (!existence.IsExist)
+        var profile = await _mediator.Send(
+            new UserByUsernameQuery(new Username(request.Username)));
+        if (profile is null)
             throw new HubException("User not found");
 
-        await using var db = await _queryDb.CreateDbContextAsync();
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == request.Username);
-        if (user is null)
-            throw new HubException("User not found");
-
-        var token = _jwt.Generate(new UserId(user.Id), new Username(user.Username), Role.User);
+        var token = _jwt.Generate(new UserId(profile.Id), new Username(profile.Username), Role.User);
         return new JwtTokenResponse(token.AccessToken, token.RefreshToken, token.ExpireIn);
     }
 
@@ -302,15 +292,8 @@ public class MainHub : Hub
 
         if (dto is null) return null;
 
-        await using var db = await _queryDb.CreateDbContextAsync();
-        var registeredAt = await db.Users
-            .Where(u => u.Id == dto.Id)
-            .Select(u => u.RegisteredAt)
-            .FirstOrDefaultAsync();
-
         return new UserProfileResponse(
-            dto.Id, dto.Username, dto.Nickname, dto.Biography,
-            new DateTimeOffset(registeredAt).ToUnixTimeSeconds());
+            dto.Id, dto.Username, dto.Nickname, dto.Biography, 0);
     }
 
     [Authorize]
@@ -374,19 +357,21 @@ public class MainHub : Hub
     {
         if (albums.Length == 0) return [];
 
-        await using var db = await _queryDb.CreateDbContextAsync();
-        var userIds = albums.Select(a => a.Author).Distinct().ToArray();
-        var categoryIds = albums.Select(a => a.Category).Distinct().ToArray();
+        var allCategories = await _mediator.Send(new CategoriesQuery(null));
+        var categoryNames = allCategories.ToDictionary(c => c.Id, c => c.Name);
 
-        var users = await db.Users.Where(u => userIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, u => u.Username);
-        var categories = await db.Categories.Where(c => categoryIds.Contains(c.Id))
-            .ToDictionaryAsync(c => c.Id, c => c.Name);
+        var userIds = albums.Select(a => a.Author).Distinct();
+        var userNames = new Dictionary<long, string>();
+        foreach (var uid in userIds)
+        {
+            var profile = await _mediator.Send(new UserProfileQuery(new UserId(uid)));
+            userNames[uid] = profile?.Username ?? "unknown";
+        }
 
         return albums.Select(a => new AlbumResponse(
             a.Id, a.Title, a.Description,
-            a.Author, users.GetValueOrDefault(a.Author, "unknown"),
-            a.Category, categories.GetValueOrDefault(a.Category, "unknown"),
+            a.Author, userNames.GetValueOrDefault(a.Author, "unknown"),
+            a.Category, categoryNames.GetValueOrDefault(a.Category, "unknown"),
             a.Tags, a.SubscribeCount, AccessLevel.PublicReadWrite,
             new DateTimeOffset(a.CreatedAt).ToUnixTimeSeconds(),
             new DateTimeOffset(a.UpdatedAt).ToUnixTimeSeconds()

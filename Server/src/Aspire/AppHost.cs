@@ -55,7 +55,7 @@ builder
 
 builder
     .AddProject<Projects.Interface>("Interface")
-    .WithReference(orleans)
+    .WithReference(orleans.AsClient())
     .WithConnectionString("Domain")
     .WithConnectionString("Query")
     .WithConnectionString("Storage")
