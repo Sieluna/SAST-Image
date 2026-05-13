@@ -1,17 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-
-    <PackageId>Sast.Native</PackageId>
-    <GeneratePackageOnBuild Condition="'$(GeneratePackageOnBuild)' == '' and '$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
-    <GeneratePackageOnBuild Condition="'$(GeneratePackageOnBuild)' == ''">false</GeneratePackageOnBuild>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
-
-    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-x64;osx-arm64</RuntimeIdentifiers>
-
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <_CargoManifest>$(MSBuildThisFileDirectory)platform/Cargo.toml</_CargoManifest>
     <_CargoWorkingDirectory>$(MSBuildThisFileDirectory)platform</_CargoWorkingDirectory>
     <_CargoTargetDirectory>$(MSBuildThisFileDirectory)platform/target</_CargoTargetDirectory>
@@ -115,54 +109,36 @@
              Text="Copied Rust native host asset: runtimes/%(_HostNativeBuild.Identity)/native/%(_HostNativeBuild.LibraryName)" />
   </Target>
 
-  <Target Name="BuildRustNativeAssets"
-          BeforeTargets="Pack"
-          Condition="'$(SkipRustPackBuild)' == ''">
-
-    <Message Importance="high"
-             Text="Building Rust native package assets for: @(_NativeBuild)" />
-
-    <Exec
-      WorkingDirectory="$(_CargoWorkingDirectory)"
-      Command="cargo build --manifest-path &quot;$(_CargoManifest)&quot; --target %(_NativeBuild.RustTarget) $(_CargoReleaseArg)"
-      ConsoleToMSBuild="true">
-      <Output TaskParameter="ExitCode" PropertyName="_RustPackBuildExitCode" />
-    </Exec>
-
-    <Error Condition="'$(_RustPackBuildExitCode)' != '0'"
-           Text="Rust package build failed. Exit code: $(_RustPackBuildExitCode)" />
-
-    <Error
-      Condition="!Exists('$(_CargoTargetDirectory)/%(_NativeBuild.RustTarget)/$(_CargoProfile)/%(_NativeBuild.LibraryName)')"
-      Text="Rust output file was not found: $(_CargoTargetDirectory)/%(_NativeBuild.RustTarget)/$(_CargoProfile)/%(_NativeBuild.LibraryName)" />
-
-    <MakeDir Directories="$(MSBuildThisFileDirectory)runtimes/%(_NativeBuild.Identity)/native" />
-
-    <Copy
-      SourceFiles="$(_CargoTargetDirectory)/%(_NativeBuild.RustTarget)/$(_CargoProfile)/%(_NativeBuild.LibraryName)"
-      DestinationFiles="$(MSBuildThisFileDirectory)runtimes/%(_NativeBuild.Identity)/native/%(_NativeBuild.LibraryName)"
-      SkipUnchangedFiles="true" />
+  <Target Name="CopyNativeToOutput" AfterTargets="BuildRustNativeHost">
+    <ItemGroup>
+      <_NativeOutputFiles Include="$(MSBuildThisFileDirectory)runtimes\**\native\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_NativeOutputFiles)"
+          DestinationFolder="$(OutputPath)"
+          SkipUnchangedFiles="true" />
   </Target>
 
   <ItemGroup>
-    <None Include="runtimes/**/native/*"
-          Pack="true"
-          PackagePath="runtimes/%(RecursiveDir)%(Filename)%(Extension)"
-          Visible="false" />
+    <EmbeddedResource Include="$(OutputPath)wwwroot.zip">
+      <LogicalName>wwwroot.zip</LogicalName>
+      <Visible>false</Visible>
+    </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="buildTransitive\Sast.Native.targets"
-          Pack="true"
-          PackagePath="buildTransitive\Sast.Native.targets"
-          Visible="false"
-          Condition="Exists('buildTransitive\Sast.Native.targets')" />
+  <Target Name="PublishWebApp" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <_PublishDir>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\App\bin\$(Configuration)\net10.0-browser\publish\wwwroot\))</_PublishDir>
+    </PropertyGroup>
 
-    <None Include="build\Sast.Native.targets"
-          Pack="true"
-          PackagePath="build\Sast.Native.targets"
-          Visible="false"
-          Condition="Exists('build\Sast.Native.targets')" />
-  </ItemGroup>
+    <Exec
+      Command="dotnet publish &quot;..\App\App.csproj&quot; -c $(Configuration)"
+      WorkingDirectory="$(MSBuildThisFileDirectory)"
+      ConsoleToMSBuild="true" />
+
+    <ZipDirectory
+      SourceDirectory="$(_PublishDir)"
+      DestinationFile="$(MSBuildThisFileDirectory)$(OutputPath)wwwroot.zip"
+      Overwrite="true" />
+  </Target>
 
 </Project>

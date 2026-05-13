@@ -107,7 +107,7 @@ setModuleImports('main.js', {
   scheduleFlush,
 });
 
-const exports = await getAssemblyExports('App.Browser.dll');
+const exports = await getAssemblyExports('App.dll');
 
 const flushRenderQueue = exports.App.Framework.Scheduler.FlushRenderQueue;
 
