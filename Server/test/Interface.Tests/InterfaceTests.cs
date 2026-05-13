@@ -245,7 +245,7 @@ public sealed class InterfaceTests : TestBase
         ClearAuth();
         var anonymous = await Client.GetAsync("/images/1");
         anonymous.StatusCode.ShouldBe(HttpStatusCode.OK);
-        anonymous.Content.Headers.ContentType!.MediaType.ShouldBe("image/webp");
+        anonymous.Content.Headers.ContentType!.MediaType.ShouldBe("image/avif");
         (await anonymous.Content.ReadAsByteArrayAsync()).ShouldBe(anonymousBytes);
 
         var authenticatedBytes = "authenticated-image"u8.ToArray();

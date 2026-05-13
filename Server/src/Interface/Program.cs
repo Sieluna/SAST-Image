@@ -53,7 +53,8 @@ builder.Services.Configure<AuthOptions>(builder.Configuration.GetSection("Auth")
 builder.Services.AddSingleton<JwtTokenService>();
 
 // Register S3 as the IImageFileManager at host level
-builder.Services.AddS3Storage(builder.Configuration, startRustFs: false);
+// TODO: restore S3 when ready
+// builder.Services.AddS3Storage(builder.Configuration, startRustFs: false);
 
 builder.UseOrleansClient(client =>
 {
@@ -64,8 +65,8 @@ builder.UseOrleansClient(client =>
     });
     client.Services.AddQuery(client.Configuration);
     client.Services.AddStorage(client.Configuration);
-    // Replace local IImageFileManager with S3 in Orleans client scope
-    client.Services.AddS3Storage(client.Configuration);
+    // TODO: restore S3 when ready
+    // client.Services.AddS3Storage(client.Configuration);
     client.Services.AddSerializer(b => b.AddJsonSerializer(t => t.Namespace!.StartsWith("Domain")));
 });
 
@@ -87,13 +88,27 @@ app.MapImageEndpoints();
 app.MapUserEndpoints();
 
 // Image file serving via IImageFileManager → S3
-app.MapGet("/images/{id}", async (long id, IMediator mediator, HttpContext context) =>
+var formatMimeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
 {
+    ["avif"] = "image/avif",
+    ["webp"] = "image/webp",
+    ["jpeg"] = "image/jpeg",
+    ["png"] = "image/png",
+};
+var supportedFormats = formatMimeMap.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+app.MapGet("/images/{id}", async (
+    long id,
+    string? format,
+    IMediator mediator,
+    HttpContext context) =>
+{
+    format = format is not null && supportedFormats.Contains(format) ? format : "avif";
     var actor = context.TryGetActor();
-    var stream = await mediator.Send(new ImageFileQuery(new ImageId(id), ImageKind.Original, actor));
+    var stream = await mediator.Send(new ImageFileQuery(new ImageId(id), ImageKind.Original, actor, format));
     if (stream is null)
         return Results.NotFound();
-    return Results.File(stream, "image/webp");
+    return Results.File(stream, formatMimeMap[format]);
 });
 
 await app.RunAsync();
