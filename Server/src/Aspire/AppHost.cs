@@ -53,6 +53,14 @@ builder
     .WaitFor(query3)
     .WaitFor(storage);
 
+builder
+    .AddProject<Projects.Interface>("Interface")
+    .WithReference(orleans)
+    .WithConnectionString("Domain")
+    .WithConnectionString("Query")
+    .WithConnectionString("Storage")
+    .WaitFor(silo);
+
 builder.Build().Run();
 
 file static class Rua

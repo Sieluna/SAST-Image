@@ -6,11 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Domain\Domain.csproj" />
-    <ProjectReference Include="..\Query\Query.csproj" />
-    <ProjectReference Include="..\Storage\Storage.csproj" />
+    <ProjectReference Include="..\Domain\Domain.Core\Domain.Core.csproj" />
+    <ProjectReference Include="..\Query\Query.Core\Query.Core.csproj" />
+    <ProjectReference Include="..\Storage\Storage.Core\Storage.Core.csproj" />
     <ProjectReference Include="..\S3Storage\S3Storage.csproj" />
-    <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Shared\ServiceDefaults\ServiceDefaults.csproj" />
     <ProjectReference Include="..\..\..\Shared\Api\Api.csproj" />
   </ItemGroup>
 

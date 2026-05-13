@@ -14,6 +14,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\S3Storage.Native\S3Storage.Native.csproj" />
-    <ProjectReference Include="..\Storage\Storage.csproj" />
+    <ProjectReference Include="..\Storage\Storage.Core\Storage.Core.csproj" />
   </ItemGroup>
 </Project>
