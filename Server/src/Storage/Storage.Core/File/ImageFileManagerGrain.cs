@@ -8,9 +8,6 @@ namespace Storage.File;
 internal sealed class ImageFileManagerGrain(LocalImageFileManager manager)
     : Grain,
         IImageFileManagerGrain
-internal sealed class ImageFileManagerGrain(LocalImageFileManager manager)
-    : Grain,
-        IImageFileManagerGrain
 {
     public async Task<Immutable<byte[]?>> GetAsync<TId>(TId id, CancellationToken cancellationToken)
         where TId : ITypedId<TId>
