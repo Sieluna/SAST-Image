@@ -21,7 +21,7 @@ public sealed class AlbumImageAddedEventHandler(
 
         await manager.SaveAsync(ms, e.Id, cancellationToken);
 
-        await compressor.CompressAsync(e.Id, null, "avif", cancellationToken);
+        await compressor.CompressAsync(e.Id, null, "compressed", cancellationToken);
 
         return Unit.Value;
     }

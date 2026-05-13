@@ -1,7 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <_RustFsNative_IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</_RustFsNative_IsWindows>
-    <_RustFsNative_IsLinux Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' == 'true'">true</_RustFsNative_IsLinux>
-    <_RustFsNative_IsMacOS Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' == 'true'">true</_RustFsNative_IsMacOS>
-  </PropertyGroup>
-</Project>
