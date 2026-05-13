@@ -4,17 +4,17 @@ using Domain.User.Events;
 using Mediator;
 using Storage.Services;
 
-namespace Storage.Users.EventHandlers;
+namespace Storage.User.EventHandlers;
 
 public sealed class AvatarUpdatedEventHandler(
-    IImageFileManager manager,
-    ICompressProcessor compressor,
+    LocalImageFileManager manager,
+    LocalCompressProcessor compressor,
     IGrainFactory factory
 ) : IDomainEventHandler<AvatarUpdatedEvent>
 {
     public async ValueTask<Unit> Handle(AvatarUpdatedEvent e, CancellationToken cancellationToken)
     {
-        var domainManager = factory.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var domainManager = factory.GetGrain<IFileSyncGrain>(Guid.Empty);
         var file = await domainManager.GetAsync(e.File, cancellationToken);
         await using MemoryStream stream = new(file.Value);
 

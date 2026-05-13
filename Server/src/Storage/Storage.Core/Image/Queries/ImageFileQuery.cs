@@ -3,11 +3,11 @@ using Domain.Album.Image;
 using Mediator;
 using Storage.Services;
 
-namespace Storage.Images.Queries;
+namespace Storage.Image.Queries;
 
 public sealed record ImageFileQuery(ImageId Image, ImageKind Kind, Actor Actor) : IQuery<Stream?>;
 
-public sealed class ImageFileQueryHandler(IImageFileManager manager, IAccessChecker checker)
+public sealed class ImageFileQueryHandler(LocalImageFileManager manager, IAccessChecker checker)
     : IQueryHandler<ImageFileQuery, Stream?>
 {
     public async ValueTask<Stream?> Handle(

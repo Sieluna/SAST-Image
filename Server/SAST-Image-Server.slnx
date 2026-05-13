@@ -13,6 +13,7 @@
     <Project Path="src/Shared/Shared.Core/Shared.Core.csproj" Id="08550dc6-3077-4de9-bc2c-ddfa629723df" />
   </Folder>
   <Folder Name="/Storage/">
+    <Project Path="src/Storage/Storage.Contract/Storage.Contract.csproj" Id="ba77d730-6cfa-4073-88ef-938b0d04f63a" />
     <Project Path="src/Storage/Storage.Core/Storage.Core.csproj" />
     <Project Path="src/Storage/Storage.Silo/Storage.Silo.csproj" />
   </Folder>

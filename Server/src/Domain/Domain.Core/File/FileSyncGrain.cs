@@ -6,13 +6,13 @@ using Orleans.Concurrency;
 namespace Domain.File;
 
 [StatelessWorker]
-internal sealed class FileManagerGrain(IDbContextFactory<DomainDbContext> factory)
+internal sealed class FileSyncGrain(IDbContextFactory<DomainDbContext> factory)
     : Grain,
-        IFileManagerGrain
+        IFileSyncGrain
 {
-    const int BufferSize = 1024 * 64;
+    const int BufferSize = 1024 * 256;
 
-    public async ValueTask<Immutable<byte[]>> GetAsync(
+    public async Task<Immutable<byte[]>> GetAsync(
         ImageFileKey key,
         CancellationToken cancellationToken
     )
@@ -33,7 +33,7 @@ internal sealed class FileManagerGrain(IDbContextFactory<DomainDbContext> factor
         return stream.ToArray().AsImmutable();
     }
 
-    public async ValueTask<ImageFileKey> UploadAsync(
+    public async Task<ImageFileKey> UploadAsync(
         Immutable<byte[]> file,
         CancellationToken cancellationToken
     )

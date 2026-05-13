@@ -5,35 +5,9 @@ using Microsoft.Extensions.Options;
 
 namespace Storage.Services;
 
-public interface IImageFileManager
+public sealed class LocalImageFileManager
 {
-    public ValueTask SaveAsync<TId>(
-        Stream stream,
-        TId id,
-        CancellationToken cancellationToken = default
-    )
-        where TId : ITypedId<TId, long>;
-
-    public ValueTask SaveAsync<TId>(
-        Stream stream,
-        TId id,
-        string? extension,
-        CancellationToken cancellationToken
-    )
-        where TId : ITypedId<TId, long>;
-
-    public Stream? GetStream<TId>(TId id)
-        where TId : ITypedId<TId, long>;
-    public Stream? GetStream<TId>(TId id, string? extension)
-        where TId : ITypedId<TId, long>;
-
-    public ValueTask DeleteAsync<TId>(TId id, CancellationToken cancellationToken = default)
-        where TId : ITypedId<TId, long>;
-}
-
-internal sealed class LocalImageFileManager : IImageFileManager
-{
-    const int BufferSize = 1024 * 64;
+    public const int BufferSize = 1024 * 256;
     private readonly string basePath;
 
     public LocalImageFileManager(IOptions<StorageOptions> options)
@@ -70,11 +44,11 @@ internal sealed class LocalImageFileManager : IImageFileManager
         EnsureDirectory(destination);
         var filename = Path.GetTempFileName();
 
-        await using (var file = File.OpenWrite(filename))
+        await using (var file = System.IO.File.OpenWrite(filename))
         {
             await stream.CopyToAsync(file, BufferSize, cancellationToken);
         }
-        File.Move(filename, destination, true);
+        System.IO.File.Move(filename, destination, true);
     }
 
     public Stream? GetStream<TId>(TId id)
@@ -84,7 +58,7 @@ internal sealed class LocalImageFileManager : IImageFileManager
         where TId : ITypedId<TId, long>
     {
         string filename = id.AbsolutePath(basePath, extension);
-        return File.Exists(filename) ? File.OpenRead(filename) : null;
+        return System.IO.File.Exists(filename) ? System.IO.File.OpenRead(filename) : null;
     }
 
     public async ValueTask DeleteAsync<TId>(TId id, CancellationToken cancellationToken = default)
