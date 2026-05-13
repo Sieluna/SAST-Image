@@ -24,6 +24,12 @@ builder
     .WithConnectionString("Storage")
     .WaitFor(silo);
 
+builder
+    .AddProject<Projects.WebApp>("webapp")
+    .WithReference(orleans.AsClient())
+    .WithConnectionString("Domain")
+    .WaitFor(silo);
+
 builder.Build().Run();
 
 file static class Rua

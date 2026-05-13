@@ -16,5 +16,6 @@
     <ProjectReference Include="..\Query\Query.Silo\Query.Silo.csproj" />
     <ProjectReference Include="..\Domain\Domain.Silo\Domain.Silo.csproj" />
     <ProjectReference Include="..\Storage\Storage.Silo\Storage.Silo.csproj" />
+    <ProjectReference Include="..\WebApp\WebApp.csproj" />
   </ItemGroup>
 </Project>
