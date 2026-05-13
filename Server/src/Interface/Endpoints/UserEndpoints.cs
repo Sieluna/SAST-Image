@@ -4,7 +4,7 @@ using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Orleans.Concurrency;
 using Query.Database;
-using Query.Users.Queries;
+using Query.User;
 using UserGrain = Domain.User.IUserGrain;
 using Username = Domain.User.Username;
 using Nickname = Domain.User.Nickname;

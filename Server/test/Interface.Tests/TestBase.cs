@@ -18,18 +18,18 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Orleans.Concurrency;
 using Orleans.Runtime;
-using Query.Albums.EventHandlers;
-using Query.Albums.Queries;
-using Query.Categories.EventHandlers;
-using Query.Categories.Queries;
+using Query.Album;
+using Query.Album.EventHandlers;
+using Query.Category;
+using Query.Category.EventHandlers;
 using Query.Database;
-using Query.Images;
-using Query.Images.Queries;
-using Query.Users.EventHandlers;
-using Query.Users.Queries;
+using Query.Image;
+using Query.User;
+using Query.User.EventHandlers;
+using Storage;
 using Storage.Database;
-using Storage.Images;
-using Storage.Images.Queries;
+using Storage.Image;
+using Storage.Image.Queries;
 using Storage.Services;
 
 namespace Interface.Tests;
@@ -42,9 +42,8 @@ public abstract class TestBase
     protected Mock<IAlbumGrain> AlbumGrainMock { get; } = new();
     protected Mock<IUserGrain> UserGrainMock { get; } = new();
     protected Mock<ICategoryGrain> CategoryGrainMock { get; } = new();
-    protected Mock<IFileManagerGrain> FileManagerGrainMock { get; } = new();
+    protected Mock<IFileSyncGrain> FileManagerGrainMock { get; } = new();
     protected Mock<IMediator> MediatorMock { get; } = new();
-    protected Mock<IImageFileManager> ImageFileManagerMock { get; } = new();
     protected JwtTokenService JwtService { get; set; } = null!;
 
     private readonly string _dbName = Guid.NewGuid().ToString();
@@ -107,7 +106,13 @@ public abstract class TestBase
                     // Replace with mocks
                     services.AddSingleton(GrainFactoryMock.Object);
                     services.AddSingleton(MediatorMock.Object);
-                    services.AddSingleton(ImageFileManagerMock.Object);
+
+                    // Register a real LocalImageFileManager for the test
+                    var storageOpts = Options.Create(new StorageOptions
+                    {
+                        BaseUri = new Uri("file:///tmp/test-images"),
+                    });
+                    services.AddSingleton(new LocalImageFileManager(storageOpts));
 
                     // Remove all EF Core registrations (pool, factory, options) for Query and Storage DB
                     var toRemove = services
@@ -150,7 +155,6 @@ public abstract class TestBase
 
                     // Register mocks for Storage services
                     services.AddSingleton(new Mock<IAccessChecker>().Object);
-                    services.AddSingleton(new Mock<ICompressProcessor>().Object);
                 });
             });
 
@@ -195,7 +199,6 @@ public abstract class TestBase
         CategoryGrainMock.Reset();
         FileManagerGrainMock.Reset();
         MediatorMock.Reset();
-        ImageFileManagerMock.Reset();
 
         SetupDefaultGrainFactory();
         SetupDefaultGrains();
@@ -215,7 +218,7 @@ public abstract class TestBase
             .Setup(g => g.GetGrain<ICategoryGrain>(It.IsAny<long>(), It.IsAny<string?>()))
             .Returns(() => CategoryGrainMock.Object);
         GrainFactoryMock
-            .Setup(g => g.GetGrain<IFileManagerGrain>(It.IsAny<Guid>(), It.IsAny<string?>()))
+            .Setup(g => g.GetGrain<IFileSyncGrain>(It.IsAny<Guid>(), It.IsAny<string?>()))
             .Returns(() => FileManagerGrainMock.Object);
     }
 
@@ -291,13 +294,6 @@ public abstract class TestBase
         FileManagerGrainMock
             .Setup(f => f.UploadAsync(It.IsAny<Immutable<byte[]>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ImageFileKey(1));
-
-        ImageFileManagerMock
-            .Setup(f => f.GetStream(It.IsAny<ImageId>(), It.IsAny<string?>()))
-            .Returns(new MemoryStream("fake-image-data"u8.ToArray()));
-        ImageFileManagerMock
-            .Setup(f => f.GetStream(It.IsAny<ImageId>()))
-            .Returns(new MemoryStream("fake-image-data"u8.ToArray()));
     }
 
     // ─── Auth helpers ─────────────────────────────────────────────
@@ -381,10 +377,10 @@ public abstract class TestBase
                 }), CancellationToken.None);
 
             var album = db.ChangeTracker
-                .Entries<Query.Albums.AlbumModel>()
+                .Entries<Query.Album.AlbumModel>()
                 .Single(e => e.Entity.Id == id)
                 .Entity;
-            db.Entry(album).Property(nameof(Query.Albums.AlbumModel.Tags)).CurrentValue = tags ?? [];
+            db.Entry(album).Property(nameof(Query.Album.AlbumModel.Tags)).CurrentValue = tags ?? [];
             await db.SaveChangesAsync();
         });
     }
@@ -414,11 +410,11 @@ public abstract class TestBase
                 }), CancellationToken.None);
 
             var imageEntry = db.ChangeTracker
-                .Entries<ImageModel>()
+                .Entries<Query.Image.ImageModel>()
                 .Single(e => e.Entity.Id == imageId);
             imageEntry.State = EntityState.Added;
             var image = imageEntry.Entity;
-            db.Entry(image).Property(nameof(ImageModel.Likes)).CurrentValue = likes ?? [];
+            db.Entry(image).Property(nameof(Query.Image.ImageModel.Likes)).CurrentValue = likes ?? [];
             await db.SaveChangesAsync();
         });
     }

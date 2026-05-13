@@ -4,7 +4,7 @@ using Domain.Api;
 using Domain.File;
 using Mediator;
 using Orleans.Concurrency;
-using Query.Images.Queries;
+using Query.Image;
 using AlbumGrain = Domain.Album.IAlbumGrain;
 
 namespace Interface.Endpoints;
@@ -42,7 +42,7 @@ internal static class ImageEndpoints
 
             var imageId = ImageId.GenerateNew();
 
-            var fileManager = grains.GetGrain<IFileManagerGrain>(Guid.Empty);
+            var fileManager = grains.GetGrain<IFileSyncGrain>(Guid.Empty);
             var fileKey = await fileManager.UploadAsync(request.FileBytes.AsImmutable(), CancellationToken.None);
 
             var grain = grains.GetGrain<IAlbumGrain>(albumId);

@@ -5,7 +5,7 @@ using Interface.Services;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
 using Query.Database;
-using Query.Users.Queries;
+using Query.User;
 using UserGrain = Domain.User.IUserGrain;
 
 namespace Interface.Endpoints;

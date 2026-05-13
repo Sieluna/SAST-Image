@@ -9,10 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Orleans.Serialization;
 using Query;
-using S3Storage;
 using Storage;
-using Storage.Images;
-using Storage.Images.Queries;
+using Storage.Image;
+using Storage.Image.Queries;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -87,28 +86,16 @@ app.MapCategoryEndpoints();
 app.MapImageEndpoints();
 app.MapUserEndpoints();
 
-// Image file serving via IImageFileManager → S3
-var formatMimeMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-{
-    ["avif"] = "image/avif",
-    ["webp"] = "image/webp",
-    ["jpeg"] = "image/jpeg",
-    ["png"] = "image/png",
-};
-var supportedFormats = formatMimeMap.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
 app.MapGet("/images/{id}", async (
     long id,
-    string? format,
     IMediator mediator,
     HttpContext context) =>
 {
-    format = format is not null && supportedFormats.Contains(format) ? format : "avif";
     var actor = context.TryGetActor();
-    var stream = await mediator.Send(new ImageFileQuery(new ImageId(id), ImageKind.Original, actor, format));
+    var stream = await mediator.Send(new ImageFileQuery(new ImageId(id), ImageKind.Original, actor));
     if (stream is null)
         return Results.NotFound();
-    return Results.File(stream, formatMimeMap[format]);
+    return Results.File(stream, "image/avif");
 });
 
 await app.RunAsync();

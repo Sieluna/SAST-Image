@@ -4,7 +4,7 @@ using Domain.Api;
 using Domain.Category;
 using Mediator;
 using Microsoft.EntityFrameworkCore;
-using Query.Albums.Queries;
+using Query.Album;
 using Query.Database;
 using AlbumGrain = Domain.Album.IAlbumGrain;
 using AlbumId = Domain.Album.AlbumId;

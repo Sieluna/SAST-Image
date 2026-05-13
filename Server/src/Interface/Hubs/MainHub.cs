@@ -13,11 +13,11 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Orleans.Concurrency;
 using Orleans.Runtime;
-using Query.Albums.Queries;
-using Query.Categories.Queries;
+using Query.Album;
+using Query.Category;
 using Query.Database;
-using Query.Images.Queries;
-using Query.Users.Queries;
+using Query.Image;
+using Query.User;
 
 using AlbumGrain = Domain.Album.IAlbumGrain;
 using CategoryGrain = Domain.Category.ICategoryGrain;
@@ -196,7 +196,7 @@ public class MainHub : Hub
 
         var imageId = ImageId.GenerateNew();
 
-        var fileManager = _grains.GetGrain<IFileManagerGrain>(Guid.Empty);
+        var fileManager = _grains.GetGrain<IFileSyncGrain>(Guid.Empty);
         var fileKey = await fileManager.UploadAsync(request.FileBytes.AsImmutable(), CancellationToken.None);
 
         var grain = _grains.GetGrain<IAlbumGrain>(albumId);

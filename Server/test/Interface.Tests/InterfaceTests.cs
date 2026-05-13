@@ -7,8 +7,8 @@ using Domain.Category;
 using Domain.File;
 using Domain.User;
 using Orleans.Concurrency;
-using Storage.Images;
-using Storage.Images.Queries;
+using Storage.Image;
+using Storage.Image.Queries;
 
 namespace Interface.Tests;
 

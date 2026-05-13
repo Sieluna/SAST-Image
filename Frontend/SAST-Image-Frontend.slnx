@@ -1,0 +1,5 @@
+<Solution>
+    <Project Path="src/App/App.csproj" />
+    <Project Path="src/App.Native/App.Native.csproj" />
+    <Project Path="src/Client/Client.csproj" />
+</Solution>

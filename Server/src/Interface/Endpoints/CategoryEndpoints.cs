@@ -1,7 +1,7 @@
 using Domain.Api;
 using Domain.Category;
 using Mediator;
-using Query.Categories.Queries;
+using Query.Category;
 using CategoryGrain = Domain.Category.ICategoryGrain;
 using CategoryName = Domain.Category.CategoryName;
 using CategoryDescription = Domain.Category.CategoryDescription;
