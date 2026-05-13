@@ -7,7 +7,7 @@ namespace Domain.Album.Events;
 public sealed record AlbumImageAddedEvent(
     AlbumId Id,
     ImageId ImageId,
-    ImageTitle Title,
+    ImageDescription Description,
     ImageTags Tags,
     ImageFileKey File,
     Actor Uploader

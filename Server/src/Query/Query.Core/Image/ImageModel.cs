@@ -14,13 +14,12 @@ public sealed class ImageModel
     public long UploaderId { get; }
     public string[] Tags { get; internal set; } = [];
     public DateTime UploadedAt { get; } = DateTime.UtcNow;
-    public long[] Likes { get; internal set; } = null!;
 
     internal ImageModel(AlbumImageAddedEvent e)
     {
         Id = e.ImageId.Value;
         AlbumId = e.Id.Value;
-        Title = e.Title.Value;
+        Title = e.Description.Value;
         Tags = e.Tags.Value;
         UploadedAt = e.Timestamp;
         UploaderId = e.Uploader.Id.Value;

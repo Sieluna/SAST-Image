@@ -12,8 +12,8 @@ using Query.Database;
 namespace Query.Migrations
 {
     [DbContext(typeof(QueryDbContext))]
-    [Migration("20260512100019_QM1")]
-    partial class QM1
+    [Migration("20260513170911_QM")]
+    partial class QM
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,45 +25,7 @@ namespace Query.Migrations
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("Domain.Event.Checkpoint", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<long?>("GrainId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("grain_id");
-
-                    b.Property<byte>("Status")
-                        .HasColumnType("smallint")
-                        .HasColumnName("status");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("timestamp");
-
-                    b.Property<uint>("Version")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("xid")
-                        .HasColumnName("xmin");
-
-                    b.HasKey("Id")
-                        .HasName("pk_checkpoints");
-
-                    b.HasIndex("GrainId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_checkpoints_grain_id");
-
-                    b.HasIndex("Timestamp")
-                        .HasDatabaseName("ix_checkpoints_timestamp");
-
-                    b.ToTable("checkpoints", "query");
-                });
-
-            modelBuilder.Entity("Query.Albums.AlbumModel", b =>
+            modelBuilder.Entity("Query.Album.AlbumModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,6 +68,12 @@ namespace Query.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_albums");
 
@@ -122,7 +90,7 @@ namespace Query.Migrations
                     b.ToTable("albums", "query");
                 });
 
-            modelBuilder.Entity("Query.Categories.CategoryModel", b =>
+            modelBuilder.Entity("Query.Category.CategoryModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -139,6 +107,12 @@ namespace Query.Migrations
                         .HasColumnType("text")
                         .HasColumnName("name");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_categories");
 
@@ -149,7 +123,7 @@ namespace Query.Migrations
                     b.ToTable("categories", "query");
                 });
 
-            modelBuilder.Entity("Query.Images.ImageModel", b =>
+            modelBuilder.Entity("Query.Image.ImageModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -163,11 +137,6 @@ namespace Query.Migrations
                     b.Property<long>("AuthorId")
                         .HasColumnType("bigint")
                         .HasColumnName("author_id");
-
-                    b.PrimitiveCollection<long[]>("Likes")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("likes");
 
                     b.PrimitiveCollection<string[]>("Tags")
                         .IsRequired()
@@ -187,6 +156,12 @@ namespace Query.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("uploader_id");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_images");
 
@@ -202,7 +177,7 @@ namespace Query.Migrations
                     b.ToTable("images", "query");
                 });
 
-            modelBuilder.Entity("Query.Users.UserModel", b =>
+            modelBuilder.Entity("Query.User.UserModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -228,6 +203,12 @@ namespace Query.Migrations
                         .HasColumnType("text")
                         .HasColumnName("username");
 
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_users");
 
@@ -238,16 +219,53 @@ namespace Query.Migrations
                     b.ToTable("users", "query");
                 });
 
-            modelBuilder.Entity("Query.Albums.AlbumModel", b =>
+            modelBuilder.Entity("Shared.Core.Checkpoint", b =>
                 {
-                    b.HasOne("Query.Users.UserModel", null)
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long?>("GrainId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("grain_id");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_checkpoints");
+
+                    b.HasIndex("GrainId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_checkpoints_grain_id");
+
+                    b.HasIndex("Timestamp")
+                        .HasDatabaseName("ix_checkpoints_timestamp");
+
+                    b.ToTable("checkpoints", "query");
+                });
+
+            modelBuilder.Entity("Query.Album.AlbumModel", b =>
+                {
+                    b.HasOne("Query.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_albums_users_author_id");
 
-                    b.HasOne("Query.Categories.CategoryModel", null)
+                    b.HasOne("Query.Category.CategoryModel", null)
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -255,23 +273,23 @@ namespace Query.Migrations
                         .HasConstraintName("fk_albums_categories_category_id");
                 });
 
-            modelBuilder.Entity("Query.Images.ImageModel", b =>
+            modelBuilder.Entity("Query.Image.ImageModel", b =>
                 {
-                    b.HasOne("Query.Albums.AlbumModel", null)
+                    b.HasOne("Query.Album.AlbumModel", null)
                         .WithMany("Images")
                         .HasForeignKey("AlbumId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_images_albums_album_id");
 
-                    b.HasOne("Query.Users.UserModel", null)
+                    b.HasOne("Query.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_images_users_author_id");
 
-                    b.HasOne("Query.Users.UserModel", null)
+                    b.HasOne("Query.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("UploaderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -279,7 +297,7 @@ namespace Query.Migrations
                         .HasConstraintName("fk_images_users_uploader_id");
                 });
 
-            modelBuilder.Entity("Query.Albums.AlbumModel", b =>
+            modelBuilder.Entity("Query.Album.AlbumModel", b =>
                 {
                     b.Navigation("Images");
                 });

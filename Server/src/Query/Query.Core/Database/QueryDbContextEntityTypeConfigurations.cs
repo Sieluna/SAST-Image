@@ -35,7 +35,6 @@ internal sealed class QueryDbContextEntityTypeConfigurations
         builder.Property(image => image.UploadedAt);
         builder.Property(image => image.AuthorId);
         builder.PrimitiveCollection(image => image.Tags);
-        builder.PrimitiveCollection(image => image.Likes);
         builder.HasOne<UserModel>().WithMany().HasForeignKey(image => image.AuthorId);
         builder.HasOne<UserModel>().WithMany().HasForeignKey(image => image.UploaderId);
     }

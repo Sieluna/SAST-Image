@@ -43,8 +43,6 @@ public sealed class ImagesQueryHandler(QueryDbContext context)
                     Title = i.Title,
                     Tags = i.Tags,
                     UploadedAt = i.UploadedAt,
-                    Likes = i.Likes.Length,
-                    Requester = new(i.Likes.Contains(actorId)),
                 })
     );
 

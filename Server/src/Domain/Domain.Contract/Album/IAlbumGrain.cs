@@ -42,11 +42,16 @@ public interface IAlbumGrain : IGrainWithIntegerKey
 
     [AccessControl]
     [Alias("album_add_image")]
-    public ValueTask AddImage(ImageId id, ImageTitle title, ImageTags tags, ImageFileKey file);
+    public ValueTask AddImage(
+        ImageId id,
+        ImageDescription description,
+        ImageTags tags,
+        ImageFileKey file
+    );
 
     [AccessControl]
     [Alias("album_update_image")]
-    public ValueTask UpdateImage(ImageId id, ImageTitle? title, ImageTags? tags);
+    public ValueTask UpdateImage(ImageId id, ImageDescription? description, ImageTags? tags);
 
     [AccessControl]
     [Alias("album_remove_image")]

@@ -3,13 +3,18 @@ using Domain.ValueObject;
 
 namespace Domain.Album.Image;
 
-public readonly record struct ImageTitle(string Value) : IValueObject<ImageTitle, string>
+[OpenJsonConverter<ImageDescription, string>]
+public readonly record struct ImageDescription(string Value)
+    : IValueObject<ImageDescription, string>
 {
-    public const int MaxLength = 20;
+    public const int MaxLength = 32;
 
-    public static readonly ImageTitle Empty = new(string.Empty);
+    public static readonly ImageDescription Empty = new(string.Empty);
 
-    public static bool TryCreateNew(string value, [NotNullWhen(true)] out ImageTitle newObject)
+    public static bool TryCreateNew(
+        string value,
+        [NotNullWhen(true)] out ImageDescription newObject
+    )
     {
         if (string.IsNullOrWhiteSpace(value))
         {

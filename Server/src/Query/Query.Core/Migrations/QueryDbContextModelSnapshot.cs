@@ -22,7 +22,7 @@ namespace Query.Migrations
                 .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            modelBuilder.Entity("Query.Albums.AlbumModel", b =>
+            modelBuilder.Entity("Query.Album.AlbumModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -87,7 +87,7 @@ namespace Query.Migrations
                     b.ToTable("albums", "query");
                 });
 
-            modelBuilder.Entity("Query.Categories.CategoryModel", b =>
+            modelBuilder.Entity("Query.Category.CategoryModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -120,7 +120,7 @@ namespace Query.Migrations
                     b.ToTable("categories", "query");
                 });
 
-            modelBuilder.Entity("Query.Images.ImageModel", b =>
+            modelBuilder.Entity("Query.Image.ImageModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -134,11 +134,6 @@ namespace Query.Migrations
                     b.Property<long>("AuthorId")
                         .HasColumnType("bigint")
                         .HasColumnName("author_id");
-
-                    b.PrimitiveCollection<long[]>("Likes")
-                        .IsRequired()
-                        .HasColumnType("bigint[]")
-                        .HasColumnName("likes");
 
                     b.PrimitiveCollection<string[]>("Tags")
                         .IsRequired()
@@ -179,7 +174,7 @@ namespace Query.Migrations
                     b.ToTable("images", "query");
                 });
 
-            modelBuilder.Entity("Query.Users.UserModel", b =>
+            modelBuilder.Entity("Query.User.UserModel", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -258,16 +253,16 @@ namespace Query.Migrations
                     b.ToTable("checkpoints", "query");
                 });
 
-            modelBuilder.Entity("Query.Albums.AlbumModel", b =>
+            modelBuilder.Entity("Query.Album.AlbumModel", b =>
                 {
-                    b.HasOne("Query.Users.UserModel", null)
+                    b.HasOne("Query.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_albums_users_author_id");
 
-                    b.HasOne("Query.Categories.CategoryModel", null)
+                    b.HasOne("Query.Category.CategoryModel", null)
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -275,23 +270,23 @@ namespace Query.Migrations
                         .HasConstraintName("fk_albums_categories_category_id");
                 });
 
-            modelBuilder.Entity("Query.Images.ImageModel", b =>
+            modelBuilder.Entity("Query.Image.ImageModel", b =>
                 {
-                    b.HasOne("Query.Albums.AlbumModel", null)
+                    b.HasOne("Query.Album.AlbumModel", null)
                         .WithMany("Images")
                         .HasForeignKey("AlbumId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_images_albums_album_id");
 
-                    b.HasOne("Query.Users.UserModel", null)
+                    b.HasOne("Query.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_images_users_author_id");
 
-                    b.HasOne("Query.Users.UserModel", null)
+                    b.HasOne("Query.User.UserModel", null)
                         .WithMany()
                         .HasForeignKey("UploaderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -299,7 +294,7 @@ namespace Query.Migrations
                         .HasConstraintName("fk_images_users_uploader_id");
                 });
 
-            modelBuilder.Entity("Query.Albums.AlbumModel", b =>
+            modelBuilder.Entity("Query.Album.AlbumModel", b =>
                 {
                     b.Navigation("Images");
                 });

@@ -54,26 +54,31 @@ internal sealed class AlbumGrain : DomainGrain<AlbumState>, IAlbumGrain
         RaiseEvent(new AlbumUpdatedEvent(Id, title, description, tags, categoryId));
     }
 
-    public ValueTask AddImage(ImageId id, ImageTitle title, ImageTags tags, ImageFileKey file)
+    public ValueTask AddImage(
+        ImageId id,
+        ImageDescription description,
+        ImageTags tags,
+        ImageFileKey file
+    )
     {
         if (Actor.Id != State.Author && Actor.IsAdmin is false)
             throw new ForbiddenException();
         if (State.Images.Contains(id))
             return ValueTask.CompletedTask;
 
-        RaiseEvent(new AlbumImageAddedEvent(Id, id, title, tags, file, Actor));
+        RaiseEvent(new AlbumImageAddedEvent(Id, id, description, tags, file, Actor));
         return ValueTask.CompletedTask;
     }
 
-    public ValueTask UpdateImage(ImageId id, ImageTitle? title, ImageTags? tags)
+    public ValueTask UpdateImage(ImageId id, ImageDescription? description, ImageTags? tags)
     {
-        if (Actor.Id != State.Author && !Actor.IsAdmin is false)
+        if (Actor.Id != State.Author && Actor.IsAdmin is false)
             throw new ForbiddenException();
 
         if (State.Images.Contains(id) is false)
             return ValueTask.CompletedTask;
 
-        RaiseEvent(new AlbumImageUpdatedEvent(Id, id, title, tags));
+        RaiseEvent(new AlbumImageUpdatedEvent(Id, id, description, tags));
         return ValueTask.CompletedTask;
     }
 
