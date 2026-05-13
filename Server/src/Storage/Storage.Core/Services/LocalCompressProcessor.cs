@@ -4,28 +4,7 @@ using NetVips;
 
 namespace Storage.Services;
 
-public interface ICompressProcessor
-{
-    public ValueTask CompressAsync<TId>(TId id, CancellationToken cancellationToken = default)
-        where TId : ITypedId<TId>;
-
-    public ValueTask CompressAsync<TId>(
-        TId id,
-        string? sourceSuffix,
-        CancellationToken cancellationToken = default
-    )
-        where TId : ITypedId<TId>;
-
-    public ValueTask CompressAsync<TId>(
-        TId id,
-        string? sourceSuffix,
-        string? destinationSuffix,
-        CancellationToken cancellationToken = default
-    )
-        where TId : ITypedId<TId>;
-}
-
-internal sealed class LocalCompressProcessor(IOptions<StorageOptions> options) : ICompressProcessor
+public sealed class LocalCompressProcessor(IOptions<StorageOptions> options)
 {
     public async ValueTask CompressAsync<TId>(TId id, CancellationToken cancellationToken = default)
         where TId : ITypedId<TId>
@@ -53,7 +32,7 @@ internal sealed class LocalCompressProcessor(IOptions<StorageOptions> options) :
     {
         string original = id.AbsolutePath(options.Value.BaseUri.LocalPath, sourceExtension);
         string copy = Path.GetTempFileName();
-        File.Copy(original, copy, true);
+        System.IO.File.Copy(original, copy, true);
 
         await using FileStream stream = new(
             copy,
@@ -64,7 +43,7 @@ internal sealed class LocalCompressProcessor(IOptions<StorageOptions> options) :
             FileOptions.DeleteOnClose
         );
 
-        using var image = Image.NewFromStream(stream);
+        using var image = NetVips.Image.NewFromStream(stream);
         string temp = Path.GetTempFileName();
 
         image.Heifsave(
@@ -77,6 +56,6 @@ internal sealed class LocalCompressProcessor(IOptions<StorageOptions> options) :
         );
 
         string compressed = Path.ChangeExtension(original, destinationExtension);
-        File.Move(temp, compressed, true);
+        System.IO.File.Move(temp, compressed, true);
     }
 }

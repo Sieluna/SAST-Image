@@ -3,11 +3,11 @@ using Domain.Album;
 using Mediator;
 using Storage.Services;
 
-namespace Storage.Albums.Queries;
+namespace Storage.Album.Queries;
 
 public sealed record class AlbumCoverQuery(AlbumId Id, Actor Actor) : IQuery<Stream?>;
 
-public sealed class AlbumCoverQueryHandler(IImageFileManager manager, IAccessChecker checker)
+public sealed class AlbumCoverQueryHandler(LocalImageFileManager manager, IAccessChecker checker)
     : IQueryHandler<AlbumCoverQuery, Stream?>
 {
     public async ValueTask<Stream?> Handle(

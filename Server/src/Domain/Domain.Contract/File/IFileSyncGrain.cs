@@ -3,16 +3,13 @@
 namespace Domain.File;
 
 [Alias("FileManagerGrain")]
-public interface IFileManagerGrain : IGrainWithGuidKey
+public interface IFileSyncGrain : IGrainWithGuidKey
 {
     [Alias(nameof(GetAsync))]
-    public ValueTask<Immutable<byte[]>> GetAsync(
-        ImageFileKey key,
-        CancellationToken cancellationToken
-    );
+    public Task<Immutable<byte[]>> GetAsync(ImageFileKey key, CancellationToken cancellationToken);
 
     [Alias(nameof(UploadAsync))]
-    public ValueTask<ImageFileKey> UploadAsync(
+    public Task<ImageFileKey> UploadAsync(
         Immutable<byte[]> file,
         CancellationToken cancellationToken
     );

@@ -3,9 +3,9 @@ using Domain.Event;
 using Mediator;
 using Storage.Services;
 
-namespace Storage.Images.EventHandlers;
+namespace Storage.Image.EventHandlers;
 
-public sealed class AlbumImageRemovedEventHandler(IImageFileManager manager)
+public sealed class AlbumImageRemovedEventHandler(LocalImageFileManager manager)
     : IDomainEventHandler<AlbumImageRemovedEvent>
 {
     public async ValueTask<Unit> Handle(

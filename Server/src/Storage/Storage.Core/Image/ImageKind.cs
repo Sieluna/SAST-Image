@@ -1,4 +1,4 @@
-﻿namespace Storage.Images;
+﻿namespace Storage.Image;
 
 public enum ImageKind
 {

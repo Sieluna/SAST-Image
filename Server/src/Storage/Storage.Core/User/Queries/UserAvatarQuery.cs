@@ -2,11 +2,11 @@
 using Mediator;
 using Storage.Services;
 
-namespace Storage.Users.Queries;
+namespace Storage.User.Queries;
 
 public sealed record class UserAvatarQuery(UserId User) : IQuery<Stream?> { }
 
-public sealed class UserAvatarQueryHandler(IImageFileManager manager)
+public sealed class UserAvatarQueryHandler(LocalImageFileManager manager)
     : IQueryHandler<UserAvatarQuery, Stream?>
 {
     public async ValueTask<Stream?> Handle(

@@ -1,6 +1,6 @@
 ﻿using Domain.User;
 
-namespace Storage;
+namespace Storage.User;
 
 public sealed record AccessControl(long ResourceId, UserId[] Users, AccessControlLevel Level) { }
 
