@@ -5,13 +5,13 @@ using Domain.Filters;
 
 namespace Domain.Album;
 
-[Alias("album_grain")]
+[Alias("AlbumGrain")]
 public interface IAlbumGrain : IGrainWithIntegerKey
 {
     [AccessControl]
     [EnsureUniqueId]
     [AllowRecordNotExists]
-    [Alias("album_create")]
+    [Alias(nameof(Create))]
     public ValueTask<AlbumId> Create(
         AlbumTitle title,
         AlbumDescription description,
@@ -20,7 +20,7 @@ public interface IAlbumGrain : IGrainWithIntegerKey
     );
 
     [AccessControl]
-    [Alias("album_update")]
+    [Alias(nameof(Update))]
     public ValueTask Update(
         AlbumTitle? title,
         AlbumDescription? description,
@@ -29,19 +29,19 @@ public interface IAlbumGrain : IGrainWithIntegerKey
     );
 
     [AccessControl]
-    [Alias("album_remove")]
+    [Alias(nameof(Remove))]
     public ValueTask Remove();
 
     [AccessControl]
-    [Alias("album_subscribe")]
+    [Alias(nameof(Subscribe))]
     public ValueTask Subscribe();
 
     [AccessControl]
-    [Alias("album_unsubscribe")]
+    [Alias(nameof(Unsubscribe))]
     public ValueTask Unsubscribe();
 
     [AccessControl]
-    [Alias("album_add_image")]
+    [Alias(nameof(AddImage))]
     public ValueTask AddImage(
         ImageId id,
         ImageDescription description,
@@ -50,18 +50,10 @@ public interface IAlbumGrain : IGrainWithIntegerKey
     );
 
     [AccessControl]
-    [Alias("album_update_image")]
+    [Alias(nameof(UpdateImage))]
     public ValueTask UpdateImage(ImageId id, ImageDescription? description, ImageTags? tags);
 
     [AccessControl]
-    [Alias("album_remove_image")]
+    [Alias(nameof(RemoveImage))]
     public ValueTask RemoveImage(ImageId id);
-
-    [AccessControl]
-    [Alias("album_like_image")]
-    public ValueTask LikeImage(ImageId id);
-
-    [AccessControl]
-    [Alias("album_unlike_image")]
-    public ValueTask UnLikeImage(ImageId id);
 }

@@ -114,30 +114,6 @@ internal sealed class AlbumGrain : DomainGrain<AlbumState>, IAlbumGrain
         RaiseEvent(new AlbumUpdatedEvent(Id, Subscribes: subscribes));
         return ValueTask.CompletedTask;
     }
-
-    public ValueTask LikeImage(ImageId id)
-    {
-        if (State.Images.TryFind(id, out var image) is false)
-            return ValueTask.CompletedTask;
-        if (image.Likes.Contains(Actor.Id))
-            return ValueTask.CompletedTask;
-
-        var likes = image.Likes.Append(Actor.Id);
-
-        RaiseEvent(new AlbumImageUpdatedEvent(Id, id, Likes: likes));
-        return ValueTask.CompletedTask;
-    }
-
-    public ValueTask UnLikeImage(ImageId id)
-    {
-        if (State.Images.TryFind(id, out var image) is false)
-            return ValueTask.CompletedTask;
-
-        var likes = image.Likes.Filter(Actor.Id);
-
-        RaiseEvent(new AlbumImageUpdatedEvent(Id, id, Likes: likes));
-        return ValueTask.CompletedTask;
-    }
 }
 
 internal sealed class AlbumState : DomainStateBase, IDomainEventApplyable
@@ -181,16 +157,6 @@ file static class CollectionExtensions
     {
         public ImageState[] Update(AlbumImageUpdatedEvent e)
         {
-            if (e.Likes is null)
-                return images;
-            for (int i = 0; i < images.Length; i++)
-            {
-                if (images[i].Id == e.ImageId)
-                {
-                    images[i].Likes = e.Likes;
-                    break;
-                }
-            }
             return images;
         }
 
