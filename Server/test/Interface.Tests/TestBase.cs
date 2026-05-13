@@ -111,6 +111,8 @@ public abstract class TestBase
                     var storageOpts = Options.Create(new StorageOptions
                     {
                         BaseUri = new Uri("file:///tmp/test-images"),
+                        Quality = 75,
+                        Effort = 0,
                     });
                     services.AddSingleton(new LocalImageFileManager(storageOpts));
 
