@@ -241,8 +241,18 @@ public class MainHub : Hub
     {
         var actor = GetActor();
         var images = await _mediator.Send(new ImagesQuery(null, albumId, cursor, actor));
+        if (images.Length == 0) return [];
+
+        var uploaderIds = images.Select(i => i.UploaderId).Distinct();
+        var userNames = new Dictionary<long, string>();
+        foreach (var uid in uploaderIds)
+        {
+            var profile = await _mediator.Send(new UserProfileQuery(new UserId(uid)));
+            userNames[uid] = profile?.Username ?? "unknown";
+        }
+
         return images.Select(i => new ImageResponse(
-            i.Id, i.AlbumId, i.Title, i.UploaderId, "unknown",
+            i.Id, i.AlbumId, i.Title, i.UploaderId, userNames.GetValueOrDefault(i.UploaderId, "unknown"),
             i.Tags, i.Likes, i.Requester.Liked,
             new DateTimeOffset(i.UploadedAt).ToUnixTimeSeconds(),
             $"/images/{i.Id}")).ToArray();
