@@ -7,12 +7,12 @@ builder.AddServiceDefaults();
 
 builder.UseOrleansClient(client =>
 {
-    client.Services.AddDomainModelJsonSerialization();
     client.UseAdoNetClustering(options =>
     {
         options.ConnectionString = builder.Configuration.GetConnectionString(nameof(Domain));
         options.Invariant = nameof(Npgsql);
     });
+    client.Services.AddDomainModelJsonSerialization();
 });
 
 // Add services to the container.
@@ -29,6 +29,7 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 

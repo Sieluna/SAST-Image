@@ -20,8 +20,6 @@ public sealed class AlbumUpdatedEventHandler(QueryDbContext context)
             album.Tags = tags;
         if (e.CategoryId is { Value: var categoryId })
             album.CategoryId = categoryId;
-        if (e.Subscribes is { } subscribes)
-            album.Subscribes = Array.ConvertAll(subscribes, s => s.Value);
 
         return Unit.Value;
     }

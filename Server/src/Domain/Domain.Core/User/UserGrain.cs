@@ -67,18 +67,56 @@ internal sealed class UserGrain(IUsernameUniquenessChecker usernameChecker)
     }
 }
 
-internal sealed class UserState : DomainStateBase, IDomainEventApplyable
+internal sealed class UserState
+    : DomainStateBase,
+        IDomainEventApplicable<UserRegisteredEvent>,
+        IDomainEventApplicable<ProfileUpdatedEvent>,
+        IDomainEventApplicable<AvatarUpdatedEvent>,
+        IDomainEventApplicable<HeaderUpdatedEvent>
 {
     public Username Username { get; private set; }
 
     public override void Apply(DomainEventBase e)
     {
-        (Username, RecordExists) = e switch
+        switch (e)
         {
-            UserRegisteredEvent u => (u.Username, true),
-            ProfileUpdatedEvent u => (u.Username ?? Username, RecordExists),
-            AvatarUpdatedEvent or HeaderUpdatedEvent => (Username, RecordExists),
-            _ => throw new InvalidOperationException($"Unknown event type: {e.GetType().Name}"),
-        };
+            case UserRegisteredEvent e1:
+                Apply(e1);
+                break;
+            case ProfileUpdatedEvent e2:
+                Apply(e2);
+                break;
+            case AvatarUpdatedEvent e3:
+                Apply(e3);
+                break;
+            case HeaderUpdatedEvent e4:
+                Apply(e4);
+                break;
+            default:
+                throw new NotSupportedException(
+                    $"Event type {e.GetType().FullName} is not supported."
+                );
+        }
+    }
+
+    public void Apply(ProfileUpdatedEvent e)
+    {
+        Username = e.Username ?? Username;
+    }
+
+    public void Apply(UserRegisteredEvent e)
+    {
+        Username = e.Username;
+        RecordExists = true;
+    }
+
+    public void Apply(AvatarUpdatedEvent e)
+    {
+        // Do nothing.
+    }
+
+    public void Apply(HeaderUpdatedEvent e)
+    {
+        // Do nothing.
     }
 }

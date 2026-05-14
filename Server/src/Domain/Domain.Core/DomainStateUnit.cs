@@ -6,13 +6,6 @@ using Domain.User;
 
 namespace Domain;
 
-public sealed class DomainStateUnit
-{
-    public required long Id { get; set; }
-    public required int ETag { get; set; }
-    public required DomainStateBase Value { get; init; }
-}
-
 [JsonPolymorphic(
     TypeDiscriminatorPropertyName = "$type",
     UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FailSerialization
@@ -28,3 +21,9 @@ public abstract class DomainStateBase
 
 internal sealed class DerivedStateAttribute<TState> : DerivedAttribute<TState, DomainStateBase>
     where TState : DomainStateBase;
+
+internal interface IDomainEventApplicable<TEvent>
+    where TEvent : DomainEventBase
+{
+    void Apply(TEvent e);
+}

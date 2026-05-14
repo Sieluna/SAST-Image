@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Domain.Album.Events;
+﻿using Domain.Album.Events;
 using Domain.Album.Image;
 using Domain.Category;
 using Domain.Event;
@@ -99,9 +98,8 @@ internal sealed class AlbumGrain : DomainGrain<AlbumState>, IAlbumGrain
     {
         if (State.Subscribes.Contains(Actor.Id))
             return ValueTask.CompletedTask;
-        var subscribes = State.Subscribes.Append(Actor.Id);
 
-        RaiseEvent(new AlbumUpdatedEvent(Id, Subscribes: subscribes));
+        RaiseEvent(new AlbumSubscribedEvent(Id, Actor));
         return ValueTask.CompletedTask;
     }
 
@@ -109,67 +107,112 @@ internal sealed class AlbumGrain : DomainGrain<AlbumState>, IAlbumGrain
     {
         if (State.Subscribes.Contains(Actor.Id) is false)
             return ValueTask.CompletedTask;
-        var subscribes = State.Subscribes.Filter(Actor.Id);
 
-        RaiseEvent(new AlbumUpdatedEvent(Id, Subscribes: subscribes));
+        RaiseEvent(new AlbumUnsubscribedEvent(Id, Actor));
         return ValueTask.CompletedTask;
     }
 }
 
-internal sealed class AlbumState : DomainStateBase, IDomainEventApplyable
+internal sealed class AlbumState
+    : DomainStateBase,
+        IDomainEventApplicable<AlbumCreatedEvent>,
+        IDomainEventApplicable<AlbumUpdatedEvent>,
+        IDomainEventApplicable<AlbumRemovedEvent>,
+        IDomainEventApplicable<AlbumImageAddedEvent>,
+        IDomainEventApplicable<AlbumImageUpdatedEvent>,
+        IDomainEventApplicable<AlbumImageRemovedEvent>,
+        IDomainEventApplicable<AlbumSubscribedEvent>,
+        IDomainEventApplicable<AlbumUnsubscribedEvent>
 {
     public UserId Author { get; private set; }
-    public UserId[] Subscribes { get; private set; } = [];
-    public ImageState[] Images { get; private set; } = [];
+    public List<UserId> Subscribes { get; private set; } = [];
+    public List<ImageState> Images { get; private set; } = [];
 
     public override void Apply(DomainEventBase e)
     {
-        (Author, Images, Subscribes, RecordExists) = e switch
+        switch (e)
         {
-            AlbumCreatedEvent a => (a.Actor.Id, Images, Subscribes, true),
-            AlbumUpdatedEvent a => (Author, Images, a.Subscribes ?? Subscribes, RecordExists),
-            AlbumRemovedEvent => (Author, Images, Subscribes, false),
-            //
-            AlbumImageUpdatedEvent i => (Author, Images.Update(i), Subscribes, RecordExists),
-            AlbumImageAddedEvent i => (Author, Images.Append(i.ImageId), Subscribes, RecordExists),
-            AlbumImageRemovedEvent i => (
-                Author,
-                Images.Filter(i.ImageId),
-                Subscribes,
-                RecordExists
-            ),
-            _ => throw new InvalidOperationException($"Unknown event type: {e.GetType().Name}"),
-        };
+            case AlbumCreatedEvent createdEvent:
+                Apply(createdEvent);
+                break;
+            case AlbumUpdatedEvent updatedEvent:
+                Apply(updatedEvent);
+                break;
+            case AlbumRemovedEvent removedEvent:
+                Apply(removedEvent);
+                break;
+            case AlbumImageAddedEvent imageAddedEvent:
+                Apply(imageAddedEvent);
+                break;
+            case AlbumImageUpdatedEvent imageUpdatedEvent:
+                Apply(imageUpdatedEvent);
+                break;
+            case AlbumImageRemovedEvent imageRemovedEvent:
+                Apply(imageRemovedEvent);
+                break;
+            case AlbumSubscribedEvent subscribedEvent:
+                Apply(subscribedEvent);
+                break;
+            case AlbumUnsubscribedEvent unsubscribedEvent:
+                Apply(unsubscribedEvent);
+                break;
+            default:
+                throw new NotSupportedException(
+                    $"Event type {e.GetType().FullName} is not supported."
+                );
+        }
+    }
+
+    public void Apply(AlbumImageRemovedEvent e)
+    {
+        var index = Images.FindIndex(i => i.Id == e.ImageId);
+        Images.RemoveAt(index);
+    }
+
+    public void Apply(AlbumImageUpdatedEvent e)
+    {
+        // Do nothing.
+    }
+
+    public void Apply(AlbumImageAddedEvent e)
+    {
+        Images.Add(new ImageState { Id = e.ImageId });
+    }
+
+    public void Apply(AlbumRemovedEvent e)
+    {
+        RecordExists = false;
+    }
+
+    public void Apply(AlbumUpdatedEvent e)
+    {
+        // Do nothing.
+    }
+
+    public void Apply(AlbumCreatedEvent e)
+    {
+        Author = e.Actor.Id;
+        Images = [];
+        Subscribes = [];
+        RecordExists = true;
+    }
+
+    public void Apply(AlbumUnsubscribedEvent e)
+    {
+        var index = Subscribes.FindIndex(i => i == e.Actor.Id);
+        Images.RemoveAt(index);
+    }
+
+    public void Apply(AlbumSubscribedEvent e)
+    {
+        Subscribes.Add(e.Actor.Id);
     }
 }
 
 file static class CollectionExtensions
 {
-    extension<T>(IEnumerable<T> elements)
-        where T : IEquatable<T>
+    extension(List<ImageState> images)
     {
-        public T[] Filter(T element) => [.. elements.Where(e => !e.Equals(element))];
-
-        public T[] Append(T element) => [.. elements, element];
-    }
-
-    extension(ImageState[] images)
-    {
-        public ImageState[] Update(AlbumImageUpdatedEvent e)
-        {
-            return images;
-        }
-
-        public ImageState[] Filter(ImageId id) => Array.FindAll(images, i => i.Id != id);
-
-        public ImageState[] Append(ImageId id) => [.. images, new ImageState { Id = id }];
-
-        public bool Contains(ImageId id) => Array.Exists(images, i => i.Id == id);
-
-        public bool TryFind(ImageId id, [NotNullWhen(true)] out ImageState? item)
-        {
-            item = Array.Find(images, i => i.Id == id);
-            return item != null;
-        }
+        public bool Contains(ImageId id) => images.Exists(i => i.Id == id);
     }
 }

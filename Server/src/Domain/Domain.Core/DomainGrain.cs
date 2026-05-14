@@ -9,13 +9,13 @@ using Orleans.EventSourcing.CustomStorage;
 namespace Domain;
 
 public abstract class DomainGrain<TState> : DomainGrain<TState, DomainEventBase>
-    where TState : DomainStateBase, IDomainEventApplyable<DomainEventBase>, new();
+    where TState : DomainStateBase, new();
 
 public abstract class DomainGrain<TState, TEventBase>
     : JournaledGrain<TState, TEventBase>,
         ICustomStorageInterface<TState, TEventBase>,
         IDomainGrainStateRecordExistenceIndicator
-    where TState : DomainStateBase, IDomainEventApplyable<TEventBase>, new()
+    where TState : DomainStateBase, new()
     where TEventBase : DomainEventBase
 {
     public bool RecordExists => State.RecordExists;
@@ -67,27 +67,10 @@ public abstract class DomainGrain<TState, TEventBase>
         await context.Events.AddRangeAsync(events);
         await context.SaveChangesAsync();
 
-        var snapshot = await context.Snapshots.SingleOrDefaultAsync(s => s.Id == grainId);
-
-        var state = snapshot?.Value as TState ?? new();
+        var state = new TState();
 
         foreach (var e in updates)
             state.Apply(e);
-
-        if (snapshot is null)
-        {
-            snapshot = new()
-            {
-                ETag = currentVersion,
-                Id = grainId,
-                Value = state,
-            };
-            await context.Snapshots.AddAsync(snapshot);
-        }
-        else
-        {
-            snapshot.ETag = currentVersion;
-        }
 
         await context.SaveChangesAsync();
         return true;
@@ -100,19 +83,16 @@ public abstract class DomainGrain<TState, TEventBase>
         await using var context = await ServiceProvider
             .GetRequiredService<IDbContextFactory<DomainDbContext>>()
             .CreateDbContextAsync();
-        var snapshot = await context
-            .Snapshots.AsNoTracking()
-            .SingleOrDefaultAsync(s => s.Id == grainId);
 
-        var state = snapshot?.Value as TState ?? new();
-        var version = snapshot?.ETag ?? 0;
+        var state = new TState();
         var events = await context
             .Events.AsNoTracking()
-            .Where(e => e.GrainId == grainId && e.ETag > version)
+            .Where(e => e.GrainId == grainId)
             .OrderBy(e => e.ETag)
             .Select(e => e.Value)
             .ToArrayAsync();
 
+        var version = 0;
         foreach (var e in events)
         {
             state.Apply((TEventBase)e);
@@ -121,12 +101,4 @@ public abstract class DomainGrain<TState, TEventBase>
 
         return new(version, state);
     }
-}
-
-public interface IDomainEventApplyable : IDomainEventApplyable<DomainEventBase>;
-
-public interface IDomainEventApplyable<TEventBase>
-    where TEventBase : DomainEventBase
-{
-    void Apply(TEventBase e);
 }

@@ -6,7 +6,6 @@ namespace Domain.Database;
 public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) : DbContext(options)
 {
     public const string Scheme = "domain";
-    public required DbSet<DomainStateUnit> Snapshots { get; init; }
     public required DbSet<DomainEventUnit> Events { get; init; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -18,11 +17,6 @@ public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) :
         );
 
         builder.HasDefaultSchema(Scheme);
-
-        var snapshots = builder.Entity<DomainStateUnit>();
-        snapshots.HasKey(s => s.Id);
-        snapshots.HasIndex(s => s.ETag);
-        snapshots.Property(s => s.Value).HasColumnType("jsonb");
 
         var events = builder.Entity<DomainEventUnit>();
         events.HasKey(e => e.EventId);

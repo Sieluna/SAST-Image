@@ -20,6 +20,8 @@ namespace Domain.Event;
 [DerivedEvent<AlbumCreatedEvent>]
 [DerivedEvent<AlbumRemovedEvent>]
 [DerivedEvent<AlbumUpdatedEvent>]
+[DerivedEvent<AlbumSubscribedEvent>]
+[DerivedEvent<AlbumUnsubscribedEvent>]
 [DerivedEvent<AlbumImageAddedEvent>]
 [DerivedEvent<AlbumImageUpdatedEvent>]
 [DerivedEvent<AlbumImageRemovedEvent>]

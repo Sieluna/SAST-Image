@@ -37,18 +37,47 @@ internal sealed class CategoryGrain() : DomainGrain<CategoryState>, ICategoryGra
     }
 }
 
-internal sealed class CategoryState : DomainStateBase, IDomainEventApplyable
+internal sealed class CategoryState
+    : DomainStateBase,
+        IDomainEventApplicable<CategoryCreatedEvent>,
+        IDomainEventApplicable<CategoryUpdatedEvent>,
+        IDomainEventApplicable<CategoryDeletedEvent>
 {
     public CategoryName Name { get; private set; }
 
     public override void Apply(DomainEventBase e)
     {
-        (Name, RecordExists) = e switch
+        switch (e)
         {
-            CategoryCreatedEvent c => (c.Name, true),
-            CategoryUpdatedEvent c => (c.Name ?? Name, RecordExists),
-            CategoryDeletedEvent => (Name, false),
-            _ => throw new InvalidOperationException($"Unknown event type: {e.GetType().Name}"),
-        };
+            case CategoryCreatedEvent e1:
+                Apply(e1);
+                break;
+            case CategoryUpdatedEvent e2:
+                Apply(e2);
+                break;
+            case CategoryDeletedEvent e3:
+                Apply(e3);
+                break;
+            default:
+                throw new NotSupportedException(
+                    $"Event type {e.GetType().FullName} is not supported."
+                );
+        }
+    }
+
+    public void Apply(CategoryUpdatedEvent e)
+    {
+        Name = e.Name ?? Name;
+    }
+
+    public void Apply(CategoryDeletedEvent e)
+    {
+        RecordExists = false;
+    }
+
+    public void Apply(CategoryCreatedEvent e)
+    {
+        Name = e.Name;
+        RecordExists = true;
     }
 }
