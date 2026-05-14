@@ -3,23 +3,23 @@ using Orleans.Concurrency;
 
 namespace Domain.User;
 
-[Alias("user_grain")]
+[Alias("UserGrain")]
 public interface IUserGrain : IGrainWithIntegerKey
 {
     [EnsureUniqueId]
     [AllowRecordNotExists]
-    [Alias("user_register")]
+    [Alias(nameof(Register))]
     ValueTask<UserId> Register(Username username, Nickname Nickname, Biography Biography);
 
     [AccessControl]
-    [Alias("user_update_profile")]
+    [Alias(nameof(UpdateProfile))]
     ValueTask UpdateProfile(Username? username, Nickname? nickname, Biography? biography);
 
     [AccessControl]
-    [Alias("user_update_avatar")]
+    [Alias(nameof(UpdateAvatar))]
     ValueTask UpdateAvatar(Immutable<byte[]> file, CancellationToken cancellationToken = default);
 
     [AccessControl]
-    [Alias("user_update_header")]
+    [Alias(nameof(UpdateHeader))]
     ValueTask UpdateHeader(Immutable<byte[]> file, CancellationToken cancellationToken = default);
 }
