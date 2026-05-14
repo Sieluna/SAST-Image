@@ -57,6 +57,7 @@ builder.Build().Run();
 
 file static class Rua
 {
+    static int port = 30000;
     extension<T>(IResourceBuilder<T> resource)
         where T : IResourceWithEnvironment, IResourceWithEndpoints
     {
@@ -65,10 +66,9 @@ file static class Rua
             return resource
                 .WithEnvironment("Orleans__Clustering__ProviderType", "AdoNet")
                 .WithEnvironment("Orleans__Silo__SiloName", resource.Resource.Name)
-            //.WithEnvironment("Orleans__Endpoints__AdvertisedIPAddress", "127.0.0.1")
-            //.WithEnvironment("Orleans__Endpoints__GatewayPort", (++port).ToString())
-            //.WithEnvironment("Orleans__Endpoints__SiloPort", (++port).ToString())
-            ;
+                //.WithEnvironment("Orleans__Endpoints__AdvertisedIPAddress", "127.0.0.1")
+                .WithEnvironment("Orleans__Endpoints__GatewayPort", (++port).ToString())
+                .WithEnvironment("Orleans__Endpoints__SiloPort", (++port).ToString());
         }
 
         public IResourceBuilder<T> WithConnectionString(string name) =>
