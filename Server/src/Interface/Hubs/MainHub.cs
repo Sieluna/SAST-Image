@@ -72,8 +72,9 @@ public class MainHub : Hub
     public async Task<JwtTokenResponse> Register(RegisterRequest request)
     {
         SetActor(null);
-        var grain = _grains.GetGrain<IUserGrain>(0);
-        var userId = await grain.Register(
+        var userId = UserId.GenerateNew();
+        var grain = _grains.GetGrain<IUserGrain>(userId.Value);
+        userId = await grain.Register(
             new Username(request.Username),
             new Nickname(request.Nickname),
             new Biography(request.Biography));
@@ -125,8 +126,9 @@ public class MainHub : Hub
     {
         var actor = GetActor();
         SetActor(actor);
-        var grain = _grains.GetGrain<IAlbumGrain>(0);
-        var albumId = await grain.Create(
+        var albumId = AlbumId.GenerateNew();
+        var grain = _grains.GetGrain<IAlbumGrain>(albumId.Value);
+        albumId = await grain.Create(
             new AlbumTitle(request.Title),
             new AlbumDescription(request.Description),
             new AlbumTags(request.Tags),
@@ -258,11 +260,12 @@ public class MainHub : Hub
     {
         var actor = GetActor();
         SetActor(actor);
-        var grain = _grains.GetGrain<ICategoryGrain>(0);
+        var categoryId = CategoryId.GenerateNew();
+        var grain = _grains.GetGrain<ICategoryGrain>(categoryId.Value);
         var id = await grain.Create(
             new CategoryName(request.Name),
             new CategoryDescription(request.Description));
-        return new CategoryDto(id.Value, request.Name, request.Description);
+        return new CategoryDto(categoryId.Value, request.Name, request.Description);
     }
 
     [Authorize]
