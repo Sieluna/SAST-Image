@@ -48,7 +48,7 @@ public sealed class AlbumsQueryHandler(QueryDbContext context)
                     Tags = a.Tags,
                     Title = a.Title,
                     Description = a.Description,
-                    SubscribeCount = a.Subscribes.Length,
+                    SubscribeCount = a.Subscribes.Count,
                 })
     );
 

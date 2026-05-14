@@ -25,6 +25,6 @@ public sealed class AlbumModel
     public string[] Tags { get; internal set; } = [];
     public DateTime CreatedAt { get; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; internal set; } = DateTime.UtcNow;
-    public long[] Subscribes { get; internal set; } = [];
+    public List<long> Subscribes { get; internal set; } = [];
     public List<ImageModel> Images { get; } = [];
 }
