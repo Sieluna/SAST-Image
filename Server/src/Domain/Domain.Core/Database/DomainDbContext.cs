@@ -22,6 +22,7 @@ public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) :
         events.HasKey(e => e.EventId);
         events.HasIndex(e => new { e.GrainId, e.ETag }).IsUnique();
         events.HasIndex(e => e.Timestamp);
+        events.HasIndex(e => e.Type).IsUnique(false);
         events.Property(e => e.Value).HasColumnType("jsonb");
     }
 }
