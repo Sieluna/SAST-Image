@@ -24,7 +24,7 @@ public static class ISiloBuilderExtensions
                 b.AddJsonSerializer(type => type.Namespace!.StartsWith("Domain"))
             );
 
-            builder.Services.AddSingleton<IUsernameUniquenessChecker, UsernameUniquenessChecker>();
+            builder.Services.AddSingleton<IUsernameManagerGrain, UsernameManagerGrain>();
             builder.Services.AddSingleton<IIdUniquenessChecker, IdUniquenessChecker>();
 
             builder.Services.AddPooledDbContextFactory<DomainDbContext>(options =>

@@ -2,9 +2,5 @@
 
 namespace Domain.User.Events;
 
-public sealed record class ProfileUpdatedEvent(
-    UserId Id,
-    Username? Username,
-    Nickname? Nickname,
-    Biography? Biography
-) : DomainEventBase { }
+public sealed record class ProfileUpdatedEvent(UserId Id, Nickname? Nickname, Biography? Biography)
+    : DomainEventBase { }

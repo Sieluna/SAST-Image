@@ -6,10 +6,7 @@ using Orleans.Concurrency;
 
 namespace Domain.User;
 
-internal sealed class UserGrain(IUsernameUniquenessChecker usernameChecker)
-    : DomainGrain<UserState>,
-        IUserGrain,
-        IIncomingGrainCallFilter
+internal sealed class UserGrain : DomainGrain<UserState>, IUserGrain, IIncomingGrainCallFilter
 {
     public Task Invoke(IIncomingGrainCallContext context)
     {
@@ -20,15 +17,17 @@ internal sealed class UserGrain(IUsernameUniquenessChecker usernameChecker)
         return context.Invoke();
     }
 
-    public async ValueTask<UserId> Register(
+    public async ValueTask<UserId?> Register( // TODO: Change to `Union` in .NET11
         Username username,
         Nickname nickname,
-        Biography biography
+        Biography biography,
+        CancellationToken cancellationToken = default
     )
     {
-        if (await usernameChecker.ExistsAsync(username))
-            throw new UsernameAlreadyExistsException(username);
+        var manager = GrainFactory.GetGrain<IUsernameManagerGrain>(Guid.Empty);
 
+        if (await manager.Put(Id, username, cancellationToken) is false)
+            return null;
         RaiseEvent(new UserRegisteredEvent(Id, username, nickname, biography));
         return Id;
     }
@@ -43,6 +42,20 @@ internal sealed class UserGrain(IUsernameUniquenessChecker usernameChecker)
         RaiseEvent(new AvatarUpdatedEvent(Id, key));
     }
 
+    public async ValueTask<bool> UpdateUsername(
+        Username username,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var manager = GrainFactory.GetGrain<IUsernameManagerGrain>(Guid.Empty);
+
+        if (await manager.Put(Id, username, cancellationToken) is false)
+            return false;
+
+        RaiseEvent(new UsernameUpdatedEvent(Id, username));
+        return true;
+    }
+
     public async ValueTask UpdateHeader(
         Immutable<byte[]> file,
         CancellationToken cancellationToken = default
@@ -54,16 +67,12 @@ internal sealed class UserGrain(IUsernameUniquenessChecker usernameChecker)
     }
 
     public async ValueTask UpdateProfile(
-        Username? username,
         Nickname? nickname,
-        Biography? biography
+        Biography? biography,
+        CancellationToken cancellationToken = default
     )
     {
-        if (username is { } value)
-            if (await usernameChecker.ExistsAsync(value))
-                throw new UsernameAlreadyExistsException(value);
-
-        RaiseEvent(new ProfileUpdatedEvent(Id, username, nickname, biography));
+        RaiseEvent(new ProfileUpdatedEvent(Id, nickname, biography));
     }
 }
 
@@ -74,8 +83,6 @@ internal sealed class UserState
         IDomainEventApplicable<AvatarUpdatedEvent>,
         IDomainEventApplicable<HeaderUpdatedEvent>
 {
-    public Username Username { get; private set; }
-
     public override void Apply(DomainEventBase e)
     {
         switch (e)
@@ -101,12 +108,11 @@ internal sealed class UserState
 
     public void Apply(ProfileUpdatedEvent e)
     {
-        Username = e.Username ?? Username;
+        // Do nothing.
     }
 
     public void Apply(UserRegisteredEvent e)
     {
-        Username = e.Username;
         RecordExists = true;
     }
 

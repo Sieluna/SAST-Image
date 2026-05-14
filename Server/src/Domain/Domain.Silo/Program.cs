@@ -1,5 +1,4 @@
 using Domain;
-using Orleans.Configuration;
 using Orleans.Dashboard;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,12 +13,12 @@ builder.UseOrleans(builder =>
         options.ConnectionString = builder.Configuration.GetConnectionString(nameof(Domain));
     });
 
-    builder.Services.Configure<EndpointOptions>(
-        builder.Configuration.GetRequiredSection("Orleans:Endpoints")
-    );
-    builder.Services.Configure<SiloOptions>(
-        builder.Configuration.GetRequiredSection("Orleans:Silo")
-    );
+    //builder.Services.Configure<EndpointOptions>(
+    //    builder.Configuration.GetRequiredSection("Orleans:Endpoints")
+    //);
+    //builder.Services.Configure<SiloOptions>(
+    //    builder.Configuration.GetRequiredSection("Orleans:Silo")
+    //);
 
     builder.UseDomain();
     builder.AddDashboard(options => options.HideTrace = true);

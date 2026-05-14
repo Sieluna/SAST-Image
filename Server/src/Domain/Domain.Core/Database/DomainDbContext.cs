@@ -1,4 +1,5 @@
 ﻿using Domain.Event;
+using Domain.User;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain.Database;
@@ -7,6 +8,7 @@ public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) :
 {
     public const string Scheme = "domain";
     public required DbSet<DomainEventUnit> Events { get; init; }
+    public required DbSet<UsernameRegistry> Usernames { get; init; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -18,11 +20,19 @@ public sealed class DomainDbContext(DbContextOptions<DomainDbContext> options) :
 
         builder.HasDefaultSchema(Scheme);
 
-        var events = builder.Entity<DomainEventUnit>();
-        events.HasKey(e => e.EventId);
-        events.HasIndex(e => new { e.GrainId, e.ETag }).IsUnique();
-        events.HasIndex(e => e.Timestamp);
-        events.HasIndex(e => e.Type).IsUnique(false);
-        events.Property(e => e.Value).HasColumnType("jsonb");
+        var e = builder.Entity<DomainEventUnit>();
+        e.HasKey(e => e.EventId);
+        e.HasIndex(e => new { e.GrainId, e.ETag }).IsUnique();
+        e.HasIndex(e => e.Timestamp).IsUnique();
+        e.HasIndex(e => e.Type).IsUnique(false);
+        e.Property(e => e.Value).HasColumnType("jsonb");
+
+        var username = builder.Entity<UsernameRegistry>();
+        username.HasKey(e => new { e.UserId, e.Username });
+        username.HasIndex(e => e.UserId).IsUnique();
+        username.HasIndex(e => e.Username).IsUnique();
+        username.Property<uint>("Version").IsRowVersion();
+        username.Property(u => u.UserId).HasConversion(u => u.Value, v => new(v));
+        username.Property(u => u.Username).HasConversion(u => u.Value, v => new(v));
     }
 }

@@ -16,8 +16,6 @@ public sealed class ProfileUpdatedEventHandler(QueryDbContext context)
             user.Biography = biography;
         if (e.Nickname is { Value: var nickname })
             user.Nickname = nickname;
-        if (e.Username is { Value: var username })
-            user.Username = username;
 
         return Unit.Value;
     }

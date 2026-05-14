@@ -13,6 +13,7 @@ namespace Domain.Event;
 [DerivedEvent<CategoryUpdatedEvent>]
 // User
 [DerivedEvent<ProfileUpdatedEvent>]
+[DerivedEvent<UsernameUpdatedEvent>]
 [DerivedEvent<AvatarUpdatedEvent>]
 [DerivedEvent<HeaderUpdatedEvent>]
 [DerivedEvent<UserRegisteredEvent>]

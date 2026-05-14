@@ -10,5 +10,9 @@ public sealed class DomainEventUnit
     public required int ETag { get; init; }
     public required DomainEventBase Value { get; init; }
     public required DateTime Timestamp { get; init; }
-    public string Type => Value.GetType().Name;
+    public string Type
+    {
+        get => Value.GetType().Name;
+        init => _ = value;
+    }
 }
