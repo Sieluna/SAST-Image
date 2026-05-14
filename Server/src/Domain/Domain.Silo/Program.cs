@@ -1,5 +1,5 @@
 using Domain;
-using Microsoft.EntityFrameworkCore;
+using Orleans.Configuration;
 using Orleans.Dashboard;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,13 +8,16 @@ builder.AddServiceDefaults();
 
 builder.UseOrleans(builder =>
 {
-    builder.UseDomain();
-    builder.AddDashboard(options => options.HideTrace = true);
+    builder.Services.Configure<EndpointOptions>(
+        builder.Configuration.GetRequiredSection("Orleans:Endpoints")
+    );
     builder.UseAdoNetClustering(options =>
     {
         options.Invariant = nameof(Npgsql);
         options.ConnectionString = builder.Configuration.GetConnectionString(nameof(Domain));
     });
+    builder.UseDomain();
+    builder.AddDashboard(options => options.HideTrace = true);
 });
 
 var app = builder.Build();

@@ -2,17 +2,21 @@
 using Orleans.Concurrency;
 using Storage.Services;
 
-namespace Storage.File;
+namespace Storage;
 
 [StatelessWorker]
 internal sealed class ImageFileManagerGrain(LocalImageFileManager manager)
     : Grain,
         IImageFileManagerGrain
 {
-    public async Task<Immutable<byte[]?>> GetAsync<TId>(TId id, CancellationToken cancellationToken)
+    public async Task<Immutable<byte[]?>> GetAsync<TId>(
+        TId id,
+        string? extension,
+        CancellationToken cancellationToken = default
+    )
         where TId : ITypedId<TId>
     {
-        await using var stream = manager.GetStream(id);
+        await using var stream = manager.GetStream(id, extension);
 
         if (stream is null)
             return new Immutable<byte[]?>(null);

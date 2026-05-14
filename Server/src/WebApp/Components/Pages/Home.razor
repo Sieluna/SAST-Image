@@ -5,3 +5,26 @@
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+
+<div>@message</div>
+
+<img src="data:image /jpeg;base64,@dataStr" />
+
+
+@code
+{
+    [Inject] IGrainFactory Factory { get; init; } = null!;
+
+    string message = string.Empty;
+    string dataStr = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var info = await Factory.GetGrain<Query.IQueryHandlerGrain>(Guid.Empty).QueryAsync(new Query.User.UserProfileQuery(new(233)));
+        message = System.Text.Json.JsonSerializer.Serialize(info);
+
+        var data = await Factory.GetGrain<Storage.IImageFileManagerGrain>(Guid.Empty).GetAsync(new Domain.User.UserId(233), Storage.UserFileExtensionKeys.Header);
+        if(data.Value is not null)
+            dataStr = Convert.ToBase64String(data.Value);
+    }
+}

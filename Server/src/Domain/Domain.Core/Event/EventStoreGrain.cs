@@ -1,10 +1,9 @@
 ﻿using Domain.Database;
 using Microsoft.EntityFrameworkCore;
-using Orleans.Concurrency;
 
 namespace Domain.Event;
 
-[StatelessWorker]
+[Orleans.Concurrency.StatelessWorker]
 internal sealed class EventStoreGrain(IDbContextFactory<DomainDbContext> factory)
     : Grain,
         IEventStoreGrain

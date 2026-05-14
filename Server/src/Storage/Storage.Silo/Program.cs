@@ -1,4 +1,5 @@
 using Domain;
+using Orleans.Configuration;
 using Orleans.Dashboard;
 using Storage;
 
@@ -14,6 +15,9 @@ builder.UseOrleans(builder =>
         options.Invariant = "Npgsql";
         options.ConnectionString = builder.Configuration.GetConnectionString("Domain");
     });
+    builder.Services.Configure<EndpointOptions>(
+        builder.Configuration.GetRequiredSection("Orleans:Endpoints")
+    );
     builder.AddDashboard(options => options.HideTrace = true);
     builder.Services.AddStorage(builder.Configuration);
     builder.Services.AddDomainModelJsonSerialization();

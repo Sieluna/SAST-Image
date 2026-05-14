@@ -1,14 +1,13 @@
 ﻿using Mediator;
-using Orleans.Concurrency;
 
 namespace Query;
 
-[StatelessWorker]
+[Orleans.Concurrency.StatelessWorker]
 internal sealed class QueryHandlerGrain(IMediator mediator) : Grain, IQueryHandlerGrain
 {
     public async Task<TResult> QueryAsync<TResult>(
         IQuery<TResult> query,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken = default
     )
     {
         return await mediator.Send(query, cancellationToken);
