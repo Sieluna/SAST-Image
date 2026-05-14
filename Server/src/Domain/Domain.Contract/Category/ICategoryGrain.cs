@@ -2,23 +2,23 @@
 
 namespace Domain.Category;
 
-[Alias("category_grain")]
+[Alias("CategoryGrain")]
 public interface ICategoryGrain : IGrainWithIntegerKey
 {
     [AccessControl(Role.Admin)]
     [EnsureUniqueId]
     [AllowRecordNotExists]
-    [Alias("category_create")]
+    [Alias(nameof(Create))]
     ValueTask<CategoryId> Create(CategoryName name, CategoryDescription description);
 
     [AccessControl(Role.Admin)]
-    [Alias("category_update")]
+    [Alias(nameof(Update))]
     ValueTask Update(CategoryName? name, CategoryDescription? description);
 
     [AccessControl(Role.Admin)]
-    [Alias("category_delete")]
+    [Alias(nameof(Delete))]
     ValueTask Delete();
 
-    [Alias("category_check")]
+    [Alias(nameof(Exists))]
     ValueTask<bool> Exists();
 }
