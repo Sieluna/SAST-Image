@@ -8,7 +8,7 @@ using static App.Framework.Tags;
 
 namespace App.Components;
 
-public partial class LoginPage(Action<SastClient> onLogin, Action<string> setPage) : IComponent
+public partial class LoginPage(SastClient client, Action onAuthenticated) : IComponent
 {
     public VNode Render()
     {
@@ -24,11 +24,31 @@ public partial class LoginPage(Action<SastClient> onLogin, Action<string> setPag
 
                 TabSwitcher(tab, setTab),
 
-                tab == "login"
-                    ? LoginForm(onLogin)
-                    : RegisterForm(onLogin, setTab),
+                tab == "login" ? LoginForm() : RegisterForm(setTab),
 
                 OAuthSection()));
+    }
+
+    private static VNode Field(string placeholder, string type, string value, Action<string> set) =>
+        input(type, placeholder, value, (Action<JSObject>)(e =>
+            set(e.GetPropertyAsJSObject("target")!.GetPropertyAsString("value") ?? "")));
+
+    private static async Task AuthenticateAsync(
+        SastClient c,
+        Func<SastClient, Task> auth,
+        Action onSuccess,
+        Action<bool> setLoading,
+        Action<string> setError)
+    {
+        setLoading(true);
+        setError("");
+        try
+        {
+            await auth(c);
+            onSuccess();
+        }
+        catch (Exception ex) { setError(ex.Message); }
+        finally { setLoading(false); }
     }
 
     private static VNode TabSwitcher(string tab, Action<string> setTab)
@@ -40,20 +60,16 @@ public partial class LoginPage(Action<SastClient> onLogin, Action<string> setPag
                 () => setTab("register"), txt("Register")));
     }
 
-    private static VNode LoginForm(Action<SastClient> onLogin)
+    private VNode LoginForm()
     {
         var (username, setUsername) = UseState("");
         var (password, setPassword) = UseState("");
         var (error, setError) = UseState("");
         var (loading, setLoading) = UseState(false);
 
-        var field = (string placeholder, string type, string value, Action<string> set) =>
-            input(type, placeholder, value, (Action<JSObject>)(e =>
-                set(e.GetPropertyAsJSObject("target")!.GetPropertyAsString("value") ?? "")));
-
         return div(Css.login_form,
-            field("Username", "text", username, setUsername),
-            field("Password", "password", password, setPassword),
+            Field("Username", "text", username, setUsername),
+            Field("Password", "password", password, setPassword),
 
             error.Length > 0
                 ? p("error", txt(error))
@@ -62,23 +78,13 @@ public partial class LoginPage(Action<SastClient> onLogin, Action<string> setPag
             button("md-btn primary full", async () =>
             {
                 if (loading) return;
-                setLoading(true);
-                setError("");
-                try
-                {
-                    var client = new SastClient(new ClientOptions
-                    {
-                        Storage = new BrowserStorage()
-                    });
-                    await client.SignalR().LoginAsync(username, password);
-                    onLogin(client);
-                }
-                catch (Exception ex) { setError(ex.Message); }
-                finally { setLoading(false); }
+                await AuthenticateAsync(client,
+                    c => c.SignalR().LoginAsync(username, password),
+                    onAuthenticated, setLoading, setError);
             }, txt(loading ? "Signing in..." : "Sign In")));
     }
 
-    private static VNode RegisterForm(Action<SastClient> onLogin, Action<string> setTab)
+    private VNode RegisterForm(Action<string> setTab)
     {
         var (username, setUsername) = UseState("");
         var (nickname, setNickname) = UseState("");
@@ -87,16 +93,12 @@ public partial class LoginPage(Action<SastClient> onLogin, Action<string> setPag
         var (error, setError) = UseState("");
         var (loading, setLoading) = UseState(false);
 
-        var field = (string placeholder, string type, string value, Action<string> set) =>
-            input(type, placeholder, value, (Action<JSObject>)(e =>
-                set(e.GetPropertyAsJSObject("target")!.GetPropertyAsString("value") ?? "")));
-
         return div(Css.login_form,
-            field("Username", "text", username, setUsername),
-            field("Nickname", "text", nickname, setNickname),
-            field("Biography", "text", biography, setBiography),
+            Field("Username", "text", username, setUsername),
+            Field("Nickname", "text", nickname, setNickname),
+            Field("Biography", "text", biography, setBiography),
             // TODO: Password field reserved for future server-side password support
-            field("Password (optional)", "password", password, setPassword),
+            Field("Password (optional)", "password", password, setPassword),
 
             error.Length > 0
                 ? p("error", txt(error))
@@ -110,20 +112,9 @@ public partial class LoginPage(Action<SastClient> onLogin, Action<string> setPag
                     setError("Username and nickname are required.");
                     return;
                 }
-                setLoading(true);
-                setError("");
-                try
-                {
-                    var client = new SastClient(new ClientOptions
-                    {
-                        Storage = new BrowserStorage()
-                    });
-                    await client.SignalR().RegisterAsync(new RegisterRequest(
-                        username, nickname, biography));
-                    onLogin(client);
-                }
-                catch (Exception ex) { setError(ex.Message); }
-                finally { setLoading(false); }
+                await AuthenticateAsync(client,
+                    c => c.SignalR().RegisterAsync(new RegisterRequest(username, nickname, biography)),
+                    onAuthenticated, setLoading, setError);
             }, txt(loading ? "Creating account..." : "Register")),
 
             p(Css.login_switch,

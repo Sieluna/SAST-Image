@@ -56,18 +56,6 @@ public partial class AlbumDetailPage(long albumId, Action<string> setPage, Actio
             div("md-card-body",
                 h4(txt(image.Title)),
                 div("md-card-meta",
-                    span(txt($"♥ {image.Likes}")),
-                    button("md-btn text sm", async () =>
-                    {
-                        try
-                        {
-                            if (image.Liked)
-                                await signalR.UnlikeImageAsync(image.AlbumId, image.Id);
-                            else
-                                await signalR.LikeImageAsync(image.AlbumId, image.Id);
-                        }
-                        catch { /* TODO: Show error feedback to user */ }
-                    }, txt(image.Liked ? "Unlike" : "Like")),
                     button("md-btn text sm", () =>
                     {
                         setUserId(image.UploaderId);

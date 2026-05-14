@@ -15,14 +15,15 @@ public partial class App : IComponent
     public VNode Render()
     {
         var (page, setPage) = UseState("albums");
-        var (client, setClient) = UseState<SastClient>(null!);
+        var (loggedIn, setLoggedIn) = UseState(false);
         var (albumId, setAlbumId) = UseState(0L);
         var (userId, setUserId) = UseState(0L);
+        var client = UseRef(new SastClient(new ClientOptions { Storage = new BrowserStorage() }));
 
-        if (client is null)
+        if (!loggedIn)
         {
             return div("app",
-                H(() => new LoginPage(v => setClient(v), setPage).Render(), "login"));
+                H(() => new LoginPage(client.Value, () => setLoggedIn(true)).Render(), "login"));
         }
 
         var goTo = (string p) => (Action)(() => { setPage(p); setAlbumId(0); });
@@ -34,7 +35,7 @@ public partial class App : IComponent
             _ => H(() => new AlbumListPage(setPage, setAlbumId).Render(), "album-list"),
         };
 
-        return Provide(ClientCtx, client,
+        return Provide(ClientCtx, client.Value,
             div("app",
                 header(Css.top_bar,
                     span(Css.logo, txt("Sast Image")),

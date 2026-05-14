@@ -118,27 +118,24 @@
           SkipUnchangedFiles="true" />
   </Target>
 
-  <ItemGroup>
-    <EmbeddedResource Include="$(OutputPath)wwwroot.zip">
-      <LogicalName>wwwroot.zip</LogicalName>
-      <Visible>false</Visible>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <Target Name="PublishWebApp" BeforeTargets="CoreCompile">
+  <Target Name="PublishWebApp" BeforeTargets="GetCopyToOutputDirectoryItems">
     <PropertyGroup>
-      <_PublishDir>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\App\bin\$(Configuration)\net10.0-browser\publish\wwwroot\))</_PublishDir>
+      <_AppDir>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\App'))</_AppDir>
+      <_WasmPublishDir>$(_AppDir)\bin\$(Configuration)\net10.0-browser\publish\wwwroot\</_WasmPublishDir>
     </PropertyGroup>
 
     <Exec
-      Command="dotnet publish &quot;..\App\App.csproj&quot; -c $(Configuration)"
-      WorkingDirectory="$(MSBuildThisFileDirectory)"
+      Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\App\App.csproj&quot; -c $(Configuration)"
       ConsoleToMSBuild="true" />
 
-    <ZipDirectory
-      SourceDirectory="$(_PublishDir)"
-      DestinationFile="$(MSBuildThisFileDirectory)$(OutputPath)wwwroot.zip"
-      Overwrite="true" />
+    <ItemGroup>
+      <_WasmFiles Include="$(_WasmPublishDir)**\*" />
+
+      <ContentWithTargetPath Include="@(_WasmFiles)">
+        <TargetPath>wwwroot\%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </ContentWithTargetPath>
+    </ItemGroup>
   </Target>
 
 </Project>

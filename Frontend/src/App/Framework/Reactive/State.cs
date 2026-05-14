@@ -4,7 +4,10 @@ public sealed class State<T> : IStateSignal
     where T : notnull
 {
     private T _value;
+    private int _version;
     private readonly List<(object Subscriber, Action Callback)> _subscribers = new();
+
+    int IStateSignal.Version => _version;
 
     public State(T initial) => _value = initial;
 
@@ -33,6 +36,7 @@ public sealed class State<T> : IStateSignal
         if (EqualityComparer<T>.Default.Equals(_value, value))
             return;
         _value = value;
+        _version++;
         Notify();
     }
 
@@ -56,6 +60,7 @@ public sealed class State<T> : IStateSignal
 
 internal interface IStateSignal
 {
+    int Version { get; }
     void Subscribe(object subscriber, Action callback);
     void Unsubscribe(object subscriber);
 }

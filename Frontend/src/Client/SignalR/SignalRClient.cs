@@ -163,18 +163,6 @@ public class SignalRClient : IAsyncDisposable
         await _connection.InvokeAsync("RemoveImage", albumId, imageId);
     }
 
-    public async Task LikeImageAsync(long albumId, long imageId)
-    {
-        await EnsureConnected();
-        await _connection.InvokeAsync("LikeImage", albumId, imageId);
-    }
-
-    public async Task UnlikeImageAsync(long albumId, long imageId)
-    {
-        await EnsureConnected();
-        await _connection.InvokeAsync("UnlikeImage", albumId, imageId);
-    }
-
     // ─── Categories ─────────────────────────────────────────────
 
     public async Task<CategoryResponse[]> GetCategoriesAsync()

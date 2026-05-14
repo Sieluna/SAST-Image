@@ -25,7 +25,7 @@ using AlbumTitle = Domain.Album.AlbumTitle;
 using AlbumDescription = Domain.Album.AlbumDescription;
 using AlbumTags = Domain.Album.AlbumTags;
 using DomainImageId = Domain.Album.Image.ImageId;
-using DomainImageTitle = Domain.Album.Image.ImageTitle;
+using DomainImageDescription = Domain.Album.Image.ImageDescription;
 using DomainImageTags = Domain.Album.Image.ImageTags;
 using DomainCategoryId = Domain.Category.CategoryId;
 using CategoryName = Domain.Category.CategoryName;
@@ -198,7 +198,7 @@ public class MainHub : Hub
         var grain = _grains.GetGrain<IAlbumGrain>(albumId);
         await grain.AddImage(
             imageId,
-            new ImageTitle(request.Title),
+            new ImageDescription(request.Title),
             new ImageTags(request.Tags),
             fileKey);
 
@@ -219,24 +219,6 @@ public class MainHub : Hub
     }
 
     [Authorize]
-    public async Task LikeImage(long albumId, long imageId)
-    {
-        var actor = GetActor();
-        SetActor(actor);
-        var grain = _grains.GetGrain<IAlbumGrain>(albumId);
-        await grain.LikeImage(new ImageId(imageId));
-    }
-
-    [Authorize]
-    public async Task UnlikeImage(long albumId, long imageId)
-    {
-        var actor = GetActor();
-        SetActor(actor);
-        var grain = _grains.GetGrain<IAlbumGrain>(albumId);
-        await grain.UnLikeImage(new ImageId(imageId));
-    }
-
-    [Authorize]
     public async Task<ImageResponse[]> GetImages(long albumId, long? cursor)
     {
         var actor = GetActor();
@@ -253,7 +235,7 @@ public class MainHub : Hub
 
         return images.Select(i => new ImageResponse(
             i.Id, i.AlbumId, i.Title, i.UploaderId, userNames.GetValueOrDefault(i.UploaderId, "unknown"),
-            i.Tags, i.Likes, i.Requester.Liked,
+            i.Tags, 0, false,
             new DateTimeOffset(i.UploadedAt).ToUnixTimeSeconds(),
             $"/images/{i.Id}")).ToArray();
     }
