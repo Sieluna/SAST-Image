@@ -58,14 +58,11 @@ builder.Services.AddSingleton<JwtTokenService>();
 
 builder.UseOrleansClient(client =>
 {
-    if (string.IsNullOrEmpty(builder.Configuration["ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL"]))
+    client.UseAdoNetClustering(options =>
     {
-        client.UseAdoNetClustering(options =>
-        {
-            options.Invariant = "Npgsql";
-            options.ConnectionString = client.Configuration.GetConnectionString("Domain");
-        });
-    }
+        options.Invariant = "Npgsql";
+        options.ConnectionString = client.Configuration.GetConnectionString("Domain");
+    });
     client.Services.AddQuery(client.Configuration);
     client.Services.AddStorage(client.Configuration);
     // TODO: restore S3 when ready
