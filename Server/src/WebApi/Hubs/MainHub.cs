@@ -6,7 +6,7 @@ using Domain.Api;
 using Domain.Category;
 using Domain.User;
 using Domain.File;
-using Interface.Services;
+using WebApi.Services;
 using Mediator;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -36,7 +36,7 @@ using Nickname = Domain.User.Nickname;
 using Biography = Domain.User.Biography;
 using ImageFileKey = Domain.File.ImageFileKey;
 
-namespace Interface.Hubs;
+namespace WebApi.Hubs;
 
 public class MainHub : Hub
 {

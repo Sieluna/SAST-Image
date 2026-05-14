@@ -54,12 +54,13 @@ builder
     .WaitFor(storage);
 
 builder
-    .AddProject<Projects.Interface>("Interface")
+    .AddProject<Projects.WebApi>("webapi")
     .WithReference(orleans.AsClient())
+    .WithAdoNetClustering()
     .WithConnectionString("Domain")
     .WithConnectionString("Query")
     .WithConnectionString("Storage")
-    .WaitFor(silo);
+    .WaitFor(domain);
 
 builder.Build().Run();
 
