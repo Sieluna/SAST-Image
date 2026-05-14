@@ -19,9 +19,11 @@ public class SignalRClient : IAsyncDisposable
         _connection = new HubConnectionBuilder()
             .WithUrl($"{baseUrl.TrimEnd('/')}/hub", options =>
             {
-                var token = _tokenStore.LoadAsync().Result;
-                if (token is not null)
-                    options.AccessTokenProvider = () => Task.FromResult(token.AccessToken)!;
+                options.AccessTokenProvider = async () =>
+                {
+                    var token = await _tokenStore.LoadAsync();
+                    return token?.AccessToken;
+                };
             })
             .WithAutomaticReconnect()
             .Build();
@@ -42,6 +44,13 @@ public class SignalRClient : IAsyncDisposable
             await _connection.StartAsync();
     }
 
+    private async Task RestartConnectionAsync()
+    {
+        if (_connection.State == HubConnectionState.Connected)
+            await _connection.StopAsync();
+        await _connection.StartAsync();
+    }
+
     // ─── Account ────────────────────────────────────────────────
 
     public async Task<JwtTokenResponse> LoginAsync(string username, string password)
@@ -49,6 +58,7 @@ public class SignalRClient : IAsyncDisposable
         await EnsureConnected();
         var result = await _connection.InvokeAsync<JwtTokenResponse>("Login", new LoginRequest(username, password));
         await _tokenStore.SaveAsync(new SignalRToken(result.AccessToken, result.RefreshToken, result.ExpireIn));
+        await RestartConnectionAsync();
         return result;
     }
 
@@ -57,6 +67,7 @@ public class SignalRClient : IAsyncDisposable
         await EnsureConnected();
         var result = await _connection.InvokeAsync<JwtTokenResponse>("Register", request);
         await _tokenStore.SaveAsync(new SignalRToken(result.AccessToken, result.RefreshToken, result.ExpireIn));
+        await RestartConnectionAsync();
         return result;
     }
 
@@ -65,6 +76,7 @@ public class SignalRClient : IAsyncDisposable
         await EnsureConnected();
         var result = await _connection.InvokeAsync<JwtTokenResponse>("RefreshToken", refreshToken);
         await _tokenStore.SaveAsync(new SignalRToken(result.AccessToken, result.RefreshToken, result.ExpireIn));
+        await RestartConnectionAsync();
         return result;
     }
 

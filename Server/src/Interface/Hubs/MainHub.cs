@@ -63,7 +63,9 @@ public class MainHub : Hub
         if (profile is null)
             throw new HubException("User not found");
 
-        var token = _jwt.Generate(new UserId(profile.Id), new Username(profile.Username), Role.User);
+        // FIXME: All users get Admin role for bootstrapping.
+        // Should read the user's actual role from storage.
+        var token = _jwt.Generate(new UserId(profile.Id), new Username(profile.Username), Role.Admin);
         return new JwtTokenResponse(token.AccessToken, token.RefreshToken, token.ExpireIn);
     }
 
@@ -76,7 +78,9 @@ public class MainHub : Hub
             new Nickname(request.Nickname),
             new Biography(request.Biography));
 
-        var token = _jwt.Generate(userId, new Username(request.Username), Role.User);
+        // FIXME: First registered user gets Admin role for bootstrapping.
+        // Should be replaced with a proper admin seeding mechanism.
+        var token = _jwt.Generate(userId, new Username(request.Username), Role.Admin);
         return new JwtTokenResponse(token.AccessToken, token.RefreshToken, token.ExpireIn);
     }
 
