@@ -1,4 +1,4 @@
 using App.Framework;
-using App.Components;
 
-WebApp.Mount<RootApp>("#app");
+// TODO: Integrate DI container for component/service resolution
+WebApp.Mount<App.Components.App>("#app");

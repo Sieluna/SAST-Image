@@ -3,11 +3,13 @@ using App.Framework.Reactive;
 using Client;
 using static App.Framework.WebApp;
 using static App.Framework.Hooks;
+using static App.Framework.Tags;
 
 namespace App.Components;
 
-public class RootApp : IComponent
+public partial class App : IComponent
 {
+    // TODO: Use URL-based routing so browser back/forward and deep-links work
     public static readonly Context<SastClient> ClientCtx = Context.Create<SastClient>();
 
     public VNode Render()
@@ -19,11 +21,11 @@ public class RootApp : IComponent
 
         if (client is null)
         {
-            return H("div", new Dictionary<string, object?> { ["class"] = "app" },
+            return div("app",
                 H(() => new LoginPage(v => setClient(v), setPage).Render(), "login"));
         }
 
-        var nav = (string p) => (Action)(() => { setPage(p); setAlbumId(0); });
+        var goTo = (string p) => (Action)(() => { setPage(p); setAlbumId(0); });
 
         VNode body = page switch
         {
@@ -33,19 +35,16 @@ public class RootApp : IComponent
         };
 
         return Provide(ClientCtx, client,
-            H("div", new Dictionary<string, object?> { ["class"] = "app" },
-                H("header", new Dictionary<string, object?> { ["class"] = "top-bar" },
-                    H("span", new Dictionary<string, object?> { ["class"] = "logo" },
-                        new VText("Sast Image")),
-                    H("nav", null,
-                        TabBtn("Albums", page == "albums", nav("albums")),
-                        TabBtn("Profile", page == "profile", (Action)(() => { setPage("profile"); setUserId(0); })))),
-                H("main", new Dictionary<string, object?> { ["class"] = "main-content" }, body)));
+            div("app",
+                header(Css.top_bar,
+                    span(Css.logo, txt("Sast Image")),
+                    nav(
+                        TabBtn("Albums", page == "albums", goTo("albums")),
+                        TabBtn("Profile", page == "profile",
+                            (Action)(() => { setPage("profile"); setUserId(0); })))),
+                main("main-content", body)));
     }
 
     private static VNode TabBtn(string label, bool active, Action onClick)
-        => H("button", new Dictionary<string, object?> {
-            ["class"] = "tab " + (active ? "active" : ""),
-            ["onclick"] = onClick
-        }, new VText(label));
+        => button(Css.tab + (active ? " " + Css.active : ""), onClick, txt(label));
 }

@@ -3,14 +3,15 @@ using App.Models;
 using Client.SignalR;
 using static App.Framework.WebApp;
 using static App.Framework.Hooks;
+using static App.Framework.Tags;
 
 namespace App.Components;
 
-public class AlbumDetailPage(long albumId, Action<string> setPage, Action<long> setUserId) : IComponent
+public partial class AlbumDetailPage(long albumId, Action<string> setPage, Action<long> setUserId) : IComponent
 {
     public VNode Render()
     {
-        var sastClient = UseContext(RootApp.ClientCtx);
+        var sastClient = UseContext(App.ClientCtx);
         var signalR = sastClient.SignalR();
         var baseUrl = sastClient.Options.BaseUrl.TrimEnd('/');
         var (images, setImages) = UseState<ImageModel[]>([]);
@@ -24,61 +25,53 @@ public class AlbumDetailPage(long albumId, Action<string> setPage, Action<long> 
             try
             {
                 var list = await signalR.GetImagesAsync(albumId: albumId);
+                // TODO: Implement pagination / infinite scroll for large datasets
                 setImages(list.Select(i => (ImageModel)i).ToArray());
             }
-            catch { }
+            catch { /* TODO: Show error feedback to user */ }
             finally { setLoading(false); }
         }
 
-        return H("div", null,
-            H("div", new Dictionary<string, object?> { ["class"] = "page-header" },
-                H("button", new Dictionary<string, object?> {
-                    ["class"] = "md-btn text",
-                    ["onclick"] = (Action)(() => setPage("albums"))
-                }, new VText("← Albums")),
-                H("h2", null, new VText($"{images.Length} images"))),
+        return div(
+            div("page-header",
+                button("md-btn text", () => setPage("albums"), txt("← Albums")),
+                h2(txt($"{images.Length} images"))),
             loading
-                ? H("div", new Dictionary<string, object?> { ["class"] = "loading" },
-                    H("span", null, new VText("Loading...")))
-                : H("div", new Dictionary<string, object?> { ["class"] = "image-grid" },
-                    images.Select(img => ImageCard(img, baseUrl, setUserId, setPage, signalR)).ToArray()));
+                ? div("loading", span(txt("Loading...")))
+                // TODO: Add image upload UI
+                : div(Css.image_grid,
+                    images.Select(x =>
+                        ImageCard(x, baseUrl, setUserId, setPage, signalR)).ToArray()));
     }
 
     private static VNode ImageCard(
-        ImageModel img, string baseUrl, Action<long> setUserId,
+        ImageModel image, string baseUrl, Action<long> setUserId,
         Action<string> setPage, SignalRClient signalR)
     {
-        var src = img.ThumbnailUrl is not null ? $"{baseUrl}{img.ThumbnailUrl}" : null;
-        return H("div", new Dictionary<string, object?> { ["class"] = "md-card image-card" },
+        var src = image.ThumbnailUrl is not null ? $"{baseUrl}{image.ThumbnailUrl}" : null;
+        return div(new Props("md-card").Cls(Css.image_card),
             src is not null
-                ? H("img", new Dictionary<string, object?> { ["src"] = src, ["alt"] = img.Title })
-                : H("div", new Dictionary<string, object?> { ["class"] = "img-fallback" },
-                    new VText("🖼")),
-            H("div", new Dictionary<string, object?> { ["class"] = "md-card-body" },
-                H("h4", null, new VText(img.Title)),
-                H("div", new Dictionary<string, object?> { ["class"] = "md-card-meta" },
-                    H("span", null, new VText($"♥ {img.Likes}")),
-                    H("button", new Dictionary<string, object?> {
-                        ["class"] = "md-btn text sm",
-                        ["onclick"] = (Action)(async () =>
+                ? Tags.img(src, image.Title)
+                : div(Css.img_fallback, txt("🖼")),
+            div("md-card-body",
+                h4(txt(image.Title)),
+                div("md-card-meta",
+                    span(txt($"♥ {image.Likes}")),
+                    button("md-btn text sm", async () =>
+                    {
+                        try
                         {
-                            try
-                            {
-                                if (img.Liked)
-                                    await signalR.UnlikeImageAsync(img.AlbumId, img.Id);
-                                else
-                                    await signalR.LikeImageAsync(img.AlbumId, img.Id);
-                            }
-                            catch { }
-                        })
-                    }, new VText(img.Liked ? "Unlike" : "Like")),
-                    H("button", new Dictionary<string, object?> {
-                        ["class"] = "md-btn text sm",
-                        ["onclick"] = (Action)(() =>
-                        {
-                            setUserId(img.UploaderId);
-                            setPage("profile");
-                        })
-                    }, new VText("Uploader")))));
+                            if (image.Liked)
+                                await signalR.UnlikeImageAsync(image.AlbumId, image.Id);
+                            else
+                                await signalR.LikeImageAsync(image.AlbumId, image.Id);
+                        }
+                        catch { /* TODO: Show error feedback to user */ }
+                    }, txt(image.Liked ? "Unlike" : "Like")),
+                    button("md-btn text sm", () =>
+                    {
+                        setUserId(image.UploaderId);
+                        setPage("profile");
+                    }, txt("Uploader")))));
     }
 }
