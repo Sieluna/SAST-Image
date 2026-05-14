@@ -62,7 +62,9 @@ file static class Rua
     {
         public IResourceBuilder<T> WithAdoNetClustering()
         {
-            return resource.WithEnvironment("Orleans__Clustering__ProviderType", "AdoNet")
+            return resource
+                .WithEnvironment("Orleans__Clustering__ProviderType", "AdoNet")
+                .WithEnvironment("Orleans__Silo__SiloName", resource.Resource.Name)
             //.WithEnvironment("Orleans__Endpoints__AdvertisedIPAddress", "127.0.0.1")
             //.WithEnvironment("Orleans__Endpoints__GatewayPort", (++port).ToString())
             //.WithEnvironment("Orleans__Endpoints__SiloPort", (++port).ToString())

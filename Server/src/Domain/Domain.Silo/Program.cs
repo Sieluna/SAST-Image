@@ -8,14 +8,19 @@ builder.AddServiceDefaults();
 
 builder.UseOrleans(builder =>
 {
-    builder.Services.Configure<EndpointOptions>(
-        builder.Configuration.GetRequiredSection("Orleans:Endpoints")
-    );
     builder.UseAdoNetClustering(options =>
     {
         options.Invariant = nameof(Npgsql);
         options.ConnectionString = builder.Configuration.GetConnectionString(nameof(Domain));
     });
+
+    builder.Services.Configure<EndpointOptions>(
+        builder.Configuration.GetRequiredSection("Orleans:Endpoints")
+    );
+    builder.Services.Configure<SiloOptions>(
+        builder.Configuration.GetRequiredSection("Orleans:Silo")
+    );
+
     builder.UseDomain();
     builder.AddDashboard(options => options.HideTrace = true);
 });

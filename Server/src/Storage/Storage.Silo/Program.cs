@@ -18,6 +18,9 @@ builder.UseOrleans(builder =>
     builder.Services.Configure<EndpointOptions>(
         builder.Configuration.GetRequiredSection("Orleans:Endpoints")
     );
+    builder.Services.Configure<SiloOptions>(
+        builder.Configuration.GetRequiredSection("Orleans:Silo")
+    );
     builder.AddDashboard(options => options.HideTrace = true);
     builder.Services.AddStorage(builder.Configuration);
     builder.Services.AddDomainModelJsonSerialization();
