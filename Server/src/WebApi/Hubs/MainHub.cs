@@ -74,14 +74,17 @@ public class MainHub : Hub
         SetActor(null);
         var userId = UserId.GenerateNew();
         var grain = _grains.GetGrain<IUserGrain>(userId.Value);
-        userId = await grain.Register(
+        var registeredId = await grain.Register(
             new Username(request.Username),
             new Nickname(request.Nickname),
             new Biography(request.Biography));
 
+        if (registeredId is null)
+            throw new HubException("Registration failed: username may already be taken");
+
         // FIXME: First registered user gets Admin role for bootstrapping.
         // Should be replaced with a proper admin seeding mechanism.
-        var token = _jwt.Generate(userId, new Username(request.Username), Role.Admin);
+        var token = _jwt.Generate(registeredId.Value, new Username(request.Username), Role.Admin);
         return new JwtTokenResponse(token.AccessToken, token.RefreshToken, token.ExpireIn);
     }
 
@@ -301,8 +304,11 @@ public class MainHub : Hub
         var actor = GetActor();
         SetActor(actor);
         var grain = _grains.GetGrain<IUserGrain>(actor.Id.Value);
+
+        if (request.Username is not null)
+            await grain.UpdateUsername(new Username(request.Username));
+
         await grain.UpdateProfile(
-            request.Username is not null ? new Username(request.Username) : null,
             request.Nickname is not null ? new Nickname(request.Nickname) : null,
             request.Biography is not null ? new Biography(request.Biography) : null);
     }
